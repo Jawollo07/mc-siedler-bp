@@ -13,7 +13,7 @@ function playerOnly(origin) {
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
-    registry.registerCommand({ name: "claim:set", description: "Claimt ein 2x2-Chunk-Grundstück für ein Team (nur OPs).", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:claim_set", description: "Claimt ein 2x2-Chunk-Grundstück für ein Team (nur OPs).", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         const teamName = String(args[0] ?? "");
         system.run(() => {
@@ -29,7 +29,7 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "claim:remove", description: "Entfernt das gesamte Grundstück eines Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:claim_remove", description: "Entfernt das gesamte Grundstück eines Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         const teamName = String(args[0] ?? "");
         system.run(() => {
@@ -41,7 +41,7 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "claim:info", description: "Zeigt Informationen zum aktuellen Chunk.", permissionLevel: ANY_PERMISSION, cheatsRequired: false }, (origin) => {
+    registry.registerCommand({ name: "siedler:claim_info", description: "Zeigt Informationen zum aktuellen Chunk.", permissionLevel: ANY_PERMISSION, cheatsRequired: false }, (origin) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         system.run(() => {
             const chunk = getChunkCoords(player.location); const claim = getClaims()[getChunkKey(chunk.x, chunk.z)];
@@ -51,7 +51,7 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "claim:list", description: "Listet alle vergebenen Grundstücke.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
+    registry.registerCommand({ name: "siedler:claim_list", description: "Listet alle vergebenen Grundstücke.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         system.run(() => {
             const claims = getClaims(); const teams = getTeams(); const byTeam = {};
