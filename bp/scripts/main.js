@@ -10,11 +10,12 @@ import "../claims/protection.js";
 import "../claims/display.js";
 import "../monster/index.js";
 import "../monster/commads.js";
+import "../monster/pillager_squads.js";
 import "../essentials/index.js";
 
 console.info("§8----------------------------------------");
 console.info("§6[Siedler Logic] §aAlle Module geladen!");
-console.info("§7Module: Teams · Steuern · Claims · Monster · Essentials");
+console.info("§7Module: Teams · Steuern · Claims · Monster · Pillager · Essentials");
 console.info("§8----------------------------------------");
 
 system.runTimeout(() => {
