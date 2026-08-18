@@ -2,23 +2,8 @@ import { world, system } from "@minecraft/server";
 import { DEFAULT_CONFIG } from "./config.js";
 import { getClaimAt } from "../claims/utils.js";
 
-const clamp = (value, min, max) => Math.min(max, Math.max(min, Number(value) || 0));
-
-function cloneConfig(config) {
-    return {
-        ...DEFAULT_CONFIG,
-        ...config,
-        allowedMobs: { ...DEFAULT_CONFIG.allowedMobs, ...(config?.allowedMobs ?? {}) },
-        spawnChances: { ...DEFAULT_CONFIG.spawnChances, ...(config?.spawnChances ?? {}) },
-        claims: {
-            ...DEFAULT_CONFIG.claims,
-            ...(config?.claims ?? {}),
-            blockedMobs: { ...DEFAULT_CONFIG.claims.blockedMobs, ...(config?.claims?.blockedMobs ?? {}) }
-        }
-    };
-}
-
-export let MONSTER_CONFIG = cloneConfig(DEFAULT_CONFIG);
+const clone = (value) => JSON.parse(JSON.stringify(value));
+export let MONSTER_CONFIG = clone(DEFAULT_CONFIG);
 
 world.beforeEvents.worldInitialize.subscribe((event) => {
     event.dynamicPropertiesDefinition.defineString("monster_config", 32767);
@@ -27,11 +12,11 @@ world.beforeEvents.worldInitialize.subscribe((event) => {
 export function loadMonsterConfig() {
     try {
         const raw = world.getDynamicProperty("monster_config");
-        MONSTER_CONFIG = raw ? cloneConfig(JSON.parse(raw)) : cloneConfig(DEFAULT_CONFIG);
-        console.info("§a[Monster] Config geladen");
+        MONSTER_CONFIG = raw ? mergeConfig(DEFAULT_CONFIG, JSON.parse(raw)) : clone(DEFAULT_CONFIG);
+        console.info("§a[Monster] Zentrale config.js geladen");
     } catch (error) {
-        console.warn(`[Monster] Ungültige Config, Standardwerte werden verwendet: ${error}`);
-        MONSTER_CONFIG = cloneConfig(DEFAULT_CONFIG);
+        console.warn(`[Monster] Ungültige gespeicherte Config, Standardwerte werden verwendet: ${error}`);
+        MONSTER_CONFIG = clone(DEFAULT_CONFIG);
     }
 }
 
@@ -40,21 +25,34 @@ export function saveMonsterConfig() {
         world.setDynamicProperty("monster_config", JSON.stringify(MONSTER_CONFIG));
         return true;
     } catch (error) {
-        console.error(`[Monster] Fehler beim Speichern: ${error}`);
+        console.error(`[Monster] Config konnte nicht gespeichert werden: ${error}`);
         return false;
     }
+}
+
+function mergeConfig(base, override) {
+    if (!override || typeof override !== "object" || Array.isArray(override)) return clone(base);
+    const result = clone(base);
+    for (const [key, value] of Object.entries(override)) {
+        if (value && typeof value === "object" && !Array.isArray(value) && result[key] && typeof result[key] === "object" && !Array.isArray(result[key])) {
+            result[key] = mergeConfig(result[key], value);
+        } else if (value !== undefined) {
+            result[key] = value;
+        }
+    }
+    return result;
 }
 
 system.runTimeout(loadMonsterConfig, 20);
 
 function getSpawnChance(typeId, inClaim) {
-    const base = clamp(MONSTER_CONFIG.spawnChances[typeId] ?? 1, 0, 1);
-    const config = inClaim ? MONSTER_CONFIG.claims : MONSTER_CONFIG;
-    const rate = clamp(config.spawnRate ?? MONSTER_CONFIG.globalSpawnRate, 0, 1);
-    const nightMultiplier = Math.max(0, Number(config.nightSpawnMultiplier ?? MONSTER_CONFIG.nightSpawnMultiplier) || 0);
+    const base = Math.min(1, Math.max(0, Number(MONSTER_CONFIG.spawnChances[typeId] ?? 1)));
+    const section = inClaim ? MONSTER_CONFIG.claims : MONSTER_CONFIG;
+    const rate = Math.min(1, Math.max(0, Number(section.spawnRate ?? MONSTER_CONFIG.globalSpawnRate)));
+    const nightMultiplier = Math.max(0, Number(section.nightSpawnMultiplier ?? MONSTER_CONFIG.nightSpawnMultiplier));
     const time = world.getTimeOfDay();
     const night = time >= 13000 && time < 23000;
-    return clamp(base * rate * (night ? nightMultiplier : 1), 0, 1);
+    return Math.min(1, Math.max(0, base * rate * (night ? nightMultiplier : 1)));
 }
 
 world.beforeEvents.entitySpawn.subscribe((event) => {
@@ -74,27 +72,21 @@ world.beforeEvents.entitySpawn.subscribe((event) => {
     const claim = getClaimAt(entity.location);
     if (claim) {
         const claimConfig = MONSTER_CONFIG.claims;
-        if (!claimConfig.enabled || claimConfig.allowMonsters === false) {
-            event.cancel = true;
-            return;
-        }
-        if (claimConfig.blockedMobs?.[typeId]) {
+        if (!claimConfig.enabled || claimConfig.allowMonsters === false || claimConfig.blockedMobs?.[typeId]) {
             event.cancel = true;
             return;
         }
     }
 
-    if (Math.random() >= getSpawnChance(typeId, !!claim)) {
-        event.cancel = true;
-    }
+    if (Math.random() >= getSpawnChance(typeId, Boolean(claim))) event.cancel = true;
 });
 
 system.runInterval(() => {
-    if (!MONSTER_CONFIG.giveWeakness) return;
+    const weakness = MONSTER_CONFIG.weakness;
+    if (!MONSTER_CONFIG.enabled || !weakness?.enabled) return;
 
-    const duration = Math.max(1, Math.floor(Number(MONSTER_CONFIG.weaknessDuration) || 220));
-    const amplifier = Math.max(0, Math.min(255, Math.floor(Number(MONSTER_CONFIG.weaknessLevel) || 0)));
-
+    const duration = Math.max(1, Math.floor(Number(weakness.duration) || 220));
+    const amplifier = Math.max(0, Math.min(255, Math.floor(Number(weakness.level) || 0)));
     for (const player of world.getAllPlayers()) {
         try {
             player.addEffect("weakness", duration, { amplifier, showParticles: false });
@@ -104,4 +96,4 @@ system.runInterval(() => {
     }
 }, 100);
 
-console.info("§a[Monster] Modul geladen");
+console.info("§a[Monster] Modul geladen – zentrale Config aktiv");
