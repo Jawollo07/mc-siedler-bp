@@ -57,43 +57,31 @@ function getSpawnChance(typeId, inClaim) {
 
 world.beforeEvents.entitySpawn.subscribe((event) => {
     if (!MONSTER_CONFIG.enabled) return;
-
     const entity = event.entity;
     const typeId = entity?.typeId;
     if (!typeId) return;
-
     const allowed = MONSTER_CONFIG.allowedMobs?.[typeId];
     if (allowed === undefined) return;
-    if (!allowed) {
-        event.cancel = true;
-        return;
-    }
-
+    if (!allowed) { event.cancel = true; return; }
     const claim = getClaimAt(entity.location);
     if (claim) {
         const claimConfig = MONSTER_CONFIG.claims;
-        if (!claimConfig.enabled || claimConfig.allowMonsters === false || claimConfig.blockedMobs?.[typeId]) {
-            event.cancel = true;
-            return;
-        }
+        if (!claimConfig.enabled || claimConfig.allowMonsters === false || claimConfig.blockedMobs?.[typeId]) { event.cancel = true; return; }
     }
-
     if (Math.random() >= getSpawnChance(typeId, Boolean(claim))) event.cancel = true;
 });
 
 system.runInterval(() => {
     const weakness = MONSTER_CONFIG.weakness;
     if (!MONSTER_CONFIG.enabled || !weakness?.enabled) return;
-
     const duration = Math.max(1, Math.floor(Number(weakness.duration) || 220));
     const amplifier = Math.max(0, Math.min(255, Math.floor(Number(weakness.level) || 0)));
     for (const player of world.getAllPlayers()) {
-        try {
-            player.addEffect("weakness", duration, { amplifier, showParticles: false });
-        } catch (error) {
-            if (MONSTER_CONFIG.debug) console.warn(`[Monster] Schwäche konnte nicht gesetzt werden: ${error}`);
-        }
+        try { player.addEffect("weakness", duration, { amplifier, showParticles: false }); }
+        catch (error) { if (MONSTER_CONFIG.debug) console.warn(`[Monster] Schwäche konnte nicht gesetzt werden: ${error}`); }
     }
 }, 100);
 
-console.info("§a[Monster] Modul geladen – zentrale Config aktiv");
+import "./commands.js";
+
+console.info("§a[Monster] Modul geladen – zentrale Config + Admin-Commands aktiv");
