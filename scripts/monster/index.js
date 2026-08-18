@@ -5,10 +5,6 @@ import { getClaimAt } from "../claims/utils.js";
 const clone = (value) => JSON.parse(JSON.stringify(value));
 export let MONSTER_CONFIG = clone(DEFAULT_CONFIG);
 
-world.beforeEvents.worldInitialize.subscribe((event) => {
-    event.dynamicPropertiesDefinition.defineString("monster_config", 32767);
-});
-
 export function loadMonsterConfig() {
     try {
         const raw = world.getDynamicProperty("monster_config");
@@ -81,7 +77,5 @@ system.runInterval(() => {
         catch (error) { if (MONSTER_CONFIG.debug) console.warn(`[Monster] Schwäche konnte nicht gesetzt werden: ${error}`); }
     }
 }, 100);
-
-import "./commands.js";
 
 console.info("§a[Monster] Modul geladen – zentrale Config + Admin-Commands aktiv");
