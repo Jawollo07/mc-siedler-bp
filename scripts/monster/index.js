@@ -42,8 +42,8 @@ function mergeConfig(base, override) {
 system.runTimeout(loadMonsterConfig, 20);
 
 function getSpawnChance(typeId, inClaim) {
-    const base = Math.min(1, Math.max(0, Number(MONSTER_CONFIG.spawnChances[typeId] ?? 1)));
-    const section = inClaim ? MONSTER_CONFIG.claims : MONSTER_CONFIG;
+    const base = Math.min(1, Math.max(0, Number(MONSTER_CONFIG.spawnChances?.[typeId] ?? 1)));
+    const section = inClaim ? (MONSTER_CONFIG.claims ?? {}) : MONSTER_CONFIG;
     const rate = Math.min(1, Math.max(0, Number(section.spawnRate ?? MONSTER_CONFIG.globalSpawnRate)));
     const nightMultiplier = Math.max(0, Number(section.nightSpawnMultiplier ?? MONSTER_CONFIG.nightSpawnMultiplier));
     const time = world.getTimeOfDay();
@@ -51,31 +51,89 @@ function getSpawnChance(typeId, inClaim) {
     return Math.min(1, Math.max(0, base * rate * (night ? nightMultiplier : 1)));
 }
 
-world.beforeEvents.entitySpawn.subscribe((event) => {
-    if (!MONSTER_CONFIG.enabled) return;
-    const entity = event.entity;
-    const typeId = entity?.typeId;
-    if (!typeId) return;
-    const allowed = MONSTER_CONFIG.allowedMobs?.[typeId];
-    if (allowed === undefined) return;
-    if (!allowed) { event.cancel = true; return; }
-    const claim = getClaimAt(entity.location);
-    if (claim) {
-        const claimConfig = MONSTER_CONFIG.claims;
-        if (!claimConfig.enabled || claimConfig.allowMonsters === false || claimConfig.blockedMobs?.[typeId]) { event.cancel = true; return; }
-    }
-    if (Math.random() >= getSpawnChance(typeId, Boolean(claim))) event.cancel = true;
-});
+/*
+ * @minecraft/server 2.x / Scripting V2:
+ * world.beforeEvents.entitySpawn is not available on the server build used by
+ * this pack. The supported spawn signal is world.afterEvents.entitySpawn.
+ *
+ * Because an after-event cannot be cancelled, invalid spawns are removed on
+ * the next writable callback. This keeps the Monster module from aborting the
+ * whole pack when the old before-event API is absent.
+ */
+const entitySpawn = world.afterEvents?.entitySpawn;
+if (entitySpawn && typeof entitySpawn.subscribe === "function") {
+    entitySpawn.subscribe((event) => {
+        if (!MONSTER_CONFIG.enabled) return;
+
+        const entity = event?.entity;
+        if (!entity) return;
+
+        const typeId = entity.typeId;
+        const allowed = MONSTER_CONFIG.allowedMobs?.[typeId];
+        if (allowed === undefined) return;
+
+        let shouldRemove = !allowed;
+
+        if (!shouldRemove) {
+            try {
+                const claim = getClaimAt(entity.location);
+                if (claim) {
+                    const claimConfig = MONSTER_CONFIG.claims ?? {};
+                    if (
+                        claimConfig.enabled === false ||
+                        claimConfig.allowMonsters === false ||
+                        claimConfig.blockedMobs?.[typeId]
+                    ) {
+                        shouldRemove = true;
+                    } else if (Math.random() >= getSpawnChance(typeId, true)) {
+                        shouldRemove = true;
+                    }
+                } else if (Math.random() >= getSpawnChance(typeId, false)) {
+                    shouldRemove = true;
+                }
+            } catch (error) {
+                if (MONSTER_CONFIG.debug) {
+                    console.warn(`[Monster] Spawn-Prüfung fehlgeschlagen: ${error}`);
+                }
+            }
+        }
+
+        if (!shouldRemove) return;
+
+        // AfterEvents laufen in normaler Ausführung; remove() ist daher erlaubt.
+        try {
+            entity.remove();
+        } catch (error) {
+            if (MONSTER_CONFIG.debug) {
+                console.warn(`[Monster] Entity konnte nicht entfernt werden (${typeId}): ${error}`);
+            }
+        }
+    });
+
+    console.info("§a[Monster] EntitySpawn-System geladen (API 2.x afterEvents)");
+} else {
+    console.warn("§e[Monster] EntitySpawn-API nicht verfügbar; normales Monster-Spawn-Filtering deaktiviert.");
+}
 
 system.runInterval(() => {
     const weakness = MONSTER_CONFIG.weakness;
     if (!MONSTER_CONFIG.enabled || !weakness?.enabled) return;
+
     const duration = Math.max(1, Math.floor(Number(weakness.duration) || 220));
     const amplifier = Math.max(0, Math.min(255, Math.floor(Number(weakness.level) || 0)));
-    for (const player of world.getAllPlayers()) {
-        try { player.addEffect("weakness", duration, { amplifier, showParticles: false }); }
-        catch (error) { if (MONSTER_CONFIG.debug) console.warn(`[Monster] Schwäche konnte nicht gesetzt werden: ${error}`); }
-    }
-}, 100);
 
-console.info("§a[Monster] Modul geladen – zentrale Config + Admin-Commands aktiv");
+    for (const player of world.getAllPlayers()) {
+        try {
+            player.addEffect("weakness", duration, {
+                amplifier,
+                showParticles: false
+            });
+        } catch (error) {
+            if (MONSTER_CONFIG.debug) {
+                console.warn(`[Monster] Schwäche konnte nicht gesetzt werden: ${error}`);
+            }
+        }
+    }
+}, Math.max(1, Number(MONSTER_CONFIG.weakness?.interval) || 100));
+
+console.info("§a[Monster] Modul geladen – zentrale Config + Spawn-Filter aktiv");
