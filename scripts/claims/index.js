@@ -1,9 +1,9 @@
-import { system, world, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
+import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 import { getChunkCoords, getChunkKey, getClaims, saveClaims, get2x2Chunks, areChunksFree, countTeamClaims } from "./utils.js";
 import { getTeams } from "../teams/index.js";
 
-const OP_PERMISSION = 1; // CommandPermissionLevel.GameDirectors
-const ANY_PERMISSION = 0; // CommandPermissionLevel.Any
+const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
+const ANY_PERMISSION = CommandPermissionLevel.Any;
 
 function playerOnly(origin) {
     const player = origin?.sourceEntity;
