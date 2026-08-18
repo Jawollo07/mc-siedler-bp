@@ -308,7 +308,7 @@ system.beforeEvents.startup.subscribe((event) => {
         registry.registerCommand({
             name,
             description,
-            permissionLevel: CommandPermissionLevel.Operator,
+            permissionLevel: CommandPermissionLevel.GameDirectors,
             cheatsRequired: false,
             optionalParameters: [{ type: CustomCommandParamType.String, name: "spieler" }]
         }, (origin, args) => {
@@ -340,7 +340,7 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand({
         name: "admin:god",
         description: "Schaltet Godmode um.",
-        permissionLevel: CommandPermissionLevel.Operator,
+        permissionLevel: CommandPermissionLevel.GameDirectors,
         cheatsRequired: false
     }, (origin) => {
         const player = playerFrom(origin);
@@ -364,7 +364,7 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand({
         name: "admin:fly",
         description: "Schaltet Flugmodus um.",
-        permissionLevel: CommandPermissionLevel.Operator,
+        permissionLevel: CommandPermissionLevel.GameDirectors,
         cheatsRequired: false
     }, (origin) => {
         const player = playerFrom(origin);
@@ -391,7 +391,7 @@ system.beforeEvents.startup.subscribe((event) => {
         registry.registerCommand({
             name,
             description,
-            permissionLevel: CommandPermissionLevel.Operator,
+            permissionLevel: CommandPermissionLevel.GameDirectors,
             cheatsRequired: false,
             mandatoryParameters: [{ type: CustomCommandParamType.String, name: "spieler" }]
         }, (origin, args) => {
@@ -424,22 +424,22 @@ system.beforeEvents.startup.subscribe((event) => {
         if (target !== admin) admin.sendMessage(`§aInventar von ${target.name} geleert.`);
     });
 
-    registry.registerCommand({ name: "admin:day", description: "Setzt die Zeit auf Tag.", permissionLevel: CommandPermissionLevel.Operator, cheatsRequired: false }, () => {
+    registry.registerCommand({ name: "admin:day", description: "Setzt die Zeit auf Tag.", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false }, () => {
         system.run(() => { world.setTimeOfDay(1000); world.sendMessage("§eDie Zeit wurde auf §aTag §egesetzt."); });
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "admin:night", description: "Setzt die Zeit auf Nacht.", permissionLevel: CommandPermissionLevel.Operator, cheatsRequired: false }, () => {
+    registry.registerCommand({ name: "admin:night", description: "Setzt die Zeit auf Nacht.", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false }, () => {
         system.run(() => { world.setTimeOfDay(13000); world.sendMessage("§eDie Zeit wurde auf §cNacht §egesetzt."); });
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "admin:sun", description: "Setzt klares Wetter.", permissionLevel: CommandPermissionLevel.Operator, cheatsRequired: false }, () => {
+    registry.registerCommand({ name: "admin:sun", description: "Setzt klares Wetter.", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false }, () => {
         system.run(() => world.getDimension("overworld").runCommand("weather clear"));
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "admin:rain", description: "Setzt Regen.", permissionLevel: CommandPermissionLevel.Operator, cheatsRequired: false }, () => {
+    registry.registerCommand({ name: "admin:rain", description: "Setzt Regen.", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false }, () => {
         system.run(() => world.getDimension("overworld").runCommand("weather rain"));
         return { status: CustomCommandStatus.Success };
     });
@@ -447,7 +447,7 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand({
         name: "admin:kick",
         description: "Kickt einen Spieler.",
-        permissionLevel: CommandPermissionLevel.Operator,
+        permissionLevel: CommandPermissionLevel.GameDirectors,
         cheatsRequired: false,
         mandatoryParameters: [{ type: CustomCommandParamType.String, name: "spieler" }]
     }, (origin, args) => {
