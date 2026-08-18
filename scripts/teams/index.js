@@ -1,6 +1,7 @@
-import { system, world, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
+import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 
-const OP_PERMISSION = 1; // CommandPermissionLevel.GameDirectors
+// @minecraft/server 2.x: GameDirectors entspricht OP-Level 1.
+const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
 export function getTeams() {
     const rawData = world.getDynamicProperty("teams");
@@ -16,7 +17,7 @@ export function getTeams() {
 
 function saveTeams(teams) {
     try { world.setDynamicProperty("teams", JSON.stringify(teams)); return true; }
-    catch (error) { console.error(`[Teams] Fehler beim Speichern: ${error}`); return false; }
+    catch (error) { console.error(`[Teams] Fehler beim Speichern der Teams: ${error}`); return false; }
 }
 
 function playerOnly(origin) {
@@ -24,7 +25,7 @@ function playerOnly(origin) {
     return player?.typeId === "minecraft:player" ? player : null;
 }
 
-world.afterEvents.playerSpawn?.subscribe((event) => {
+world.afterEvents.playerSpawn?.subscribe?.((event) => {
     if (!event.initialSpawn) return;
     const player = event.player;
     for (const [teamName, data] of Object.entries(getTeams())) {
