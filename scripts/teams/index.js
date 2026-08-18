@@ -1,6 +1,5 @@
 import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 
-// @minecraft/server 2.x: GameDirectors entspricht OP-Level 1.
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
 export function getTeams() {
@@ -39,7 +38,7 @@ world.afterEvents.playerSpawn?.subscribe?.((event) => {
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
-    registry.registerCommand({ name: "team:create", description: "Erstellt ein neues Team.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "name" }], optionalParameters: [{ type: CustomCommandParamType.String, name: "farbe" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:team_create", description: "Erstellt ein neues Team.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "name" }], optionalParameters: [{ type: CustomCommandParamType.String, name: "farbe" }] }, (origin, args) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         const teamName = String(args[0] ?? "").trim(); const color = String(args[1] ?? "§f");
         if (!teamName) { player.sendMessage("§cDer Teamname darf nicht leer sein."); return { status: CustomCommandStatus.Failure }; }
@@ -52,7 +51,7 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "team:add", description: "Fügt einen Spieler zu einem Team hinzu.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "spieler" }, { type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:team_add", description: "Fügt einen Spieler zu einem Team hinzu.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "spieler" }, { type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         const targetName = String(args[0] ?? ""); const teamName = String(args[1] ?? "");
         system.run(() => {
@@ -68,7 +67,7 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "team:remove", description: "Entfernt einen Spieler aus einem Team.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "spieler" }, { type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:team_remove", description: "Entfernt einen Spieler aus einem Team.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "spieler" }, { type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         const targetName = String(args[0] ?? ""); const teamName = String(args[1] ?? "");
         system.run(() => {
@@ -77,12 +76,12 @@ system.beforeEvents.startup.subscribe((event) => {
             team.players = Array.isArray(team.players) ? team.players.filter((n) => n !== targetName) : [];
             if (!saveTeams(teams)) { player.sendMessage("§cDie Teamänderung konnte nicht gespeichert werden."); return; }
             player.sendMessage(`§e${targetName} wurde aus Team "${team.color || "§f"}${teamName}§e" entfernt.`);
-            world.getPlayers().find((p) => p.name === targetName)?.sendMessage(`§eDu wurdest aus Team "${team.color || "§f"}${teamName}§e" entfernt.`);
+            world.getPlayers().find((p) => p.name === targetName)?.sendMessage(`§eDu wurdest aus dem Team "${team.color || "§f"}${teamName}§e" entfernt.`);
         });
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "team:delete", description: "Löscht ein gesamtes Team.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:team_delete", description: "Löscht ein gesamtes Team.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         const teamName = String(args[0] ?? "");
         system.run(() => {
@@ -93,7 +92,7 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "team:list", description: "Zeigt alle registrierten Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
+    registry.registerCommand({ name: "siedler:team_list", description: "Zeigt alle registrierten Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         system.run(() => {
             const teams = getTeams(); const names = Object.keys(teams);
@@ -108,7 +107,7 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "team:settax", description: "Setzt Steuerkiste und optional Steuerbetrag.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }, { type: CustomCommandParamType.Integer, name: "x" }, { type: CustomCommandParamType.Integer, name: "y" }, { type: CustomCommandParamType.Integer, name: "z" }], optionalParameters: [{ type: CustomCommandParamType.Integer, name: "amount" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:team_settax", description: "Setzt Steuerkiste und optional Steuerbetrag.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }, { type: CustomCommandParamType.Integer, name: "x" }, { type: CustomCommandParamType.Integer, name: "y" }, { type: CustomCommandParamType.Integer, name: "z" }], optionalParameters: [{ type: CustomCommandParamType.Integer, name: "amount" }] }, (origin, args) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         const teamName = String(args[0] ?? "");
         system.run(() => {
