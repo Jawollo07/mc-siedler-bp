@@ -1,5 +1,8 @@
 import { system } from "@minecraft/server";
 
+// Muss früh geladen werden: registriert die World-Dynamic-Properties für Scripting V2.
+import "./dynamic_properties.js";
+
 import "./teams/index.js";
 import "./teams/chat.js";
 
