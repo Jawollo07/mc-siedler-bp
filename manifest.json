@@ -14,7 +14,7 @@
       "uuid": "15f23d07-45ad-4e94-b5ae-c3389e7cc45f",
       "version": [1, 1, 0],
       "language": "javascript",
-      "entry": "scripts/main.js"
+      "entry": "main.js"
     }
   ],
   "dependencies": [
