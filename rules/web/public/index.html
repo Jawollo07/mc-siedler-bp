@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server-Regeln bestätigen</title>
+  <style>
+    :root {
+      --bg: #0c0c0e;
+      --card: #16161a;
+      --border: #2a2a32;
+      --text: #e8e8ed;
+      --muted: #9a9aa8;
+      --accent: #4ade80;
+      --accent-dim: #22c55e;
+      --danger: #f87171;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      line-height: 1.55;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 26px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    }
+
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 22px;
+    }
+
+    .rules {
+      background: #1c1c22;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 22px;
+    }
+
+    .rules h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .rules ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .rules li {
+      display: flex;
+      gap: 10px;
+      font-size: 0.98rem;
+    }
+
+    .rules li::before {
+      content: "•";
+      color: var(--accent);
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .accept-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .accept-row input {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: var(--accent-dim);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .accept-row span {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    button#generateBtn {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent-dim);
+      color: #052e16;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s, opacity 0.15s;
+    }
+
+    button#generateBtn:hover:not(:disabled) {
+      background: var(--accent);
+    }
+
+    button#generateBtn:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    button#generateBtn:disabled {
+      background: #2a2a32;
+      color: #6b6b78;
+      cursor: not-allowed;
+    }
+
+    .error {
+      display: none;
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: rgba(248, 113, 113, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.35);
+      border-radius: 8px;
+      color: var(--danger);
+      font-size: 0.92rem;
+    }
+
+    /* Code-Box */
+    #codeSection {
+      display: none;
+      margin-top: 24px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #codeSection h3 {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .code-display {
+      font-family: ui-monospace, "Cascadia Code", "SF Mono", monospace;
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: 0.28em;
+      color: var(--accent);
+      margin: 8px 0 16px;
+      padding-left: 0.28em; /* optischer Ausgleich wegen letter-spacing */
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .btn-secondary {
+      padding: 10px 18px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #1c1c22;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-secondary:hover {
+      background: #25252c;
+      border-color: #3a3a44;
+    }
+
+    .btn-secondary.copied {
+      border-color: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .timer {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .timer strong {
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .timer.warning strong { color: #fbbf24; }
+    .timer.danger strong { color: var(--danger); }
+
+    .hint {
+      margin-top: 16px;
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .hint strong { color: #c4c4d0; }
+
+    footer {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 0.8rem;
+      color: #5c5c68;
+    }
+
+    @media (max-width: 480px) {
+      .code-display { font-size: 1.9rem; letter-spacing: 0.18em; }
+      .card { padding: 22px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Server-Regeln</h1>
+      <p class="subtitle">Bitte lies die Regeln und bestätige sie, um einen Code zu erhalten.</p>
+
+      <div class="rules">
+        <h2>Regeln</h2>
+        <ul>
+          <li>Kein Griefing und kein Diebstahl</li>
+          <li>Respektvoller Umgang mit anderen Spielern</li>
+          <li>Keine Cheats, Hacks oder Exploits</li>
+          <li>… (hier weitere Regeln eintragen)</li>
+        </ul>
+      </div>
+
+      <label class="accept-row" id="acceptLabel">
+        <input type="checkbox" id="accept">
+        <span>Ich habe die Regeln gelesen und akzeptiere sie vollständig.</span>
+      </label>
+
+      <button id="generateBtn" disabled>Code generieren</button>
+
+      <div class="error" id="errorBox"></div>
+
+      <div id="codeSection">
+        <h3>Dein Verifizierungscode</h3>
+        <div class="code-display" id="codeDisplay">------</div>
+
+        <div class="actions">
+          <button class="btn-secondary" id="copyBtn">Code kopieren</button>
+        </div>
+
+        <p class="timer" id="timer">
+          Gültig noch: <strong id="countdown">15:00</strong>
+        </p>
+
+        <p class="hint">
+          Gib diesen <strong>6-stelligen Zahlencode</strong> im Spiel ein<br>
+          (Formular erscheint automatisch oder mit <strong>!verify</strong>).<br>
+          Der Code ist nur <strong>15 Minuten</strong> und <strong>einmal</strong> gültig.
+        </p>
+      </div>
+    </div>
+
+    <footer>Nach dem Bestätigen den Code im Minecraft-Spiel eingeben.</footer>
+  </div>
+
+  <script>
+    const accept = document.getElementById('accept');
+    const generateBtn = document.getElementById('generateBtn');
+    const errorBox = document.getElementById('errorBox');
+    const codeSection = document.getElementById('codeSection');
+    const codeDisplay = document.getElementById('codeDisplay');
+    const copyBtn = document.getElementById('copyBtn');
+    const countdownEl = document.getElementById('countdown');
+    const timerEl = document.getElementById('timer');
+
+    let currentCode = null;
+    let expiresAt = null;
+    let timerInterval = null;
+
+    accept.addEventListener('change', () => {
+      generateBtn.disabled = !accept.checked;
+    });
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+    }
+
+    function hideError() {
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `\( {m}: \){String(s).padStart(2, '0')}`;
+    }
+
+    function updateCountdown() {
+      if (!expiresAt) return;
+
+      const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      countdownEl.textContent = formatTime(remaining);
+
+      timerEl.classList.remove('warning', 'danger');
+      if (remaining <= 60) {
+        timerEl.classList.add('danger');
+      } else if (remaining <= 180) {
+        timerEl.classList.add('warning');
+      }
+
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        countdownEl.textContent = '0:00';
+        codeDisplay.style.opacity = '0.45';
+        codeDisplay.textContent = 'Abgelaufen';
+        copyBtn.disabled = true;
+        copyBtn.textContent = 'Abgelaufen';
+      }
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      if (!accept.checked) return;
+
+      hideError();
+      generateBtn.disabled = true;
+      generateBtn.textContent = 'Wird generiert…';
+
+      try {
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Fehler beim Generieren des Codes');
+        }
+
+        currentCode = data.code;
+        const seconds = data.expiresInSeconds || 900;
+        expiresAt = Date.now() + seconds * 1000;
+
+        codeDisplay.textContent = currentCode;
+        codeDisplay.style.opacity = '1';
+        codeSection.style.display = 'block';
+        copyBtn.disabled = false;
+        copyBtn.textContent = 'Code kopieren';
+        copyBtn.classList.remove('copied');
+
+        accept.disabled = true;
+        generateBtn.textContent = 'Code erstellt';
+
+        if (timerInterval) clearInterval(timerInterval);
+        updateCountdown();
+        timerInterval = setInterval(updateCountdown, 1000);
+
+      } catch (err) {
+        showError(err.message || 'Verbindung zum Server fehlgeschlagen');
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Code generieren';
+      }
+    });
+
+    copyBtn.addEventListener('click', async () => {
+      if (!currentCode) return;
+
+      try {
+        await navigator.clipboard.writeText(currentCode);
+        copyBtn.textContent = 'Kopiert!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          if (copyBtn.textContent === 'Kopiert!') {
+            copyBtn.textContent = 'Code kopieren';
+            copyBtn.classList.remove('copied');
+          }
+        }, 2000);
+      } catch {
+        // Fallback für ältere Browser
+        const ta = document.createElement('textarea');
+        ta.value = currentCode;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        copyBtn.textContent = 'Kopiert!';
+      }
+    });
+  </script>
+</body>
+</html>
