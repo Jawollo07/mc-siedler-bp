@@ -18,10 +18,6 @@ import {
 
 import { getTeams } from "../teams/index.js";
 
-world.beforeEvents.worldInitialize.subscribe((event) => {
-    event.dynamicPropertiesDefinition.defineString("claims", 32767);
-});
-
 function getPlayer(origin) {
     const player = origin.sourceEntity;
     return player?.typeId === "minecraft:player" ? player : null;
