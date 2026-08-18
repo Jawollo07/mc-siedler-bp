@@ -25,10 +25,17 @@ const CONFIG = {
     moveStrength: 0.055,
     sprintStrength: 0.085,
     maxSpeed: 0.75,
-    retargetDistance: 48,
     targetLostDistance: 96,
     regroupDistance: 20,
     formationRadius: 5,
+
+    // Belagerung
+    siegeEnabled: true,
+    siegeStagingRadius: 28,
+    siegeTargetRadius: 48,
+    siegeRetreatAfterTicks: 1200,
+    siegeNoTargetTicks: 300,
+    siegeClaimSearchRadius: 2,
 
     // Claims
     preferEnemyClaims: true,
@@ -68,7 +75,7 @@ function getPlayerTeam(player) {
     }) ?? null;
 }
 
-function findEnemyClaimTarget(player) {
+function getEnemyClaimNearPlayer(player) {
     if (!CONFIG.preferEnemyClaims || Math.random() > CONFIG.enemyClaimChance) return null;
 
     const claims = getClaims();
@@ -78,27 +85,55 @@ function findEnemyClaimTarget(player) {
 
     for (const [key, claim] of Object.entries(claims)) {
         if (!claim?.team || claim.team === playerTeam) continue;
-
         const separator = key.indexOf(",");
         if (separator < 0) continue;
+
         const chunkX = Number(key.slice(0, separator));
         const chunkZ = Number(key.slice(separator + 1));
         if (!Number.isInteger(chunkX) || !Number.isInteger(chunkZ)) continue;
 
         if (Math.abs(playerChunk.x - chunkX) <= CONFIG.raidClaimRadiusChunks + 1 &&
             Math.abs(playerChunk.z - chunkZ) <= CONFIG.raidClaimRadiusChunks + 1) {
-            candidates.push({ x: chunkX * 16 + 8, z: chunkZ * 16 + 8 });
+            candidates.push({
+                team: claim.team,
+                x: chunkX * 16 + 8,
+                z: chunkZ * 16 + 8
+            });
         }
     }
 
     return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
 }
 
-function randomSpawnPosition(player) {
-    const claim = findEnemyClaimTarget(player);
+function findClaimContaining(location) {
+    const chunk = getChunkCoords(location);
+    const claims = getClaims();
+    const key = `${chunk.x},${chunk.z}`;
+    const claim = claims[key];
+    if (!claim?.team) return null;
+
+    return {
+        team: claim.team,
+        x: chunk.x * 16 + 8,
+        y: location.y,
+        z: chunk.z * 16 + 8
+    };
+}
+
+function findClaimPlayers(squad) {
+    if (!squad.siegeClaim) return [];
+
+    return world.getAllPlayers().filter((player) => {
+        if (player.dimension.id !== squad.dimensionId) return false;
+        const claim = findClaimContaining(player.location);
+        return claim?.team === squad.siegeClaim.team;
+    });
+}
+
+function randomSpawnPosition(player, claim) {
     if (claim) {
         const angle = Math.random() * Math.PI * 2;
-        const distance = randomInt(12, 28);
+        const distance = randomInt(18, CONFIG.siegeStagingRadius);
         return {
             x: claim.x + Math.cos(angle) * distance,
             y: Math.floor(player.location.y),
@@ -122,11 +157,9 @@ function createComposition() {
     if (CONFIG.includeVindicator && Math.random() < CONFIG.vindicatorChance) {
         types[randomInt(0, types.length - 1)] = "minecraft:vindicator";
     }
-
     if (CONFIG.includeRavager && Math.random() < CONFIG.ravagerChance && types.length >= 5) {
         types[randomInt(0, types.length - 1)] = "minecraft:ravager";
     }
-
     return types;
 }
 
@@ -138,67 +171,59 @@ function makeCaptain(entity) {
 }
 
 function findTargetPlayer(squad, currentTarget) {
+    const claimPlayers = findClaimPlayers(squad);
+    if (claimPlayers.length) {
+        return claimPlayers.sort((a, b) => distanceSq(a.location, squad.leaderLocation) - distanceSq(b.location, squad.leaderLocation))[0];
+    }
+
     const players = world.getAllPlayers().filter((player) => {
         if (player.dimension.id !== squad.dimensionId) return false;
         if (currentTarget && player.id === currentTarget.id) return true;
-        return distanceSq(player.location, squad.spawnLocation) <= CONFIG.targetLostDistance ** 2;
+        return distanceSq(player.location, squad.leaderLocation) <= CONFIG.targetLostDistance ** 2;
     });
 
     if (!players.length) return null;
-
-    // Bevorzugt das bisherige Ziel, solange es noch in Reichweite ist.
     if (currentTarget && players.some((p) => p.id === currentTarget.id)) return currentTarget;
-
-    // Nächstes erreichbares Spielerziel.
     return players.sort((a, b) => distanceSq(a.location, squad.leaderLocation) - distanceSq(b.location, squad.leaderLocation))[0];
 }
 
-function steerEntity(entity, target, squad) {
-    try {
-        if (!entity.isValid || !target?.isValid) return;
-        if (entity.dimension.id !== target.dimension.id) return;
+function getSquadDestination(squad, target) {
+    if (squad.phase === "staging" && squad.siegeClaim) {
+        return squad.siegeClaim;
+    }
+    return target?.location ?? squad.leaderLocation;
+}
 
-        const dx = target.location.x - entity.location.x;
-        const dz = target.location.z - entity.location.z;
+function steerEntity(entity, destination, squad) {
+    try {
+        if (!entity.isValid || !destination || entity.dimension.id !== squad.dimensionId) return;
+
+        const dx = destination.x - entity.location.x;
+        const dz = destination.z - entity.location.z;
         const horizontalSq = dx * dx + dz * dz;
         if (horizontalSq < 0.01) return;
 
         const distance = Math.sqrt(horizontalSq);
         const isRanged = entity.typeId === "minecraft:pillager";
 
-        // Im Nahkampf nicht weiter beschleunigen. Die Vanilla-KI übernimmt den Schlag.
-        if (distance <= CONFIG.attackRange) {
-            return;
-        }
-
-        // Fernkämpfer halten etwas Abstand, Nahkämpfer stürmen auf das Ziel zu.
-        if (isRanged && distance <= CONFIG.rangedAttackRange) {
-            return;
-        }
+        if (squad.phase === "staging" && distance <= CONFIG.siegeStagingRadius) return;
+        if (squad.phase === "assault" && isRanged && distance <= CONFIG.rangedAttackRange) return;
+        if (squad.phase === "assault" && distance <= CONFIG.attackRange) return;
 
         let strength = distance > CONFIG.regroupDistance ? CONFIG.sprintStrength : CONFIG.moveStrength;
-
-        // Truppmitglieder bleiben in Formation und laufen nicht unendlich auseinander.
         if (squad.leaderLocation && distanceSq(entity.location, squad.leaderLocation) > CONFIG.formationRadius ** 2 && entity !== squad.leader) {
             strength *= 0.65;
         }
 
-        const impulse = {
+        entity.applyImpulse({
             x: (dx / distance) * strength,
             y: 0,
             z: (dz / distance) * strength
-        };
-
-        entity.applyImpulse(impulse);
+        });
 
         const velocity = entity.getVelocity?.();
         if (velocity && Math.hypot(velocity.x, velocity.z) > CONFIG.maxSpeed) {
-            const speed = Math.hypot(velocity.x, velocity.z);
-            entity.applyImpulse({
-                x: -velocity.x * 0.08,
-                y: 0,
-                z: -velocity.z * 0.08
-            });
+            entity.applyImpulse({ x: -velocity.x * 0.08, y: 0, z: -velocity.z * 0.08 });
         }
     } catch {}
 }
@@ -212,15 +237,12 @@ function performSquadAttack(squad, target) {
         try {
             return entity.isValid && entity.dimension.id === target.dimension.id &&
                 distanceSq(entity.location, target.location) <= CONFIG.attackRange ** 2;
-        } catch {
-            return false;
-        }
+        } catch { return false; }
     });
 
     if (!attackers.length) return;
-
-    // Nur die KI löst den Angriff aus; Schaden wird auf einen klaren Cooldown begrenzt.
     const attacker = attackers[Math.floor(Math.random() * attackers.length)];
+
     try {
         const damage = attacker.typeId === "minecraft:ravager" ? 8 : attacker.typeId === "minecraft:vindicator" ? 7 : 5;
         target.applyDamage(damage);
@@ -232,15 +254,15 @@ function performSquadAttack(squad, target) {
 function spawnSquadForPlayer(target) {
     if (!target || squads.size >= CONFIG.maxActiveSquads) return false;
 
-    const dimension = target.dimension;
-    const location = randomSpawnPosition(target);
+    const siegeClaim = CONFIG.siegeEnabled ? getEnemyClaimNearPlayer(target) : null;
+    const location = randomSpawnPosition(target, siegeClaim);
     const composition = createComposition();
     const entities = [];
 
     try {
         for (const typeId of composition) {
             const offset = { x: (Math.random() - 0.5) * 6, y: 0, z: (Math.random() - 0.5) * 6 };
-            entities.push(dimension.spawnEntity(typeId, {
+            entities.push(target.dimension.spawnEntity(typeId, {
                 x: location.x + offset.x,
                 y: location.y,
                 z: location.z + offset.z
@@ -257,21 +279,80 @@ function spawnSquadForPlayer(target) {
         return false;
     }
 
-    const leader = entities[0];
+    const now = world.getAbsoluteTime();
     const id = nextSquadId++;
+    const leader = entities[0];
+
     squads.set(id, {
         entities,
         targetId: target.id,
-        dimensionId: dimension.id,
-        createdAt: world.getAbsoluteTime(),
+        dimensionId: target.dimension.id,
+        createdAt: now,
         spawnLocation: { ...location },
         leader,
         leaderLocation: { ...location },
-        nextAttack: 0
+        nextAttack: 0,
+        siegeClaim,
+        phase: siegeClaim ? "staging" : "assault",
+        phaseStartedAt: now,
+        noTargetSince: null
     });
 
-    target.sendMessage(`§c⚔ Ein feindlicher Trupp wurde gesichtet! §7${composition.map((t) => t.replace("minecraft:", "")).join(", ")}`);
+    if (siegeClaim) {
+        target.sendMessage(`§4⚔ BELAGERUNG! §cEin feindlicher Trupp sammelt sich vor dem Gebiet von Team §e${siegeClaim.team}§c.`);
+    } else {
+        target.sendMessage(`§c⚔ Ein feindlicher Trupp wurde gesichtet! §7${composition.map((t) => t.replace("minecraft:", "")).join(", ")}`);
+    }
     return true;
+}
+
+function updateSiegePhase(squad, target) {
+    if (!squad.siegeClaim) {
+        squad.phase = "assault";
+        return;
+    }
+
+    const now = world.getAbsoluteTime();
+    const claimPlayers = findClaimPlayers(squad);
+    const claimCenter = squad.siegeClaim;
+
+    if (squad.phase === "staging") {
+        const leaderNearClaim = squad.leaderLocation && distanceSq(squad.leaderLocation, claimCenter) <= CONFIG.siegeStagingRadius ** 2;
+        if (leaderNearClaim && now - squad.phaseStartedAt >= 100) {
+            squad.phase = "assault";
+            squad.phaseStartedAt = now;
+            for (const player of world.getAllPlayers()) {
+                if (player.dimension.id === squad.dimensionId && distanceSq(player.location, claimCenter) <= CONFIG.siegeTargetRadius ** 2) {
+                    player.sendMessage(`§c⚔ Der feindliche Trupp stürmt das Gebiet von Team §e${squad.siegeClaim.team}§c!`);
+                }
+            }
+        }
+        return;
+    }
+
+    if (squad.phase === "assault") {
+        if (claimPlayers.length > 0) {
+            squad.noTargetSince = null;
+            return;
+        }
+
+        squad.noTargetSince ??= now;
+        if (now - squad.noTargetSince >= CONFIG.siegeNoTargetTicks || now - squad.phaseStartedAt >= CONFIG.siegeRetreatAfterTicks) {
+            squad.phase = "retreat";
+            squad.phaseStartedAt = now;
+        }
+        return;
+    }
+
+    if (squad.phase === "retreat") {
+        // Rückzugspunkt liegt außerhalb des Claims in Richtung ursprünglicher Spawnposition.
+        if (now - squad.phaseStartedAt >= CONFIG.siegeRetreatAfterTicks) {
+            squad.forceDespawn = true;
+        }
+        if (target && distanceSq(squad.leaderLocation, squad.spawnLocation) < 12 ** 2) {
+            squad.forceDespawn = true;
+        }
+    }
 }
 
 function runSquadAI(squad) {
@@ -285,15 +366,29 @@ function runSquadAI(squad) {
 
     const currentTarget = world.getAllPlayers().find((player) => player.id === squad.targetId) ?? null;
     const target = findTargetPlayer(squad, currentTarget);
-    if (!target) return;
+    updateSiegePhase(squad, target);
+
+    if (squad.forceDespawn) return;
+
+    if (!target) {
+        if (squad.siegeClaim) {
+            for (const entity of alive) steerEntity(entity, squad.spawnLocation, squad);
+        }
+        return;
+    }
 
     squad.targetId = target.id;
-    for (const entity of alive) steerEntity(entity, target, squad);
-    performSquadAttack(squad, target);
+    const destination = getSquadDestination(squad, target);
+    for (const entity of alive) steerEntity(entity, destination, squad);
+
+    if (squad.phase === "assault") {
+        performSquadAttack(squad, target);
+    }
 }
 
 function cleanupSquads() {
     const now = world.getAbsoluteTime();
+
     for (const [id, squad] of squads) {
         const target = world.getAllPlayers().find((player) => player.id === squad.targetId);
         const alive = squad.entities.filter((entity) => {
@@ -301,14 +396,14 @@ function cleanupSquads() {
         });
 
         const expired = now - squad.createdAt >= CONFIG.lifetimeTicks;
-        const targetGone = !target;
+        const targetGone = !target && !squad.siegeClaim;
         const tooFar = target && alive.length > 0 && alive.every((entity) => {
             try {
                 return entity.dimension.id !== target.dimension.id || distanceSq(entity.location, target.location) > CONFIG.despawnDistance ** 2;
             } catch { return true; }
         });
 
-        if (alive.length === 0 || expired || targetGone || tooFar) {
+        if (alive.length === 0 || expired || targetGone || tooFar || squad.forceDespawn) {
             for (const entity of alive) { try { entity.remove(); } catch {} }
             squads.delete(id);
         }
@@ -329,4 +424,4 @@ system.runInterval(() => {
 
 system.runInterval(cleanupSquads, 200);
 
-console.info("§a[Pillager] Eigene Trupp-KI aktiviert.");
+console.info("§a[Pillager] Eigene Trupp-KI + Belagerungslogik aktiviert.");
