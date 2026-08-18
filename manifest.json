@@ -1,24 +1,23 @@
 {
   "format_version": 2,
   "header": {
-    "description": "An add-on that implements the logic of the original series",
+    "description": "Siedler Logic – Behavior Pack",
     "name": "Siedler Logic",
-    "uuid":"481d6fb2-75fa-4a3d-afa3-7def96812e6c",
-    "version": [1, 0, 0],
-    "min_engine_version": [1, 16, 0]
+    "uuid": "481d6fb2-75fa-4a3d-afa3-7def96812e6c",
+    "version": [1, 1, 0],
+    "min_engine_version": [1, 26, 0]
   },
-  "modules":
-    [
-      {
-        "description": "An Behavior package to implement the logic of the original series",
-          "type": "script",
-          "uuid": "15f23d07-45ad-4e94-b5ae-c3389e7cc45f",
-          "version": [1, 0, 0],
-          "language": "javascript",
-          "entry": "scripts/main.js"
-      }
-    ],
-    "dependencies": [
+  "modules": [
+    {
+      "description": "Siedler Logic Script Module",
+      "type": "script",
+      "uuid": "15f23d07-45ad-4e94-b5ae-c3389e7cc45f",
+      "version": [1, 1, 0],
+      "language": "javascript",
+      "entry": "bp/scripts/main.js"
+    }
+  ],
+  "dependencies": [
     {
       "module_name": "@minecraft/server",
       "version": "2.7.0"

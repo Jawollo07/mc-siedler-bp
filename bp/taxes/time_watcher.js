@@ -3,18 +3,20 @@ import { addTaxes } from "./taxes.js";
 import { getTeams } from "../teams/index.js";
 import { countVillagersInTeamClaims } from "../claims/utils.js";
 
-// === KONFIGURATION ===
 const MORNING_START = 0;
 const MORNING_WINDOW = 200;
 
 let dayStarted = false;
+let lastPaidDay = -1;
 
 system.runInterval(() => {
     const timeNow = world.getTimeOfDay();
+    const currentDay = Math.floor(world.getAbsoluteTime() / 24000);
 
     if (timeNow >= MORNING_START && timeNow < MORNING_START + MORNING_WINDOW) {
-        if (!dayStarted) {
+        if (!dayStarted && lastPaidDay !== currentDay) {
             dayStarted = true;
+            lastPaidDay = currentDay;
             payAllTeamTaxes();
         }
     } else {
@@ -27,19 +29,15 @@ function payAllTeamTaxes() {
     let paidCount = 0;
 
     for (const [teamName, data] of Object.entries(teams)) {
-        if (!data.taxChest) continue;
+        if (!data?.taxChest) continue;
 
-        // 1 Emerald pro Dorfbewohner im Claim
         const villagerCount = countVillagersInTeamClaims(teamName);
-        const amount = villagerCount; // 1:1
+        const configuredAmount = Number.isFinite(Number(data.taxAmount)) ? Number(data.taxAmount) : villagerCount;
+        const amount = Math.max(0, Math.floor(configuredAmount));
 
-        if (amount <= 0) {
-            // Optional: Nachricht, dass keine Steuern fällig sind
-            continue;
-        }
+        if (amount <= 0) continue;
 
         const success = addTaxes(data.taxChest, amount, teamName);
-
         if (success) {
             paidCount++;
             notifyTeamMembers(teamName, data, amount, villagerCount);
@@ -53,13 +51,10 @@ function payAllTeamTaxes() {
 
 function notifyTeamMembers(teamName, teamData, amount, villagerCount) {
     const color = teamData.color || "§f";
-    const message = `§a[Steuern] Euer Team \( {color} \){teamName}§a hat §e${amount} Emeralds§a erhalten ` +
-                    `§7(${villagerCount} Dorfbewohner)`;
+    const message = `§a[Steuern] Euer Team ${color}${teamName}§a hat §e${amount} Emeralds§a erhalten §7(${villagerCount} Dorfbewohner)`;
 
-    const onlinePlayers = world.getAllPlayers();
-
-    for (const player of onlinePlayers) {
-        if (teamData.players.includes(player.name)) {
+    for (const player of world.getAllPlayers()) {
+        if (Array.isArray(teamData.players) && teamData.players.includes(player.name)) {
             player.sendMessage(message);
         }
     }

@@ -1,7 +1,7 @@
 import { world } from "@minecraft/server";
 import { getTeams } from "../teams/index.js";
 
-/** Chunk-Koordinaten aus Block-Position berechnen */
+/** Chunk-Koordinaten aus Block-Position berechnen. Funktioniert auch für negative Koordinaten. */
 export function getChunkCoords(location) {
     return {
         x: Math.floor(location.x / 16),
@@ -9,98 +9,102 @@ export function getChunkCoords(location) {
     };
 }
 
-/** Key für einen Chunk */
+/** Stabiler Schlüssel für einen Chunk. */
 export function getChunkKey(chunkX, chunkZ) {
-    return `\( {chunkX}, \){chunkZ}`;
+    return `${chunkX},${chunkZ}`;
 }
 
-/** Alle Claims laden */
+/** Alle Claims laden. Beschädigte/ungültige Daten werden nicht den gesamten Script-Start zerstören lassen. */
 export function getClaims() {
     const raw = world.getDynamicProperty("claims");
-    return raw ? JSON.parse(raw) : {};
+    if (typeof raw !== "string" || raw.length === 0) return {};
+
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch (error) {
+        console.error(`[Claims] Ungültige Claims-Daten: ${error}`);
+        return {};
+    }
 }
 
-/** Claims speichern */
+/** Claims speichern. */
 export function saveClaims(claims) {
-    world.setDynamicProperty("claims", JSON.stringify(claims));
+    try {
+        world.setDynamicProperty("claims", JSON.stringify(claims));
+        return true;
+    } catch (error) {
+        console.error(`[Claims] Fehler beim Speichern: ${error}`);
+        return false;
+    }
 }
 
-/** Gibt den Claim eines Chunks zurück (oder null) */
+/** Gibt den Claim eines Chunks zurück (oder null). */
 export function getClaimAt(location) {
     const chunk = getChunkCoords(location);
     const claims = getClaims();
     return claims[getChunkKey(chunk.x, chunk.z)] || null;
 }
 
-/** Prüft, ob ein Spieler Zugriff auf einen Claim hat */
+/** Prüft, ob ein Spieler Zugriff auf einen Claim hat. */
 export function hasAccess(player, claim) {
-    if (!claim) return true; // unclaimed = frei
+    if (!claim) return true;
 
     const teams = getTeams();
     const team = teams[claim.team];
-    if (!team) return false;
+    if (!team || !Array.isArray(team.players)) return false;
 
     return team.players.includes(player.name);
 }
 
-/** Erzeugt die 4 Chunks eines 2×2-Quadrats ausgehend von der Nord-West-Ecke */
+/** Erzeugt die 4 Chunks eines 2×2-Quadrats ausgehend von der Nord-West-Ecke. */
 export function get2x2Chunks(startChunkX, startChunkZ) {
     return [
-        { x: startChunkX,     z: startChunkZ },
+        { x: startChunkX, z: startChunkZ },
         { x: startChunkX + 1, z: startChunkZ },
-        { x: startChunkX,     z: startChunkZ + 1 },
+        { x: startChunkX, z: startChunkZ + 1 },
         { x: startChunkX + 1, z: startChunkZ + 1 }
     ];
 }
 
-/** Prüft, ob alle 4 Chunks frei sind */
+/** Prüft, ob alle 4 Chunks frei sind. */
 export function areChunksFree(chunks, claims) {
-    for (const c of chunks) {
-        const key = getChunkKey(c.x, c.z);
-        if (claims[key]) return false;
-    }
-    return true;
+    return chunks.every((chunk) => !claims[getChunkKey(chunk.x, chunk.z)]);
 }
 
-/** Zählt, wie viele Chunks ein Team bereits besitzt */
+/** Zählt, wie viele Chunks ein Team bereits besitzt. */
 export function countTeamClaims(teamName, claims) {
-    let count = 0;
-    for (const claim of Object.values(claims)) {
-        if (claim.team === teamName) count++;
-    }
-    return count;
+    return Object.values(claims).filter((claim) => claim?.team === teamName).length;
 }
-/**
- * Zählt alle Dorfbewohner innerhalb der Claims eines Teams
- */
+
+/** Zählt Dorfbewohner innerhalb der Claims eines Teams. */
 export function countVillagersInTeamClaims(teamName) {
     const claims = getClaims();
     const dimension = world.getDimension("overworld");
-    let count = 0;
-
-    // Alle Chunks des Teams finden
     const teamChunks = [];
+
     for (const [key, claim] of Object.entries(claims)) {
-        if (claim.team === teamName) {
-            const [cx, cz] = key.split(",").map(Number);
-            teamChunks.push({ x: cx, z: cz });
+        if (claim?.team !== teamName) continue;
+
+        const separator = key.indexOf(",");
+        if (separator === -1) continue;
+
+        const x = Number(key.slice(0, separator));
+        const z = Number(key.slice(separator + 1));
+        if (Number.isInteger(x) && Number.isInteger(z)) {
+            teamChunks.push({ x, z });
         }
     }
 
     if (teamChunks.length === 0) return 0;
 
-    // Alle Dorfbewohner in der Welt holen und prüfen, ob sie in einem Team-Chunk sind
+    const claimedKeys = new Set(teamChunks.map((chunk) => getChunkKey(chunk.x, chunk.z)));
     const villagers = dimension.getEntities({ type: "minecraft:villager" });
 
+    let count = 0;
     for (const villager of villagers) {
-        const loc = villager.location;
-        const chunkX = Math.floor(loc.x / 16);
-        const chunkZ = Math.floor(loc.z / 16);
-
-        const isInTeamClaim = teamChunks.some(c => c.x === chunkX && c.z === chunkZ);
-        if (isInTeamClaim) {
-            count++;
-        }
+        const chunk = getChunkCoords(villager.location);
+        if (claimedKeys.has(getChunkKey(chunk.x, chunk.z))) count++;
     }
 
     return count;

@@ -1,186 +1,188 @@
-import { 
-    system, 
-    world, 
-    CommandPermissionLevel, 
+import {
+    system,
+    CommandPermissionLevel,
     CustomCommandParamType,
-    CustomCommandStatus 
+    CustomCommandStatus
 } from "@minecraft/server";
-
 import { MONSTER_CONFIG, saveMonsterConfig, loadMonsterConfig } from "./index.js";
 import { DEFAULT_CONFIG } from "./config.js";
+
+const playerOnly = (origin) => {
+    const player = origin.sourceEntity;
+    return player?.typeId === "minecraft:player" ? player : null;
+};
+
+const mobId = (value) => String(value ?? "").startsWith("minecraft:")
+    ? String(value)
+    : `minecraft:${value}`;
+
+const clamp01 = (value) => Math.min(1, Math.max(0, Number(value)));
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
-    // ==========================================
-    // /monster:set <key> <value>
-    // ==========================================
-    registry.registerCommand(
-        {
-            name: "monster:set",
-            description: "Setzt eine Monster-Config Einstellung.",
-            permissionLevel: CommandPermissionLevel.Operator,
-            cheatsRequired: false,
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "key" },
-                { type: CustomCommandParamType.String, name: "value" }
-            ]
-        },
-        (origin, args) => {
-            const player = origin.sourceEntity;
-            if (!player || player.typeId !== "minecraft:player") return { status: CustomCommandStatus.Failure };
+    registry.registerCommand({
+        name: "monster:set",
+        description: "Setzt eine einfache Monster-Config Einstellung.",
+        permissionLevel: CommandPermissionLevel.Operator,
+        cheatsRequired: false,
+        mandatoryParameters: [
+            { type: CustomCommandParamType.String, name: "key" },
+            { type: CustomCommandParamType.String, name: "value" }
+        ]
+    }, (origin, args) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
 
-            const key = args[0];
-            let value = args[1];
+        const key = String(args[0] ?? "");
+        const raw = String(args[1] ?? "");
 
-            system.run(() => {
-                // Boolean
-                if (value === "true") value = true;
-                else if (value === "false") value = false;
-                // Number
-                else if (!isNaN(Number(value))) value = Number(value);
+        system.run(() => {
+            if (!(key in MONSTER_CONFIG) || typeof MONSTER_CONFIG[key] === "object") {
+                player.sendMessage(`§cUnbekannter oder verschachtelter Key: ${key}`);
+                player.sendMessage("§7Nutze /monster:mob oder /monster:chance für verschachtelte Werte.");
+                return;
+            }
 
-                if (!(key in MONSTER_CONFIG)) {
-                    player.sendMessage(`§cUnbekannter Key: ${key}`);
-                    player.sendMessage("§7Nutze /monster:list um alle Keys zu sehen.");
+            let value;
+            if (raw === "true" || raw === "false") value = raw === "true";
+            else if (raw !== "" && Number.isFinite(Number(raw))) value = Number(raw);
+            else value = raw;
+
+            if (typeof MONSTER_CONFIG[key] === "number") {
+                if (!Number.isFinite(value)) {
+                    player.sendMessage("§cDer Wert muss eine Zahl sein.");
                     return;
                 }
+                if (["globalSpawnRate", "nightSpawnMultiplier"].includes(key)) value = Math.max(0, Number(value));
+                if (key === "weaknessLevel") value = Math.max(0, Math.min(255, Math.floor(Number(value))));
+                if (key === "weaknessDuration") value = Math.max(1, Math.floor(Number(value)));
+            }
 
-                // Verschachtelte Objekte nicht direkt überschreiben
-                if (typeof MONSTER_CONFIG[key] === "object") {
-                    player.sendMessage(`§c"${key}" ist ein Objekt. Nutze /monster:mob oder /monster:chance`);
-                    return;
+            MONSTER_CONFIG[key] = value;
+            if (saveMonsterConfig()) player.sendMessage(`§a${key} §7wurde auf §e${value} §7gesetzt.`);
+            else player.sendMessage("§cDie Config konnte nicht gespeichert werden.");
+        });
+
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({
+        name: "monster:mob",
+        description: "Aktiviert oder deaktiviert ein Monster.",
+        permissionLevel: CommandPermissionLevel.Operator,
+        cheatsRequired: false,
+        mandatoryParameters: [
+            { type: CustomCommandParamType.String, name: "type" },
+            { type: CustomCommandParamType.String, name: "enabled" }
+        ]
+    }, (origin, args) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+
+        const type = mobId(args[0]);
+        const raw = String(args[1] ?? "").toLowerCase();
+        if (raw !== "true" && raw !== "false") {
+            player.sendMessage("§cNutze true oder false.");
+            return { status: CustomCommandStatus.Failure };
+        }
+
+        system.run(() => {
+            MONSTER_CONFIG.allowedMobs[type] = raw === "true";
+            const saved = saveMonsterConfig();
+            player.sendMessage(saved
+                ? `§a${type} §7ist jetzt §e${raw === "true" ? "erlaubt" : "blockiert"}§7.`
+                : "§cDie Config konnte nicht gespeichert werden.");
+        });
+
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({
+        name: "monster:chance",
+        description: "Setzt die Spawn-Chance eines Monsters von 0 bis 1.",
+        permissionLevel: CommandPermissionLevel.Operator,
+        cheatsRequired: false,
+        mandatoryParameters: [
+            { type: CustomCommandParamType.String, name: "type" },
+            { type: CustomCommandParamType.Float, name: "chance" }
+        ]
+    }, (origin, args) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+
+        const chance = Number(args[1]);
+        if (!Number.isFinite(chance) || chance < 0 || chance > 1) {
+            player.sendMessage("§cDie Spawn-Chance muss zwischen 0 und 1 liegen.");
+            return { status: CustomCommandStatus.Failure };
+        }
+
+        const type = mobId(args[0]);
+        system.run(() => {
+            MONSTER_CONFIG.spawnChances[type] = clamp01(chance);
+            const saved = saveMonsterConfig();
+            player.sendMessage(saved
+                ? `§aSpawn-Chance von ${type} §7auf §e${chance} §7gesetzt.`
+                : "§cDie Config konnte nicht gespeichert werden.");
+        });
+
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({
+        name: "monster:list",
+        description: "Zeigt die aktuelle Monster-Config.",
+        permissionLevel: CommandPermissionLevel.Operator,
+        cheatsRequired: false
+    }, (origin) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+
+        system.run(() => {
+            player.sendMessage("§6--- Monster Config ---");
+            player.sendMessage(`§7enabled: §e${MONSTER_CONFIG.enabled}`);
+            player.sendMessage(`§7globalSpawnRate: §e${MONSTER_CONFIG.globalSpawnRate}`);
+            player.sendMessage(`§7nightSpawnMultiplier: §e${MONSTER_CONFIG.nightSpawnMultiplier}`);
+            player.sendMessage(`§7claimSpawnRate: §e${MONSTER_CONFIG.claims?.spawnRate}`);
+            player.sendMessage(`§7giveWeakness: §e${MONSTER_CONFIG.giveWeakness}`);
+            player.sendMessage(`§7weaknessLevel: §e${MONSTER_CONFIG.weaknessLevel}`);
+            player.sendMessage(`§7weaknessDuration: §e${MONSTER_CONFIG.weaknessDuration}`);
+            player.sendMessage("§7/monster:set <key> <value>");
+            player.sendMessage("§7/monster:mob <mob> <true|false>");
+            player.sendMessage("§7/monster:chance <mob> <0-1>");
+        });
+
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({
+        name: "monster:reset",
+        description: "Setzt die Monster-Config auf Standard zurück.",
+        permissionLevel: CommandPermissionLevel.Operator,
+        cheatsRequired: false
+    }, (origin) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+
+        system.run(() => {
+            Object.assign(MONSTER_CONFIG, {
+                ...DEFAULT_CONFIG,
+                allowedMobs: { ...DEFAULT_CONFIG.allowedMobs },
+                spawnChances: { ...DEFAULT_CONFIG.spawnChances },
+                claims: {
+                    ...DEFAULT_CONFIG.claims,
+                    blockedMobs: { ...DEFAULT_CONFIG.claims.blockedMobs }
                 }
-
-                MONSTER_CONFIG[key] = value;
-                saveMonsterConfig();
-                player.sendMessage(`§a${key} §7wurde auf §e${value} §7gesetzt.`);
             });
 
-            return { status: CustomCommandStatus.Success };
-        }
-    );
-
-    // ==========================================
-    // /monster:mob <type> <true|false>
-    // ==========================================
-    registry.registerCommand(
-        {
-            name: "monster:mob",
-            description: "Aktiviert/Deaktiviert ein Monster.",
-            permissionLevel: CommandPermissionLevel.Operator,
-            cheatsRequired: false,
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "type" },
-                { type: CustomCommandParamType.String, name: "enabled" }
-            ]
-        },
-        (origin, args) => {
-            const player = origin.sourceEntity;
-            if (!player || player.typeId !== "minecraft:player") return { status: CustomCommandStatus.Failure };
-
-            const type = args[0].startsWith("minecraft:") ? args[0] : `minecraft:${args[0]}`;
-            const enabled = args[1] === "true";
-
-            system.run(() => {
-                MONSTER_CONFIG.allowedMobs[type] = enabled;
-                saveMonsterConfig();
-                player.sendMessage(`§a${type} §7ist jetzt §e${enabled ? "erlaubt" : "blockiert"}§7.`);
-            });
-
-            return { status: CustomCommandStatus.Success };
-        }
-    );
-
-    // ==========================================
-    // /monster:chance <type> <zahl>
-    // ==========================================
-    registry.registerCommand(
-        {
-            name: "monster:chance",
-            description: "Setzt die Spawn-Chance eines Monsters.",
-            permissionLevel: CommandPermissionLevel.Operator,
-            cheatsRequired: false,
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "type" },
-                { type: CustomCommandParamType.Float, name: "chance" }
-            ]
-        },
-        (origin, args) => {
-            const player = origin.sourceEntity;
-            if (!player || player.typeId !== "minecraft:player") return { status: CustomCommandStatus.Failure };
-
-            const type = args[0].startsWith("minecraft:") ? args[0] : `minecraft:${args[0]}`;
-            const chance = args[1];
-
-            system.run(() => {
-                MONSTER_CONFIG.spawnChances[type] = chance;
-                saveMonsterConfig();
-                player.sendMessage(`§aSpawn-Chance von ${type} §7auf §e${chance} §7gesetzt.`);
-            });
-
-            return { status: CustomCommandStatus.Success };
-        }
-    );
-
-    // ==========================================
-    // /monster:list
-    // ==========================================
-    registry.registerCommand(
-        {
-            name: "monster:list",
-            description: "Zeigt die aktuelle Monster-Config.",
-            permissionLevel: CommandPermissionLevel.Operator,
-            cheatsRequired: false
-        },
-        (origin) => {
-            const player = origin.sourceEntity;
-            if (!player || player.typeId !== "minecraft:player") return { status: CustomCommandStatus.Failure };
-
-            system.run(() => {
-                player.sendMessage("§6--- Monster Config ---");
-                player.sendMessage(`§7enabled: §e${MONSTER_CONFIG.enabled}`);
-                player.sendMessage(`§7globalSpawnRate: §e${MONSTER_CONFIG.globalSpawnRate}`);
-                player.sendMessage(`§7nightSpawnMultiplier: §e${MONSTER_CONFIG.nightSpawnMultiplier}`);
-                player.sendMessage(`§7maxMonstersNearPlayer: §e${MONSTER_CONFIG.maxMonstersNearPlayer}`);
-                player.sendMessage(`§7claimSpawnMultiplier: §e${MONSTER_CONFIG.claimSpawnMultiplier}`);
-                player.sendMessage(`§7giveWeakness: §e${MONSTER_CONFIG.giveWeakness}`);
-                player.sendMessage(`§7weaknessLevel: §e${MONSTER_CONFIG.weaknessLevel}`);
-                player.sendMessage("§7Nutze /monster:set <key> <value>");
-            });
-
-            return { status: CustomCommandStatus.Success };
-        }
-    );
-
-    // ==========================================
-    // /monster:reset
-    // ==========================================
-    registry.registerCommand(
-        {
-            name: "monster:reset",
-            description: "Setzt die Monster-Config auf Standard zurück.",
-            permissionLevel: CommandPermissionLevel.Operator,
-            cheatsRequired: false
-        },
-        (origin) => {
-            const player = origin.sourceEntity;
-            if (!player || player.typeId !== "minecraft:player") return { status: CustomCommandStatus.Failure };
-
-            system.run(() => {
-                // Alle Keys zurücksetzen
-                for (const key of Object.keys(DEFAULT_CONFIG)) {
-                    MONSTER_CONFIG[key] = DEFAULT_CONFIG[key];
-                }
-                // Objekte neu kopieren
-                MONSTER_CONFIG.allowedMobs = { ...DEFAULT_CONFIG.allowedMobs };
-                MONSTER_CONFIG.spawnChances = { ...DEFAULT_CONFIG.spawnChances };
-
-                saveMonsterConfig();
+            if (saveMonsterConfig()) {
+                loadMonsterConfig();
                 player.sendMessage("§aMonster-Config wurde zurückgesetzt.");
-            });
+            } else {
+                player.sendMessage("§cDie Monster-Config konnte nicht gespeichert werden.");
+            }
+        });
 
-            return { status: CustomCommandStatus.Success };
-        }
-    );
+        return { status: CustomCommandStatus.Success };
+    });
 });

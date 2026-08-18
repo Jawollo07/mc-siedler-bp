@@ -1,37 +1,36 @@
 import { world } from "@minecraft/server";
 import { getClaimAt, hasAccess } from "./utils.js";
 
-// 1. Block abbauen
+function deny(player, message) {
+    try { player.sendMessage(message); } catch {}
+}
+
+// Block abbauen
 world.beforeEvents.playerBreakBlock.subscribe((event) => {
     const claim = getClaimAt(event.block.location);
     if (claim && !hasAccess(event.player, claim)) {
         event.cancel = true;
-        event.player.sendMessage("§cDieses Grundstück gehört einem anderen Team!");
+        deny(event.player, "§cDieses Grundstück gehört einem anderen Team!");
     }
 });
 
-// 2. Block platzieren – alles außer TNT blockiert
+// Block platzieren – fremde Claims sind vollständig geschützt.
 world.beforeEvents.playerPlaceBlock.subscribe((event) => {
     const claim = getClaimAt(event.block.location);
     if (!claim || hasAccess(event.player, claim)) return;
 
-    const blockId = event.permutationToPlace.type.id;
-    if (blockId === "minecraft:tnt") return; // TNT erlaubt
-
     event.cancel = true;
-    event.player.sendMessage("§cDu darfst hier nichts bauen!");
+    deny(event.player, "§cDu darfst hier nichts bauen!");
 });
 
-// 3. Interaktionen
+// Container, Türen und sonstige interaktive Blöcke schützen.
 world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
     const claim = getClaimAt(event.block.location);
     if (!claim || hasAccess(event.player, claim)) return;
 
-    const block = event.block;
-    const id = block.typeId;
-
-    if (
-        block.getComponent("inventory") ||
+    const id = event.block.typeId;
+    const protectedBlock =
+        event.block.getComponent("inventory") ||
         id.includes("door") ||
         id.includes("gate") ||
         id.includes("button") ||
@@ -47,36 +46,26 @@ world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
         id.includes("smoker") ||
         id.includes("barrel") ||
         id.includes("shulker_box") ||
-        id.includes("chest")
-    ) {
+        id.includes("chest");
+
+    if (protectedBlock) {
         event.cancel = true;
-        event.player.sendMessage("§cDieses Grundstück ist geschützt!");
+        deny(event.player, "§cDieses Grundstück ist geschützt!");
     }
 });
 
-// 4. Explosionen – nur TNT erlaubt
+// Explosions dürfen keine Claims zerstören – auch TNT nicht.
 world.beforeEvents.explosion.subscribe((event) => {
-    const source = event.source;
-
-    if (!source) {
+    let impactedBlocks;
+    try {
+        impactedBlocks = event.getImpactedBlocks();
+    } catch {
         event.cancel = true;
         return;
     }
 
-    const isTnt = 
-        source.typeId === "minecraft:tnt" || 
-        source.typeId === "minecraft:tnt_minecart";
-
-    if (isTnt)
-    {
-        return;
-    }; // TNT darf alles zerstören
-
-    // Andere Explosionen: wenn sie einen Claim berühren → canceln
-    const impactedBlocks = event.getImpactedBlocks();
     for (const block of impactedBlocks) {
-        const claim = getClaimAt(block.location);
-        if (claim) {
+        if (getClaimAt(block.location)) {
             event.cancel = true;
             return;
         }
