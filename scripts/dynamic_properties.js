@@ -1,22 +1,13 @@
-import { system, DynamicPropertiesDefinition } from "@minecraft/server";
+import { system } from "@minecraft/server";
 
 /**
- * Registriert alle weltweiten Dynamic Properties zentral.
- * Scripting V2 verwendet system.beforeEvents.startup anstelle
- * des entfernten world.beforeEvents.worldInitialize Events.
+ * Dynamic Properties in the current @minecraft/server 2.x API do not expose
+ * DynamicPropertiesDefinition anymore. World properties can be read/written
+ * directly through world.getDynamicProperty()/setDynamicProperty().
+ *
+ * Keep this module as an early-startup marker so main.js can continue to load
+ * one central initialization module without importing a removed API symbol.
  */
-system.beforeEvents.startup.subscribe((event) => {
-    const teams = new DynamicPropertiesDefinition();
-    teams.defineString("teams", 32767);
-    event.propertyRegistry.registerWorldDynamicProperties(teams);
-
-    const claims = new DynamicPropertiesDefinition();
-    claims.defineString("claims", 32767);
-    event.propertyRegistry.registerWorldDynamicProperties(claims);
-
-    const monster = new DynamicPropertiesDefinition();
-    monster.defineString("monster_config", 32767);
-    event.propertyRegistry.registerWorldDynamicProperties(monster);
-
-    console.info("§a[Siedler Logic] World-Dynamic-Properties registriert: teams, claims, monster_config");
+system.beforeEvents.startup.subscribe(() => {
+    console.info("§a[Siedler Logic] Dynamic-Property-System bereit (API 2.x)");
 });
