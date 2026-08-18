@@ -33,7 +33,14 @@ try {
 } catch (e) {
     console.error("§c✗ §7Claims konnten nicht geladen werden:", e);
 }
-
+// ---------- Monster ----------
+try {
+    import("../monsters/index.js");
+    import("../monsters/commands.js");
+    console.info("§a✓ §7Monster-System (dynamisch) geladen");
+} catch (e) {
+    console.error("§c✗ §7Monster-System konnte nicht geladen werden:", e);
+}
 // ---------- Essentials ----------
 try {
     import("../essentials/index.js");
