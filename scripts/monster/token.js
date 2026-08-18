@@ -1,23 +1,6 @@
 import { system, world, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 
-const CONFIG = {
-    mobType: "minecraft:zombie",
-    mobTag: "token_monster",
-    mobName: "§6Token-Mob",
-
-    maxMobs: 4,
-
-    spawn: {
-        radius: 5,
-        minDistance: 2,
-        maxAttempts: 20
-    },
-
-    command: {
-        name: "siedler:token",
-        description: "Spawnt einen Token-Mob."
-    }
-};
+const CONFIG = () => MONSTER_CONFIG.token;
 
 const OVERWORLD_ID = "minecraft:overworld";
 
@@ -230,7 +213,7 @@ function handleAllTokenMobsDefeated(killer = null) {
 }
 function disableAllMonsters() {
     const dimension = getOverworld();
-    
+
     const allMonsters = dimension.getEntities({
         type: "minecraft:monster"
     });

@@ -53,6 +53,22 @@ export const DEFAULT_CONFIG = {
     },
     token: {
         allTokenDied: false,
+        mobType: "minecraft:zombie",
+        mobTag: "token_monster",
+        mobName: "§6Token-Mob",
+
+        maxMobs: 4,
+
+        spawn: {
+            radius: 1,
+            minDistance: 2,
+            maxAttempts: 20
+        },
+
+        command: {
+            name: "siedler:token",
+            description: "Spawnt ein Monster-Token."
+        }
     },
     // Gemeinsame Pillager-/Belagerungs-Konfiguration
     pillager: {
