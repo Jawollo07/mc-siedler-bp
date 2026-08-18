@@ -51,6 +51,15 @@ function getSpawnChance(typeId, inClaim) {
     return Math.min(1, Math.max(0, base * rate * (night ? nightMultiplier : 1)));
 }
 
+function isAllTokenDied() {
+    const values = [
+        world.getDynamicProperty("#sym:allTokenDied"),
+        world.getDynamicProperty("allTokenDied"),
+        world.getDynamicProperty("sym:allTokenDied")
+    ];
+    return values.some((value) => value === true);
+}
+
 /*
  * @minecraft/server 2.x / Scripting V2:
  * world.beforeEvents.entitySpawn is not available on the server build used by
@@ -64,6 +73,17 @@ const entitySpawn = world.afterEvents?.entitySpawn;
 if (entitySpawn && typeof entitySpawn.subscribe === "function") {
     entitySpawn.subscribe((event) => {
         if (!MONSTER_CONFIG.enabled) return;
+
+        if (isAllTokenDied()) {
+            try {
+                event?.entity?.remove?.();
+            } catch (error) {
+                if (MONSTER_CONFIG.debug) {
+                    console.warn(`[Monster] Spawn blockiert, Entity konnte nicht entfernt werden: ${error}`);
+                }
+            }
+            return;
+        }
 
         const entity = event?.entity;
         if (!entity) return;

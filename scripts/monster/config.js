@@ -51,7 +51,9 @@ export const DEFAULT_CONFIG = {
         duration: 220,
         interval: 100
     },
-
+    token: {
+        allTokenDied: false,
+    },
     // Gemeinsame Pillager-/Belagerungs-Konfiguration
     pillager: {
         enabled: true,
@@ -64,7 +66,7 @@ export const DEFAULT_CONFIG = {
         maxDistance: 64,
         despawnDistance: 112,
         lifetimeTicks: 24000,
-        spawnOnlyAtNight: true,
+        spawnOnlyAtNight: false,
         nightStart: 13000,
         nightEnd: 23000,
 
