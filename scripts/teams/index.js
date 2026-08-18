@@ -6,10 +6,6 @@ import {
     CustomCommandStatus
 } from "@minecraft/server";
 
-world.beforeEvents.worldInitialize.subscribe((event) => {
-    event.dynamicPropertiesDefinition.defineString("teams", 32767);
-});
-
 export function getTeams() {
     const rawData = world.getDynamicProperty("teams");
     if (typeof rawData !== "string" || rawData.length === 0) return {};
