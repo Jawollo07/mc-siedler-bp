@@ -15,6 +15,7 @@ import "./claims/display.js";
 import "./monster/index.js";
 import "./monster/pillager_squads.js";
 import "./monster/outpost_raids.js";
+import "./monster/commands.js";
 
 import "./essentials/index.js";
 
