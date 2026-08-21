@@ -110,6 +110,25 @@ export function getChunks(blockX, blockZ) {
     return chunks;
 }
 
+/**
+ * Returns a 5x5 chunk grid using the provided chunk coordinates as center.
+ * centerChunkX/centerChunkZ are chunk coordinates (not block coords).
+ */
+export function get5x5ChunksFromChunk(centerChunkX, centerChunkZ) {
+    const half = 2; // 5x5 -> radius 2
+    const startX = centerChunkX - half;
+    const startZ = centerChunkZ - half;
+
+    const chunks = [];
+    for (let dx = 0; dx < 5; dx++) {
+        for (let dz = 0; dz < 5; dz++) {
+            chunks.push({ x: startX + dx, z: startZ + dz });
+        }
+    }
+
+    return chunks;
+}
+
 
 /** Prüft, ob alle 4 Chunks frei sind. */
 export function areChunksFree(chunks, claims) {

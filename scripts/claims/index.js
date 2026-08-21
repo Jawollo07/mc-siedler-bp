@@ -1,6 +1,6 @@
 import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
-import { getChunkCoords, getChunkKey, getClaims, saveClaims, get5x5ChunksCentered, areChunksFree, countTeamClaims } from "./utils.js";
+import { getChunkCoords, getChunkKey, getClaims, saveClaims, get5x5ChunksFromChunk, areChunksFree, countTeamClaims } from "./utils.js";
 import { getTeams } from "../teams/index.js";
 
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
@@ -108,10 +108,9 @@ function setClaimForPlayer(player, teamName) {
                 player.sendMessage(`§cTeam "${teamName}" hat bereits die maximalen ${MAX_CHUNKS} Chunks.`);
                 return;
             }
-            // Use the player's current block position as the center of the 5x5 claim
-            const blockX = Math.floor(player.location.x);
-            const blockZ = Math.floor(player.location.z);
-            const chunks = get5x5ChunksCentered(blockX, blockZ);
+            // Use the player's current CHUNK as the center of the 5x5 claim
+            const centerChunk = getChunkCoords(player.location);
+            const chunks = get5x5ChunksFromChunk(centerChunk.x, centerChunk.z);
             if (!areChunksFree(chunks, claims)) {
                 player.sendMessage("§cEiner oder mehrere der 25 Chunks sind bereits geclaimt.");
                 return;
