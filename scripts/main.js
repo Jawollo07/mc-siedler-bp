@@ -19,10 +19,11 @@ import "./monster/commands.js";
 import "./monster/token.js";
 
 import "./essentials/index.js";
+import "./essentials/player_stats.js";
 
 console.info("§8----------------------------------------");
 console.info("§6[Siedler Logic] §aAlle Module geladen!");
-console.info("§7Module: Teams · Steuern · Claims · Monster · Pillager · Außenposten · Essentials");
+console.info("§7Module: Teams · Steuern · Claims · Monster · Pillager · Außenposten · Essentials · Spieler-Stats");
 console.info("§8----------------------------------------");
 
 system.runTimeout(() => {
