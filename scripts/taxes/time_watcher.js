@@ -31,7 +31,7 @@ function payAllTeamTaxes() {
     for (const [teamName, data] of Object.entries(teams)) {
         if (!data?.taxChest) continue;
 
-        const villagerCount = countVillagersInTeamClaims(teamName);
+        const villagerCount = countVillagersInTeamClaims(teamName, ["fv:villager*", "minecraft:villager"]);
         const configuredAmount = Number.isFinite(Number(data.taxAmount)) ? Number(data.taxAmount) : villagerCount;
         const amount = Math.max(0, Math.floor(configuredAmount));
 

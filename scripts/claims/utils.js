@@ -167,7 +167,7 @@ export function countTeamClaims(teamName, claims) {
  * deren Typ mit diesem Prefix beginnt (Wildcard-ähnlich). Standard ist
  * "minecraft:villager" (bestehendes Verhalten).
  */
-export function countVillagersInTeamClaims(teamName, typePrefix = ["fv:villager*", "minecraft:villager"]) {
+export function countVillagersInTeamClaims(teamName, typePrefix) {
     const claims = getClaims();
     const dimension = world.getDimension("overworld");
     const teamChunks = [];
