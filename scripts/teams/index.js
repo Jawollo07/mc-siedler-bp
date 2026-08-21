@@ -1,4 +1,5 @@
 import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
+import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
@@ -58,6 +59,157 @@ system.beforeEvents.startup.subscribe((event) => {
             teams[teamName] = { color, players: [], taxChest: null, taxAmount: null };
             player.sendMessage(saveTeams(teams) ? `§aTeam "${color}${teamName}§a" wurde erstellt.` : "§cDas Team konnte nicht gespeichert werden.");
         });
+        return { status: CustomCommandStatus.Success };
+    });
+
+    /* -----------------------------------------------------
+     * In-Game Team UI (/team) - ActionForm menu + input forms
+     * Uses ActionFormData for the main menu and ModalFormData for text input.
+     */
+
+    async function showCreateTeamForm(player) {
+        try {
+            if (typeof ModalFormData !== "function") {
+                player.sendMessage("§eFormular-API nicht verfügbar. Verwende: /siedler:team_create <name> [farbe]");
+                return;
+            }
+            const form = new ModalFormData();
+            form.title("Team erstellen");
+            form.textField("Teamname", "MeinTeam", "");
+            form.textField("Farbe (optional, z.B. §c)", "§f", "§f");
+
+            const response = await form.show(player);
+            if (response.canceled) return;
+            const values = response.formValues || [];
+            const name = String(values[0] ?? "").trim();
+            const color = String(values[1] ?? "§f").trim() || "§f";
+            if (!name) { player.sendMessage("§cKein Teamname angegeben."); return; }
+
+            // Delegate to existing command handler via runCommandAsync
+            await player.runCommandAsync(`siedler:team_create ${JSON.stringify(name)} ${JSON.stringify(color)}`);
+        } catch (error) {
+            console.error(`[Teams] showCreateTeamForm error: ${error}`);
+            player.sendMessage("§cFehler beim Öffnen des Erstellungsformulars.");
+        }
+    }
+
+    async function showAddPlayerForm(player) {
+        try {
+            if (typeof ModalFormData !== "function") {
+                player.sendMessage("§eFormular-API nicht verfügbar. Verwende: /siedler:team_add <spieler> <team>");
+                return;
+            }
+            const form = new ModalFormData();
+            form.title("Spieler zu Team hinzufügen");
+            form.textField("Spielername (exakt)", "SpielerName", "");
+            form.textField("Teamname", "TeamName", "");
+
+            const response = await form.show(player);
+            if (response.canceled) return;
+            const values = response.formValues || [];
+            const target = String(values[0] ?? "").trim();
+            const team = String(values[1] ?? "").trim();
+            if (!target || !team) { player.sendMessage("§cSpieler oder Team fehlt."); return; }
+
+            await player.runCommandAsync(`siedler:team_add ${JSON.stringify(target)} ${JSON.stringify(team)}`);
+        } catch (error) {
+            console.error(`[Teams] showAddPlayerForm error: ${error}`);
+            player.sendMessage("§cFehler beim Öffnen des Hinzufügeformulars.");
+        }
+    }
+
+    async function showRemovePlayerForm(player) {
+        try {
+            if (typeof ModalFormData !== "function") {
+                player.sendMessage("§eFormular-API nicht verfügbar. Verwende: /siedler:team_remove <spieler> <team>");
+                return;
+            }
+            const form = new ModalFormData();
+            form.title("Spieler aus Team entfernen");
+            form.textField("Spielername (exakt)", "SpielerName", "");
+            form.textField("Teamname", "TeamName", "");
+
+            const response = await form.show(player);
+            if (response.canceled) return;
+            const values = response.formValues || [];
+            const target = String(values[0] ?? "").trim();
+            const team = String(values[1] ?? "").trim();
+            if (!target || !team) { player.sendMessage("§cSpieler oder Team fehlt."); return; }
+
+            await player.runCommandAsync(`siedler:team_remove ${JSON.stringify(target)} ${JSON.stringify(team)}`);
+        } catch (error) {
+            console.error(`[Teams] showRemovePlayerForm error: ${error}`);
+            player.sendMessage("§cFehler beim Öffnen des Entfernen-Formulars.");
+        }
+    }
+
+    async function showDeleteTeamForm(player) {
+        try {
+            const teams = Object.keys(getTeams());
+            if (!teams.length) { player.sendMessage("§7Es sind keine Teams zum Löschen vorhanden."); return; }
+
+            const menu = new ActionFormData();
+            menu.title("Team löschen");
+            menu.body("Wähle ein Team zum Löschen aus:");
+            for (const t of teams) menu.button((getTeams()[t].color || "§f") + t);
+
+            const res = await menu.show(player);
+            if (res.canceled) return;
+            const idx = res.selection;
+            const teamName = teams[idx];
+            if (!teamName) return;
+            await player.runCommandAsync(`siedler:team_delete ${JSON.stringify(teamName)}`);
+        } catch (error) {
+            console.error(`[Teams] showDeleteTeamForm error: ${error}`);
+            player.sendMessage("§cFehler beim Öffnen des Lösch-Formulars.");
+        }
+    }
+
+    async function showTeamMenu(player) {
+        try {
+            const menu = new ActionFormData();
+            menu.title("Team-Management");
+            menu.body("Wähle eine Aktion:");
+            menu.button("Team erstellen");
+            menu.button("Spieler hinzufügen");
+            menu.button("Spieler entfernen");
+            menu.button("Team löschen");
+            menu.button("Teams anzeigen");
+            menu.button("Steuer setzen (Befehl)");
+
+            const res = await menu.show(player);
+            if (res.canceled) return;
+
+            switch (res.selection) {
+                case 0:
+                    await showCreateTeamForm(player);
+                    break;
+                case 1:
+                    await showAddPlayerForm(player);
+                    break;
+                case 2:
+                    await showRemovePlayerForm(player);
+                    break;
+                case 3:
+                    await showDeleteTeamForm(player);
+                    break;
+                case 4:
+                    await player.runCommandAsync("siedler:team_list");
+                    break;
+                case 5:
+                    player.sendMessage("§eVerwende /siedler:team_settax <team> <x> <y> <z> [amount] um die Steuer zu setzen.");
+                    break;
+            }
+        } catch (error) {
+            console.error(`[Teams] showTeamMenu error: ${error}`);
+            player.sendMessage("§cFehler beim Öffnen des Team-Menüs.");
+        }
+    }
+
+    // Register short `/team` command that opens the UI
+    registry.registerCommand({ name: "team", description: "Öffnet das Team-Management UI.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
+        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
+        system.run(() => showTeamMenu(player));
         return { status: CustomCommandStatus.Success };
     });
 
