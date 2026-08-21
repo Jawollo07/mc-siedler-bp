@@ -14,6 +14,17 @@ export function getChunkKey(chunkX, chunkZ) {
     return `${chunkX},${chunkZ}`;
 }
 
+/** Liefert die string-Repräsentation des Entity-Typs. Unterstützt verschiedene Bedrock-Field-Varianten. */
+export function getEntityType(entity) {
+    if (!entity) return null;
+    if (typeof entity.typeId === "string") return entity.typeId;
+    if (typeof entity.type === "string") return entity.type;
+    if (entity.type && typeof entity.type.id === "string") return entity.type.id;
+    if (typeof entity.id === "string") return entity.id;
+    if (typeof entity.__identifier__ === "string") return entity.__identifier__;
+    return null;
+}
+
 /** Alle Claims laden. Beschädigte/ungültige Daten werden nicht den gesamten Script-Start zerstören lassen. */
 export function getClaims() {
     const raw = world.getDynamicProperty("claims");
@@ -126,7 +137,7 @@ export function countEntitiesInChunksByPrefix(prefix, chunks) {
   let count = 0;
   for (const ent of entities) {
     try {
-      const type = ent.typeId || ent.type;
+            const type = getEntityType(ent);
       if (!type) continue;
       if (!type.startsWith(prefix)) continue;
       const chunk = getChunkCoords(ent.location);
@@ -141,11 +152,24 @@ export function countEntitiesInChunksByTypes(types, chunks) {
   const claimed = new Set(chunks.map(c => getChunkKey(c.x, c.z)));
   let count = 0;
   for (const t of types) {
-    const entities = Array.from(dimension.getEntities({ type: t }));
-    for (const e of entities) {
-      const chunk = getChunkCoords(e.location);
-      if (claimed.has(getChunkKey(chunk.x, chunk.z))) count++;
-    }
+        try {
+            const entitiesByType = Array.from(dimension.getEntities({ type: t }));
+            for (const e of entitiesByType) {
+                const chunk = getChunkCoords(e.location);
+                if (claimed.has(getChunkKey(chunk.x, chunk.z))) count++;
+            }
+        } catch (err) {
+            // Falls das Filter-Objekt von getEntities nicht unterstützt wird,
+            // fallen wir zurück auf Vollscan + Filter.
+            const all = Array.from(dimension.getEntities());
+            for (const e of all) {
+                const et = getEntityType(e);
+                if (!et) continue;
+                if (et !== t) continue;
+                const chunk = getChunkCoords(e.location);
+                if (claimed.has(getChunkKey(chunk.x, chunk.z))) count++;
+            }
+        }
   }
   return count;
 }
@@ -221,7 +245,7 @@ export function countVillagersInTeamClaims(teamName, typePattern = "minecraft:vi
     let count = 0;
     for (const ent of entities) {
         try {
-            const type = ent?.typeId || ent?.type;
+            const type = getEntityType(ent);
             if (!type) continue;
             if (!matchesPattern(type, typePattern)) continue;
 
