@@ -75,8 +75,8 @@ system.beforeEvents.startup.subscribe((event) => {
             }
             const form = new ModalFormData();
             form.title("Team erstellen");
-            form.textField("Teamname", "MeinTeam", "");
-            form.textField("Farbe (optional, z.B. §c)", "§f", "§f");
+            form.textField("Teamname", { placeholder: "MeinTeam", default: "" });
+            form.textField("Farbe (optional, z.B. §c)", { placeholder: "§f", default: "§f" });
 
             const response = await form.show(player);
             if (response.canceled) return;
@@ -93,6 +93,21 @@ system.beforeEvents.startup.subscribe((event) => {
         }
     }
 
+    // Fallback: clickable chat menu using tellraw when form API isn't available
+    async function sendClickableTeamMenu(player) {
+        const lines = [];
+        lines.push({ rawtext: [{ text: "§6--- Team-Management ---\n" }] });
+        lines.push({ rawtext: [{ text: "§a[Team erstellen] ", clickEvent: { action: "suggest_command", value: "/siedler:team_create " } }, { text: "Erstellt ein neues Team." }] });
+        lines.push({ rawtext: [{ text: "§a[Spieler hinzufügen] ", clickEvent: { action: "suggest_command", value: "/siedler:team_add <player> <team>" } }, { text: "Fügt einen Spieler hinzu." }] });
+        lines.push({ rawtext: [{ text: "§e[Spieler entfernen] ", clickEvent: { action: "suggest_command", value: "/siedler:team_remove <player> <team>" } }, { text: "Entfernt einen Spieler." }] });
+        lines.push({ rawtext: [{ text: "§c[Team löschen] ", clickEvent: { action: "suggest_command", value: "/siedler:team_delete " } }, { text: "Löscht ein Team." }] });
+        lines.push({ rawtext: [{ text: "§7[List Teams] ", clickEvent: { action: "run_command", value: "/siedler:team_list" } }, { text: "Zeigt alle Teams." }] });
+
+        for (const line of lines) {
+            try { await player.runCommandAsync(`tellraw @s ${JSON.stringify(line)}`); } catch (e) { console.warn(`[Teams] tellraw failed: ${e}`); }
+        }
+    }
+
     async function showAddPlayerForm(player) {
         try {
             if (typeof ModalFormData !== "function") {
@@ -101,8 +116,8 @@ system.beforeEvents.startup.subscribe((event) => {
             }
             const form = new ModalFormData();
             form.title("Spieler zu Team hinzufügen");
-            form.textField("Spielername (exakt)", "SpielerName", "");
-            form.textField("Teamname", "TeamName", "");
+            form.textField("Spielername (exakt)", { placeholder: "SpielerName", default: "" });
+            form.textField("Teamname", { placeholder: "TeamName", default: "" });
 
             const response = await form.show(player);
             if (response.canceled) return;
@@ -126,8 +141,8 @@ system.beforeEvents.startup.subscribe((event) => {
             }
             const form = new ModalFormData();
             form.title("Spieler aus Team entfernen");
-            form.textField("Spielername (exakt)", "SpielerName", "");
-            form.textField("Teamname", "TeamName", "");
+            form.textField("Spielername (exakt)", { placeholder: "SpielerName", default: "" });
+            form.textField("Teamname", { placeholder: "TeamName", default: "" });
 
             const response = await form.show(player);
             if (response.canceled) return;
@@ -147,6 +162,14 @@ system.beforeEvents.startup.subscribe((event) => {
         try {
             const teams = Object.keys(getTeams());
             if (!teams.length) { player.sendMessage("§7Es sind keine Teams zum Löschen vorhanden."); return; }
+            if (typeof ActionFormData !== "function") {
+                // Fallback: send clickable list
+                for (const t of teams) {
+                    const json = { rawtext: [{ text: `${getTeams()[t].color || "§f"}${t} ` }, { text: "[Löschen]", clickEvent: { action: "suggest_command", value: `/siedler:team_delete ${t}` } }] };
+                    try { await player.runCommandAsync(`tellraw @s ${JSON.stringify(json)}`); } catch (e) { console.warn(`[Teams] tellraw failed: ${e}`); }
+                }
+                return;
+            }
 
             const menu = new ActionFormData();
             menu.title("Team löschen");
@@ -167,6 +190,11 @@ system.beforeEvents.startup.subscribe((event) => {
 
     async function showTeamMenu(player) {
         try {
+            if (typeof ActionFormData !== "function") {
+                await sendClickableTeamMenu(player);
+                return;
+            }
+
             const menu = new ActionFormData();
             menu.title("Team-Management");
             menu.body("Wähle eine Aktion:");
