@@ -1,7 +1,7 @@
 import { system, world } from "@minecraft/server";
 import { getClaims, getChunkCoords } from "../claims/utils.js";
 import { getTeams } from "../teams/index.js";
-import { MONSTER_CONFIG } from "./config.js";
+import { MONSTER_CONFIG } from "./index.js";
 
 const CONFIG = MONSTER_CONFIG.pillager;
 const squads = new Map();

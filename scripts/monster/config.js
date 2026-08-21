@@ -129,4 +129,6 @@ export const DEFAULT_CONFIG = {
     }
 };
 
-export const MONSTER_CONFIG = DEFAULT_CONFIG;
+// NOTE: `MONSTER_CONFIG` is provided dynamically by `index.js` to allow
+// runtime updates and persisted dynamic properties. Do not export a
+// separate `MONSTER_CONFIG` from this file.

@@ -1,4 +1,5 @@
 import { system, world, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
+import { MONSTER_CONFIG } from "./index.js";
 
 const CONFIG = MONSTER_CONFIG?.token ?? null;
 
