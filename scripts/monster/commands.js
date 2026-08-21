@@ -742,9 +742,9 @@ system.beforeEvents.startup.subscribe((event) => {
             }
 
             const amount =
-                args[0] === undefined
-                    ? null
-                    : Number(args[0]);
+                Array.isArray(args) && args.length > 0 && args[0] !== undefined
+                    ? Number(args[0])
+                    : null;
 
             if (
                 amount !== null &&

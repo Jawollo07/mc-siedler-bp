@@ -3,7 +3,7 @@
 
 export const DEFAULT_CONFIG = {
     enabled: true,
-    debug: false,
+    debug: true,
 
     // Normale Monster-Spawns
     globalSpawnRate: 0.7,
