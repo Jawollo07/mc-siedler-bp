@@ -167,8 +167,10 @@ export function countTeamClaims(teamName, claims) {
  * deren Typ mit diesem Prefix beginnt (Wildcard-ähnlich). Standard ist
  * "minecraft:villager" (bestehendes Verhalten).
  */
-export function countVillagersInTeamClaims(teamName, typePrefix = "minecraft:villager") {
+export function countVillagersInTeamClaims(teamName, typePrefix = "fv:villager*") {
     const claims = getClaims();
+    const dimension = world.getDimension("overworld");
+    const teamChunks = [];
     const dimension = world.getDimension("overworld");
     const teamChunks = [];
 
@@ -189,8 +191,22 @@ export function countVillagersInTeamClaims(teamName, typePrefix = "minecraft:vil
 
     const claimedKeys = new Set(teamChunks.map((chunk) => getChunkKey(chunk.x, chunk.z)));
 
-    // Hol alle Entities und filter nach Prefix. Das ist allgemein genug,
-    // um z.B. "fv:villager" oder "minecraft:villager" zu unterstützen.
+    // Hol alle Entities und filter nach Pattern.
+    // Unterstützte Pattern-Formen:
+    // - exakter Typ: "minecraft:villager"
+    // - trailing wildcard: "fv:villager*" (matcht alle mit diesem Prefix)
+    // - oder ein Array von solchen Patterns.
+    const matchesPattern = (type, pattern) => {
+        if (Array.isArray(pattern)) {
+            return pattern.some((p) => matchesPattern(type, p));
+        }
+        if (typeof pattern !== "string") return false;
+        if (pattern.endsWith("*")) {
+            const prefix = pattern.slice(0, -1);
+            return type.startsWith(prefix);
+        }
+        return type === pattern;
+    };
     let entities;
     try {
         entities = Array.from(dimension.getEntities());
@@ -209,7 +225,7 @@ export function countVillagersInTeamClaims(teamName, typePrefix = "minecraft:vil
         try {
             const type = ent?.typeId || ent?.type;
             if (!type) continue;
-            if (!type.startsWith(typePrefix)) continue;
+            if (!matchesPattern(type, typePattern)) continue;
 
             const chunk = getChunkCoords(ent.location);
             if (claimedKeys.has(getChunkKey(chunk.x, chunk.z))) count++;
