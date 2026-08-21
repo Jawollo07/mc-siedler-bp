@@ -1,92 +1,729 @@
-import { system, world } from "@minecraft/server";
-import { MONSTER_CONFIG, saveMonsterConfig, loadMonsterConfig } from "./index.js";
+import {
+    system,
+    world,
+    CustomCommandParamType,
+    CustomCommandStatus,
+    CommandPermissionLevel
+} from "@minecraft/server";
 
-const PREFIX = "§8[§cMonster§8]§r ";
-const ADMIN_TAGS = ["monster.admin", "admin"];
+import {
+    MONSTER_CONFIG,
+    saveMonsterConfig,
+    loadMonsterConfig
+} from "./index.js";
+
+const OP_PERMISSION = CommandPermissionLevel.Operator;
 const SQUAD_TAG = "monster_squad";
 
-function isAdmin(player) {
-    return ADMIN_TAGS.some((tag) => { try { return player.hasTag(tag); } catch { return false; } });
+/* =========================================================
+ * Hilfsfunktionen
+ * ========================================================= */
+
+function playerOnly(origin) {
+    try {
+        const player = origin.sourceEntity;
+
+        if (!player) {
+            return null;
+        }
+
+        if (player.typeId !== "minecraft:player") {
+            return null;
+        }
+
+        return player;
+    } catch {
+        return null;
+    }
 }
-function reply(player, message) { player.sendMessage(`${PREFIX}${message}`); }
+
+function reply(player, message) {
+    try {
+        player.sendMessage(`§8[§cMonster§8]§r ${message}`);
+    } catch {}
+}
+
 function spawnEntity(dimension, typeId, location) {
     const entity = dimension.spawnEntity(typeId, location);
-    try { entity.addTag(SQUAD_TAG); } catch {}
+
+    try {
+        entity.addTag(SQUAD_TAG);
+    } catch {}
+
     return entity;
 }
+
+/* =========================================================
+ * Pillager-Trupp spawnen
+ * ========================================================= */
+
 function spawnSquad(player, count = null) {
     const cfg = MONSTER_CONFIG.pillager;
-    const amount = Math.max(1, Math.min(32, Number.isFinite(count) ? Math.floor(count) : Math.floor(Math.random() * (cfg.maxGroupSize - cfg.minGroupSize + 1)) + cfg.minGroupSize));
+
+    const amount = Math.max(
+        1,
+        Math.min(
+            32,
+            Number.isFinite(count)
+                ? Math.floor(count)
+                : Math.floor(
+                    Math.random() *
+                    (cfg.maxGroupSize - cfg.minGroupSize + 1)
+                ) + cfg.minGroupSize
+        )
+    );
+
     let spawned = 0;
+
     for (let i = 0; i < amount; i++) {
         const angle = Math.random() * Math.PI * 2;
         const distance = 3 + Math.random() * 6;
-        spawnEntity(player.dimension, "minecraft:pillager", { x: player.location.x + Math.cos(angle) * distance, y: player.location.y, z: player.location.z + Math.sin(angle) * distance });
-        spawned++;
+
+        const location = {
+            x: player.location.x + Math.cos(angle) * distance,
+            y: player.location.y,
+            z: player.location.z + Math.sin(angle) * distance
+        };
+
+        try {
+            spawnEntity(
+                player.dimension,
+                "minecraft:pillager",
+                location
+            );
+
+            spawned++;
+        } catch (error) {
+            console.warn(
+                `[Monster] Pillager konnte nicht gespawnt werden: ${error}`
+            );
+        }
     }
+
     return spawned;
 }
+
+/* =========================================================
+ * Markierte Monster entfernen
+ * ========================================================= */
+
 function clearMonsterEntities(dimension) {
     let removed = 0;
-    for (const typeId of ["minecraft:pillager", "minecraft:vindicator", "minecraft:ravager"]) {
-        for (const entity of dimension.getEntities({ type: typeId })) {
-            try { if (entity.hasTag(SQUAD_TAG)) { entity.remove(); removed++; } } catch {}
-        }
+
+    const monsterTypes = [
+        "minecraft:pillager",
+        "minecraft:vindicator",
+        "minecraft:ravager"
+    ];
+
+    for (const typeId of monsterTypes) {
+        try {
+            const entities = dimension.getEntities({
+                type: typeId
+            });
+
+            for (const entity of entities) {
+                try {
+                    if (entity.hasTag(SQUAD_TAG)) {
+                        entity.remove();
+                        removed++;
+                    }
+                } catch {}
+            }
+        } catch {}
     }
+
     return removed;
 }
-function help(player) {
-    reply(player, "§eMonster Admin Commands:");
-    reply(player, "§f!monster status §7| §f!monster enable §7| §f!monster disable");
-    reply(player, "§f!monster pillager on|off §7| §f!monster outpost on|off §7| §f!monster siege on|off");
-    reply(player, "§f!monster spawn [1-32] §7| §f!monster clear");
-    reply(player, "§f!monster reload §7| §f!monster save");
+
+/* =========================================================
+ * Status
+ * ========================================================= */
+
+function showStatus(player) {
+    const config = MONSTER_CONFIG;
+    const pillager = config.pillager;
+
+    reply(
+        player,
+        `§7System: ${
+            config.enabled
+                ? "§aAKTIV"
+                : "§cDEAKTIV"
+        }`
+    );
+
+    reply(
+        player,
+        `§7Pillager: ${
+            pillager.enabled
+                ? "§aAN"
+                : "§cAUS"
+        }`
+    );
+
+    reply(
+        player,
+        `§7Spawnchance: §e${pillager.spawnChance}`
+    );
+
+    reply(
+        player,
+        `§7Truppgröße: §e${pillager.minGroupSize}-${pillager.maxGroupSize}`
+    );
+
+    reply(
+        player,
+        `§7Max. aktive Trupps: §e${pillager.maxActiveSquads}`
+    );
+
+    reply(
+        player,
+        `§7Outpost: ${
+            pillager.outpost?.enabled
+                ? "§aAN"
+                : "§cAUS"
+        }`
+    );
+
+    reply(
+        player,
+        `§7Belagerung: ${
+            pillager.siege?.enabled
+                ? "§aAN"
+                : "§cAUS"
+        }`
+    );
 }
-function status(player) {
-    const c = MONSTER_CONFIG, p = c.pillager;
-    reply(player, `§7System: ${c.enabled ? "§aAKTIV" : "§cDEAKTIV"} §7| Pillager: ${p.enabled ? "§aAN" : "§cAUS"}`);
-    reply(player, `§7Spawnchance: §e${p.spawnChance} §7| Truppgröße: §e${p.minGroupSize}-${p.maxGroupSize} §7| Max: §e${p.maxActiveSquads}`);
-    reply(player, `§7Outpost: ${p.outpost?.enabled ? "§aAN" : "§cAUS"} §7| Belagerung: ${p.siege?.enabled ? "§aAN" : "§cAUS"}`);
-}
-function handleCommand(player, raw) {
-    const args = raw.trim().split(/\s+/);
-    if ((args.shift() ?? "").toLowerCase() !== "!monster") return false;
-    if (!isAdmin(player)) { reply(player, "§cKeine Berechtigung. Benötigt Tag §emonster.admin§c oder §eadmin§c."); return true; }
-    const sub = (args.shift() ?? "help").toLowerCase();
-    const c = MONSTER_CONFIG, p = c.pillager;
-    switch (sub) {
-        case "help": help(player); break;
-        case "status": status(player); break;
-        case "enable": c.enabled = true; saveMonsterConfig(); reply(player, "§aMonster-System aktiviert."); break;
-        case "disable": c.enabled = false; saveMonsterConfig(); reply(player, "§cMonster-System deaktiviert."); break;
-        case "pillager": {
-            const v = args.shift()?.toLowerCase(); if (!["on", "off"].includes(v)) { reply(player, "§c!monster pillager on|off"); break; }
-            p.enabled = v === "on"; saveMonsterConfig(); reply(player, `Pillager: ${p.enabled ? "§aAN" : "§cAUS"}`); break;
+
+/* =========================================================
+ * Custom Commands
+ * ========================================================= */
+
+system.beforeEvents.startup.subscribe((event) => {
+    const registry = event.customCommandRegistry;
+
+    /* -----------------------------------------------------
+     * /siedler:monster_status
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_status",
+            description: "Zeigt den aktuellen Monster-System-Status.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
+        },
+        (origin) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                showStatus(player);
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
         }
-        case "outpost": {
-            const v = args.shift()?.toLowerCase(); if (!["on", "off"].includes(v)) { reply(player, "§c!monster outpost on|off"); break; }
-            p.outpost.enabled = v === "on"; saveMonsterConfig(); reply(player, `Outpost-Raids: ${p.outpost.enabled ? "§aAN" : "§cAUS"}`); break;
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_enable
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_enable",
+            description: "Aktiviert das Monster-System.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
+        },
+        (origin) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                MONSTER_CONFIG.enabled = true;
+
+                const saved = saveMonsterConfig();
+
+                reply(
+                    player,
+                    saved
+                        ? "§aMonster-System aktiviert."
+                        : "§aMonster-System aktiviert, §cSpeichern fehlgeschlagen."
+                );
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
         }
-        case "siege": {
-            const v = args.shift()?.toLowerCase(); if (!["on", "off"].includes(v)) { reply(player, "§c!monster siege on|off"); break; }
-            p.siege.enabled = v === "on"; saveMonsterConfig(); reply(player, `Belagerungen: ${p.siege.enabled ? "§aAN" : "§cAUS"}`); break;
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_disable
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_disable",
+            description: "Deaktiviert das Monster-System.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
+        },
+        (origin) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                MONSTER_CONFIG.enabled = false;
+
+                const saved = saveMonsterConfig();
+
+                reply(
+                    player,
+                    saved
+                        ? "§cMonster-System deaktiviert."
+                        : "§cMonster-System deaktiviert, §cSpeichern fehlgeschlagen."
+                );
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
         }
-        case "spawn": {
-            const n = args[0] === undefined ? null : Number(args[0]);
-            if (n !== null && (!Number.isFinite(n) || n < 1 || n > 32)) { reply(player, "§cAnzahl muss zwischen 1 und 32 liegen."); break; }
-            reply(player, `§a${spawnSquad(player, n)} Pillager gespawnt.`); break;
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_pillager <on|off>
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_pillager",
+            description: "Aktiviert oder deaktiviert Pillager.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
+
+            mandatoryParameters: [
+                {
+                    type: CustomCommandParamType.String,
+                    name: "status"
+                }
+            ]
+        },
+        (origin, args) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            const value = String(args[0] ?? "").toLowerCase();
+
+            if (value !== "on" && value !== "off") {
+                reply(
+                    player,
+                    "§cVerwendung: /siedler:monster_pillager <on|off>"
+                );
+
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                MONSTER_CONFIG.pillager.enabled = value === "on";
+
+                const saved = saveMonsterConfig();
+
+                reply(
+                    player,
+                    `Pillager: ${
+                        MONSTER_CONFIG.pillager.enabled
+                            ? "§aAN"
+                            : "§cAUS"
+                    }`
+                );
+
+                if (!saved) {
+                    reply(
+                        player,
+                        "§cDie Änderung konnte nicht gespeichert werden."
+                    );
+                }
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
         }
-        case "clear": reply(player, `§a${clearMonsterEntities(player.dimension)} markierte Monster entfernt.`); break;
-        case "reload": loadMonsterConfig(); reply(player, "§aMonster-Config neu geladen."); break;
-        case "save": reply(player, saveMonsterConfig() ? "§aMonster-Config gespeichert." : "§cSpeichern fehlgeschlagen."); break;
-        default: reply(player, `§cUnbekannter Befehl: §e${sub}`); help(player);
-    }
-    return true;
-}
-world.beforeEvents.chatSend.subscribe((event) => {
-    const message = event.message?.trim();
-    if (!message?.toLowerCase().startsWith("!monster")) return;
-    event.cancel = true;
-    system.run(() => handleCommand(event.sender, message));
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_outpost <on|off>
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_outpost",
+            description: "Aktiviert oder deaktiviert Outpost-Raids.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
+
+            mandatoryParameters: [
+                {
+                    type: CustomCommandParamType.String,
+                    name: "status"
+                }
+            ]
+        },
+        (origin, args) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            const value = String(args[0] ?? "").toLowerCase();
+
+            if (value !== "on" && value !== "off") {
+                reply(
+                    player,
+                    "§cVerwendung: /siedler:monster_outpost <on|off>"
+                );
+
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                if (!MONSTER_CONFIG.pillager.outpost) {
+                    MONSTER_CONFIG.pillager.outpost = {};
+                }
+
+                MONSTER_CONFIG.pillager.outpost.enabled =
+                    value === "on";
+
+                const saved = saveMonsterConfig();
+
+                reply(
+                    player,
+                    `Outpost-Raids: ${
+                        MONSTER_CONFIG.pillager.outpost.enabled
+                            ? "§aAN"
+                            : "§cAUS"
+                    }`
+                );
+
+                if (!saved) {
+                    reply(
+                        player,
+                        "§cDie Änderung konnte nicht gespeichert werden."
+                    );
+                }
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
+        }
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_siege <on|off>
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_siege",
+            description: "Aktiviert oder deaktiviert Belagerungen.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
+
+            mandatoryParameters: [
+                {
+                    type: CustomCommandParamType.String,
+                    name: "status"
+                }
+            ]
+        },
+        (origin, args) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            const value = String(args[0] ?? "").toLowerCase();
+
+            if (value !== "on" && value !== "off") {
+                reply(
+                    player,
+                    "§cVerwendung: /siedler:monster_siege <on|off>"
+                );
+
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                if (!MONSTER_CONFIG.pillager.siege) {
+                    MONSTER_CONFIG.pillager.siege = {};
+                }
+
+                MONSTER_CONFIG.pillager.siege.enabled =
+                    value === "on";
+
+                const saved = saveMonsterConfig();
+
+                reply(
+                    player,
+                    `Belagerungen: ${
+                        MONSTER_CONFIG.pillager.siege.enabled
+                            ? "§aAN"
+                            : "§cAUS"
+                    }`
+                );
+
+                if (!saved) {
+                    reply(
+                        player,
+                        "§cDie Änderung konnte nicht gespeichert werden."
+                    );
+                }
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
+        }
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_spawn [anzahl]
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_spawn",
+            description: "Spawnt einen Pillager-Trupp.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
+
+            optionalParameters: [
+                {
+                    type: CustomCommandParamType.Integer,
+                    name: "anzahl"
+                }
+            ]
+        },
+        (origin, args) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            const amount =
+                args[0] === undefined
+                    ? null
+                    : Number(args[0]);
+
+            if (
+                amount !== null &&
+                (!Number.isFinite(amount) ||
+                    amount < 1 ||
+                    amount > 32)
+            ) {
+                reply(
+                    player,
+                    "§cDie Anzahl muss zwischen 1 und 32 liegen."
+                );
+
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                const spawned = spawnSquad(
+                    player,
+                    amount
+                );
+
+                reply(
+                    player,
+                    `§a${spawned} Pillager gespawnt.`
+                );
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
+        }
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_clear
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_clear",
+            description: "Entfernt alle markierten Monster.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
+        },
+        (origin) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                const removed =
+                    clearMonsterEntities(
+                        player.dimension
+                    );
+
+                reply(
+                    player,
+                    `§a${removed} markierte Monster entfernt.`
+                );
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
+        }
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_reload
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_reload",
+            description: "Lädt die Monster-Konfiguration neu.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
+        },
+        (origin) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                try {
+                    loadMonsterConfig();
+
+                    reply(
+                        player,
+                        "§aMonster-Konfiguration neu geladen."
+                    );
+                } catch (error) {
+                    console.warn(
+                        `[Monster] Fehler beim Laden der Config: ${error}`
+                    );
+
+                    reply(
+                        player,
+                        "§cMonster-Konfiguration konnte nicht geladen werden."
+                    );
+                }
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
+        }
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_save
+     * ----------------------------------------------------- */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_save",
+            description: "Speichert die Monster-Konfiguration.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
+        },
+        (origin) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            system.run(() => {
+                try {
+                    const saved = saveMonsterConfig();
+
+                    reply(
+                        player,
+                        saved
+                            ? "§aMonster-Konfiguration gespeichert."
+                            : "§cMonster-Konfiguration konnte nicht gespeichert werden."
+                    );
+                } catch (error) {
+                    console.warn(
+                        `[Monster] Fehler beim Speichern der Config: ${error}`
+                    );
+
+                    reply(
+                        player,
+                        "§cFehler beim Speichern der Monster-Konfiguration."
+                    );
+                }
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
+        }
+    );
+
+    console.info(
+        "[Monster] Custom Commands erfolgreich registriert."
+    );
 });
-console.info("§a[Monster] Admin-Commands geladen.");
