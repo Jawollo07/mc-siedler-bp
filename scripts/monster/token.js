@@ -240,8 +240,8 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand(
         {
-            name: CONFIG.command.name,
-            description: CONFIG.command.description,
+            name: CONFIG.token.command.name,
+            description: CONFIG.token.command.description,
             permissionLevel: 0,
             cheatsRequired: false
         },
