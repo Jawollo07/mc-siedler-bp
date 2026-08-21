@@ -12,8 +12,8 @@ import {
     loadMonsterConfig
 } from "./index.js";
 
-const OP_PERMISSION = CommandPermissionLevel.Operator;
 const SQUAD_TAG = "monster_squad";
+const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
 /* =========================================================
  * Hilfsfunktionen
