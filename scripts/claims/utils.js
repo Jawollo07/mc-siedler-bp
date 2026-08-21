@@ -119,6 +119,36 @@ export function get5x5ChunksFromChunk(centerChunkX, centerChunkZ) {
  * centerChunkX/centerChunkZ are chunk coordinates (not block coords).
  */
 
+export function countEntitiesInChunksByPrefix(prefix, chunks) {
+  const dimension = world.getDimension("overworld");
+  const claimed = new Set(chunks.map(c => getChunkKey(c.x, c.z)));
+  const entities = Array.from(dimension.getEntities()); // alle Entities
+  let count = 0;
+  for (const ent of entities) {
+    try {
+      const type = ent.typeId || ent.type;
+      if (!type) continue;
+      if (!type.startsWith(prefix)) continue;
+      const chunk = getChunkCoords(ent.location);
+      if (claimed.has(getChunkKey(chunk.x, chunk.z))) count++;
+    } catch (err) { /* ignore invalid entities */ }
+  }
+  return count;
+}
+
+export function countEntitiesInChunksByTypes(types, chunks) {
+  const dimension = world.getDimension("overworld");
+  const claimed = new Set(chunks.map(c => getChunkKey(c.x, c.z)));
+  let count = 0;
+  for (const t of types) {
+    const entities = Array.from(dimension.getEntities({ type: t }));
+    for (const e of entities) {
+      const chunk = getChunkCoords(e.location);
+      if (claimed.has(getChunkKey(chunk.x, chunk.z))) count++;
+    }
+  }
+  return count;
+}
 
 /** Prüft, ob alle 4 Chunks frei sind. */
 export function areChunksFree(chunks, claims) {
@@ -130,8 +160,14 @@ export function countTeamClaims(teamName, claims) {
     return Object.values(claims).filter((claim) => claim?.team === teamName).length;
 }
 
-/** Zählt Dorfbewohner innerhalb der Claims eines Teams. */
-export function countVillagersInTeamClaims(teamName) {
+/**
+ * Zählt Entities innerhalb der Claims eines Teams, gefiltert per Typ-Prefix.
+ *
+ * Wenn `typePrefix` z.B. "fv:villager" ist, werden alle Entity-Typen gezählt,
+ * deren Typ mit diesem Prefix beginnt (Wildcard-ähnlich). Standard ist
+ * "minecraft:villager" (bestehendes Verhalten).
+ */
+export function countVillagersInTeamClaims(teamName, typePrefix = "minecraft:villager") {
     const claims = getClaims();
     const dimension = world.getDimension("overworld");
     const teamChunks = [];
@@ -152,12 +188,35 @@ export function countVillagersInTeamClaims(teamName) {
     if (teamChunks.length === 0) return 0;
 
     const claimedKeys = new Set(teamChunks.map((chunk) => getChunkKey(chunk.x, chunk.z)));
-    const villagers = dimension.getEntities({ type: "minecraft:villager" });
+
+    // Hol alle Entities und filter nach Prefix. Das ist allgemein genug,
+    // um z.B. "fv:villager" oder "minecraft:villager" zu unterstützen.
+    let entities;
+    try {
+        entities = Array.from(dimension.getEntities());
+    } catch (err) {
+        try {
+            // Fallback falls getEntities kein Iterable zurückgibt
+            entities = dimension.getEntities({});
+        } catch (e) {
+            console.error(`[Claims] Fehler beim Laden der Entities: ${e}`);
+            return 0;
+        }
+    }
 
     let count = 0;
-    for (const villager of villagers) {
-        const chunk = getChunkCoords(villager.location);
-        if (claimedKeys.has(getChunkKey(chunk.x, chunk.z))) count++;
+    for (const ent of entities) {
+        try {
+            const type = ent?.typeId || ent?.type;
+            if (!type) continue;
+            if (!type.startsWith(typePrefix)) continue;
+
+            const chunk = getChunkCoords(ent.location);
+            if (claimedKeys.has(getChunkKey(chunk.x, chunk.z))) count++;
+        } catch (err) {
+            // Ignoriere fehlerhafte/gelöschte Entities
+            continue;
+        }
     }
 
     return count;
