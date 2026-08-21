@@ -54,6 +54,53 @@ function spawnEntity(dimension, typeId, location) {
 }
 
 /* =========================================================
+ * Config-Helper
+ * ========================================================= */
+
+function setConfigByPath(path, value) {
+    try {
+        if (!path || typeof path !== "string") return false;
+
+        const parts = path.split(".");
+        let obj = MONSTER_CONFIG;
+
+        for (let i = 0; i < parts.length - 1; i++) {
+            const key = parts[i];
+            if (obj[key] === undefined || obj[key] === null || typeof obj[key] !== "object") {
+                obj[key] = {};
+            }
+            obj = obj[key];
+        }
+
+        const last = parts[parts.length - 1];
+        const previous = obj.hasOwnProperty(last) ? obj[last] : undefined;
+        obj[last] = value;
+        return previous;
+    } catch (error) {
+        console.warn(`[Monster] setConfigByPath failed: ${error}`);
+        return false;
+    }
+}
+
+function getConfigByPath(path) {
+    try {
+        if (!path || typeof path !== "string") return undefined;
+        const parts = path.split(".");
+        let obj = MONSTER_CONFIG;
+
+        for (const part of parts) {
+            if (obj === undefined || obj === null) return undefined;
+            obj = obj[part];
+        }
+
+        return obj;
+    } catch (error) {
+        console.warn(`[Monster] getConfigByPath failed: ${error}`);
+        return undefined;
+    }
+}
+
+/* =========================================================
  * Pillager-Trupp spawnen
  * ========================================================= */
 
@@ -226,6 +273,148 @@ system.beforeEvents.startup.subscribe((event) => {
             system.run(() => {
                 showStatus(player);
             });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
+        }
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_set <path> <value>
+     * -----------------------------------------------------
+     */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_set",
+            description: "Setzt einen Konfigurationswert (Pfad z.B. pillager.spawnChance).",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
+
+            mandatoryParameters: [
+                {
+                    type: CustomCommandParamType.String,
+                    name: "path"
+                },
+                {
+                    type: CustomCommandParamType.String,
+                    name: "value"
+                }
+            ]
+        },
+        (origin, args) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            const path = String(args[0] ?? "").trim();
+            const raw = args[1] === undefined ? "" : String(args[1]);
+
+            if (!path) {
+                reply(player, "§cUngültiger Pfad.");
+
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            let value;
+            if (raw === "true") value = true;
+            else if (raw === "false") value = false;
+            else if (!isNaN(Number(raw)) && raw.trim() !== "") value = Number(raw);
+            else if ((raw.startsWith("{") && raw.endsWith("}")) || (raw.startsWith("[") && raw.endsWith("]"))) {
+                try {
+                    value = JSON.parse(raw);
+                } catch {
+                    value = raw;
+                }
+            } else {
+                value = raw;
+            }
+
+            system.run(() => {
+                try {
+                    const previous = setConfigByPath(path, value);
+
+                    if (previous === false) {
+                        reply(player, "§cKonfigurationswert konnte nicht gesetzt werden.");
+                        return;
+                    }
+
+                    const saved = saveMonsterConfig();
+
+                    const prevText = JSON.stringify(previous === undefined ? null : previous);
+                    const newText = JSON.stringify(value);
+
+                    reply(
+                        player,
+                        saved
+                            ? `§aKonfiguration gesetzt: ${path} = ${newText} (vorher: ${prevText})`
+                            : `§aKonfiguration gesetzt: ${path} = ${newText} (vorher: ${prevText}), §cSpeichern fehlgeschlagen.`
+                    );
+                } catch (error) {
+                    console.warn(`[Monster] Fehler beim Setzen der Config: ${error}`);
+
+                    reply(player, "§cFehler beim Setzen der Konfiguration.");
+                }
+            });
+
+            return {
+                status: CustomCommandStatus.Success
+            };
+        }
+    );
+
+    /* -----------------------------------------------------
+     * /siedler:monster_get <path>
+     * -----------------------------------------------------
+     */
+
+    registry.registerCommand(
+        {
+            name: "siedler:monster_get",
+            description: "Gibt einen Konfigurationswert zurück (Pfad z.B. pillager.spawnChance).",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
+
+            mandatoryParameters: [
+                {
+                    type: CustomCommandParamType.String,
+                    name: "path"
+                }
+            ]
+        },
+        (origin, args) => {
+            const player = playerOnly(origin);
+
+            if (!player) {
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            const path = String(args[0] ?? "").trim();
+
+            if (!path) {
+                reply(player, "§cUngültiger Pfad.");
+
+                return {
+                    status: CustomCommandStatus.Failure
+                };
+            }
+
+            try {
+                const value = getConfigByPath(path);
+                reply(player, `§7${path}: §e${JSON.stringify(value)}`);
+            } catch (error) {
+                console.warn(`[Monster] Fehler beim Lesen der Config: ${error}`);
+                reply(player, "§cFehler beim Lesen der Konfiguration.");
+            }
 
             return {
                 status: CustomCommandStatus.Success

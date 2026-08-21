@@ -240,6 +240,21 @@ Danach kann der Spieler beispielsweise mit
 
 den aktuellen Status anzeigen.
 
+Hinweis: Zusätzlich zu den Chat-Befehlen gibt es jetzt administrative Slash-Commands mit OP-Rechteprüfung:
+
+```text
+/siedler:monster_get <path>    # Gibt einen Konfigurationswert zurück (z.B. pillager.spawnChance)
+/siedler:monster_set <path> <value>  # Setzt einen Konfigurationswert und speichert die Config
+```
+
+Beispiele (als OP im Spiel):
+
+```text
+/siedler:monster_get pillager.spawnChance
+/siedler:monster_set pillager.spawnChance 0.5
+/siedler:monster_set pillager.outpost.enabled true
+```
+
 ---
 
 ## ⚙️ Monster-Konfiguration
@@ -271,6 +286,31 @@ DEFAULT_CONFIG = {
 Die Pillager-Konfiguration ist in die Bereiche `ai`, `siege`, `outpost` und `composition` unterteilt. Dadurch lassen sich KI-Verhalten, Belagerungen, Außenposten und Truppzusammensetzung getrennt anpassen.
 
 Änderungen können außerdem über die Monster-Admin-Befehle gespeichert bzw. neu geladen werden.
+
+Konfiguration per Befehl
+-----------------------
+
+Das Pack bietet nun komfortable Befehle zum Lesen und Setzen von Konfigurationswerten zur Laufzeit:
+
+- `/siedler:monster_get <path>` — Liefert den aktuellen Wert zurück. Pfade verwenden Punkt-Notation (z.B. `pillager.spawnChance`).
+- `/siedler:monster_set <path> <value>` — Setzt einen Wert und speichert die Config in den World Dynamic Properties.
+
+Werteparsing beim `monster_set`:
+- `true` / `false` → Boolean
+- numerische Strings → Number (z.B. `0.5` → Zahl)
+- JSON-Objekte/Arrays (`{...}` / `[...]`) werden versucht zu parsen
+- sonst → String
+
+Beispiele:
+
+```text
+/siedler:monster_get pillager.spawnChance
+/siedler:monster_set pillager.spawnChance 0.35
+/siedler:monster_set pillager.outpost.enabled true
+/siedler:monster_set pillager.composition '{"includeRavager":false}'
+```
+
+Hinweis: Diese Befehle erfordern OP-Rechte (`GameDirectors`). Für zusätzliche Sicherheit kann eine Whitelist implementiert werden, die nur bestimmte Pfade änderbar macht. Frage mich, wenn du das möchtest.
 
 ---
 
