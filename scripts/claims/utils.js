@@ -57,15 +57,24 @@ export function hasAccess(player, claim) {
     return team.players.includes(player.name);
 }
 
-/** Erzeugt die 4 Chunks eines 2×2-Quadrats ausgehend von der Nord-West-Ecke. */
-export function get2x2Chunks(startChunkX, startChunkZ) {
+/**
+ * Berechnet das 2x2-Chunk-Raster so, dass die übergebene Block-Koordinate
+ * (wo der Spieler steht) exakt das mathematische Zentrum bildet.
+ */
+export function get2x2ChunksCentered(blockX, blockZ) {
+    // Ein Chunk hat 16 Blöcke. Um das Zentrum eines 2x2-Rasters (32x32 Blöcke) 
+    // zu treffen, verschieben wir den Startpunkt um ein halbes Raster (16 Blöcke) nach Nord-Westen.
+    const startChunkX = Math.floor((blockX - 16) / 16);
+    const startChunkZ = Math.floor((blockZ - 16) / 16);
+
     return [
-        { x: startChunkX, z: startChunkZ },
-        { x: startChunkX + 1, z: startChunkZ },
-        { x: startChunkX, z: startChunkZ + 1 },
-        { x: startChunkX + 1, z: startChunkZ + 1 }
+        { x: startChunkX, z: startChunkZ },         // Nord-West
+        { x: startChunkX + 1, z: startChunkZ },     // Nord-Ost
+        { x: startChunkX, z: startChunkZ + 1 },     // Süd-West
+        { x: startChunkX + 1, z: startChunkZ + 1 }  // Süd-Ost
     ];
 }
+
 
 /** Prüft, ob alle 4 Chunks frei sind. */
 export function areChunksFree(chunks, claims) {
