@@ -75,6 +75,19 @@ export function get2x2ChunksCentered(blockX, blockZ) {
     ];
 }
 
+/**
+ * Returns a 2x2 chunk grid starting at the given chunk coordinates (NW corner).
+ * This is a simple helper used by claims logic which passes chunk coordinates.
+ */
+export function get2x2Chunks(chunkX, chunkZ) {
+    return [
+        { x: chunkX, z: chunkZ },
+        { x: chunkX + 1, z: chunkZ },
+        { x: chunkX, z: chunkZ + 1 },
+        { x: chunkX + 1, z: chunkZ + 1 }
+    ];
+}
+
 
 /** Prüft, ob alle 4 Chunks frei sind. */
 export function areChunksFree(chunks, claims) {
