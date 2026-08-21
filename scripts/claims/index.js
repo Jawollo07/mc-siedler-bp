@@ -13,9 +13,10 @@ function playerOnly(origin) {
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
-    registry.registerCommand({ name: "siedler:claim_set", description: "Claimt ein 2x2-Chunk-Grundstück für ein Team (nur OPs).", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:claim_set", description: "Claimt ein 2x2-Chunk-Grundstück für ein Team (nur OPs).", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(args[0] ?? "");
+        const teamName = String(team ?? "").trim();
+        if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; }
         system.run(() => {
             const teams = getTeams();
             if (!teams[teamName]) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
@@ -29,9 +30,10 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registry.registerCommand({ name: "siedler:claim_remove", description: "Entfernt das gesamte Grundstück eines Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, args) => {
+    registry.registerCommand({ name: "siedler:claim_remove", description: "Entfernt das gesamte Grundstück eines Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(args[0] ?? "");
+        const teamName = String(team ?? "").trim();
+        if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; }
         system.run(() => {
             const claims = getClaims(); let removed = 0;
             for (const [key, claim] of Object.entries(claims)) if (claim?.team === teamName) { delete claims[key]; removed++; }
