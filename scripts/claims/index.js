@@ -1,6 +1,6 @@
 import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
-import { getChunkCoords, getChunkKey, getClaims, saveClaims, get2x2ChunksCentered, areChunksFree, countTeamClaims } from "./utils.js";
+import { getChunkCoords, getChunkKey, getClaims, saveClaims, get5x5ChunksCentered, areChunksFree, countTeamClaims } from "./utils.js";
 import { getTeams } from "../teams/index.js";
 
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
@@ -103,25 +103,26 @@ function setClaimForPlayer(player, teamName) {
             return;
         }
         const claims = getClaims();
-        if (countTeamClaims(teamName, claims) >= 4) {
-            player.sendMessage(`§cTeam "${teamName}" hat bereits die maximalen 4 Chunks.`);
-            return;
-        }
-        // Use the player's current block position as the center of the 2x2 claim
-        const blockX = Math.floor(player.location.x);
-        const blockZ = Math.floor(player.location.z);
-        const chunks = get2x2ChunksCentered(blockX, blockZ);
-        if (!areChunksFree(chunks, claims)) {
-            player.sendMessage("§cEiner oder mehrere der 4 Chunks sind bereits geclaimt.");
-            return;
+            const MAX_CHUNKS = 25; // 5x5
+            if (countTeamClaims(teamName, claims) >= MAX_CHUNKS) {
+                player.sendMessage(`§cTeam "${teamName}" hat bereits die maximalen ${MAX_CHUNKS} Chunks.`);
+                return;
+            }
+            // Use the player's current block position as the center of the 5x5 claim
+            const blockX = Math.floor(player.location.x);
+            const blockZ = Math.floor(player.location.z);
+            const chunks = get5x5ChunksCentered(blockX, blockZ);
+            if (!areChunksFree(chunks, claims)) {
+                player.sendMessage("§cEiner oder mehrere der 25 Chunks sind bereits geclaimt.");
+                return;
         }
         const claimedAt = Date.now();
         for (const chunk of chunks) {
             claims[getChunkKey(chunk.x, chunk.z)] = { team: teamName, claimedAt };
         }
-        player.sendMessage(saveClaims(claims)
-            ? `§a2×2-Grundstück für Team ${teams[teamName].color || "§f"}${teamName}§a gesetzt.`
-            : "§cDas Grundstück konnte nicht gespeichert werden.");
+            player.sendMessage(saveClaims(claims)
+                ? `§a5×5-Grundstück für Team ${teams[teamName].color || "§f"}${teamName}§a gesetzt.`
+                : "§cDas Grundstück konnte nicht gespeichert werden.");
     });
 }
 

@@ -61,7 +61,7 @@ export function hasAccess(player, claim) {
  * Berechnet das 2x2-Chunk-Raster so, dass die übergebene Block-Koordinate
  * (wo der Spieler steht) exakt das mathematische Zentrum bildet.
  */
-export function get2x2ChunksCentered(blockX, blockZ) {
+export function getChunks(blockX, blockZ) {
     // Ein Chunk hat 16 Blöcke. Um das Zentrum eines 2x2-Rasters (32x32 Blöcke) 
     // zu treffen, verschieben wir den Startpunkt um ein halbes Raster (16 Blöcke) nach Nord-Westen.
     const startChunkX = Math.floor((blockX - 16) / 16);
@@ -86,6 +86,28 @@ export function get2x2Chunks(chunkX, chunkZ) {
         { x: chunkX, z: chunkZ + 1 },
         { x: chunkX + 1, z: chunkZ + 1 }
     ];
+}
+
+/**
+ * Berechnet ein 5x5-Chunk-Raster mit der gegebenen Block-Position als Zentrum.
+ * Die Funktion nimmt Block-Koordinaten (x, z) und bestimmt die 5×5 Chunks,
+ * sodass der Chunk, in dem sich der Block befindet, das Zentrum der 5×5-Matrix ist.
+ */
+export function getChunks(blockX, blockZ) {
+    const centerChunkX = Math.floor(blockX / 16);
+    const centerChunkZ = Math.floor(blockZ / 16);
+    const half = 2; // 5x5 -> radius 2
+    const startX = centerChunkX - half;
+    const startZ = centerChunkZ - half;
+
+    const chunks = [];
+    for (let dx = 0; dx < 5; dx++) {
+        for (let dz = 0; dz < 5; dz++) {
+            chunks.push({ x: startX + dx, z: startZ + dz });
+        }
+    }
+
+    return chunks;
 }
 
 
