@@ -107,8 +107,10 @@ function setClaimForPlayer(player, teamName) {
             player.sendMessage(`§cTeam "${teamName}" hat bereits die maximalen 4 Chunks.`);
             return;
         }
-        const start = getChunkCoords(player.location);
-        const chunks = get2x2Chunks(start.x, start.z);
+        // Use the player's current block position as the center of the 2x2 claim
+        const blockX = Math.floor(player.location.x);
+        const blockZ = Math.floor(player.location.z);
+        const chunks = get2x2ChunksCentered(blockX, blockZ);
         if (!areChunksFree(chunks, claims)) {
             player.sendMessage("§cEiner oder mehrere der 4 Chunks sind bereits geclaimt.");
             return;
