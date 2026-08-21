@@ -207,7 +207,7 @@ system.beforeEvents.startup.subscribe((event) => {
     }
 
     // Register short `/team` command that opens the UI
-    registry.registerCommand({ name: "team", description: "Öffnet das Team-Management UI.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
+    registry.registerCommand({ name: "siedler:team", description: "Öffnet das Team-Management UI.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
         system.run(() => showTeamMenu(player));
         return { status: CustomCommandStatus.Success };
