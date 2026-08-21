@@ -300,12 +300,22 @@ world.afterEvents.entityDie.subscribe((event) => {
 
     const deadEntity = event.deadEntity;
 
-    if (!deadEntity) {
+    if (!deadEntity) return;
+
+    // Some platforms may provide an entity reference that is already invalid/removed.
+    // Guard calls like hasTag() which throw InvalidEntityError when the entity is invalid.
+    try {
+        if (!deadEntity.isValid) return;
+    } catch {
         return;
     }
 
     // Nur unsere Token-Mobs behandeln.
-    if (!deadEntity.hasTag(CONFIG.mobTag)) {
+    try {
+        if (!deadEntity.hasTag(CONFIG.mobTag)) return;
+    } catch (error) {
+        // Entity became invalid between the event and our check.
+        if (CONFIG?.debug) console.warn(`[Token] Ignoring invalid deadEntity: ${error}`);
         return;
     }
 
@@ -313,7 +323,7 @@ world.afterEvents.entityDie.subscribe((event) => {
     const killer = getKillingPlayer(damageSource);
 
     console.info(
-        `[Token] ${killer.name} hat einen Token-Mob getötet.`
+        `[Token] ${killer ? killer.name : "<unknown>"} hat einen Token-Mob getötet.`
     );
 
     /*
