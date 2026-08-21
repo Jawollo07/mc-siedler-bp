@@ -48,12 +48,12 @@ function registerTeamCommands(registry) {
         cheatsRequired: false,
         mandatoryParameters: [{ type: CustomCommandParamType.String, name: "name" }],
         optionalParameters: [{ type: CustomCommandParamType.String, name: "farbe" }]
-    }, (origin, args) => {
+    }, (origin, name, farbe) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
 
-        const teamName = String(args?.name ?? "").trim();
-        const color = String(args?.farbe ?? "§f").trim() || "§f";
+        const teamName = String(name ?? "").trim();
+        const color = String(farbe ?? "§f").trim() || "§f";
         if (!teamName) {
             player.sendMessage("§cDer Teamname darf nicht leer sein.");
             return { status: CustomCommandStatus.Failure };
@@ -82,23 +82,23 @@ function registerTeamCommands(registry) {
             { type: CustomCommandParamType.String, name: "spieler" },
             { type: CustomCommandParamType.String, name: "team" }
         ]
-    }, (origin, args) => {
+    }, (origin, spieler, team) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-        const targetName = String(args?.spieler ?? "").trim();
-        const teamName = String(args?.team ?? "").trim();
+        const targetName = String(spieler ?? "").trim();
+        const teamName = String(team ?? "").trim();
         system.run(() => {
             const teams = getTeams();
-            const team = teams[teamName];
-            if (!team) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
+            const teamData = teams[teamName];
+            if (!teamData) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
             for (const other of Object.values(teams)) {
                 other.players = Array.isArray(other.players) ? other.players.filter((name) => name !== targetName) : [];
             }
-            team.players = Array.isArray(team.players) ? team.players : [];
-            if (!team.players.includes(targetName)) team.players.push(targetName);
+            teamData.players = Array.isArray(teamData.players) ? teamData.players : [];
+            if (!teamData.players.includes(targetName)) teamData.players.push(targetName);
             if (!saveTeams(teams)) { player.sendMessage("§cDie Teamänderung konnte nicht gespeichert werden."); return; }
-            player.sendMessage(`§a${targetName} wurde zu Team "${team.color || "§f"}${teamName}§a" hinzugefügt.`);
-            world.getPlayers().find((p) => p.name === targetName)?.sendMessage(`§aDu wurdest dem Team "${team.color || "§f"}${teamName}§a" hinzugefügt.`);
+            player.sendMessage(`§a${targetName} wurde zu Team "${teamData.color || "§f"}${teamName}§a" hinzugefügt.`);
+            world.getPlayers().find((p) => p.name === targetName)?.sendMessage(`§aDu wurdest dem Team "${teamData.color || "§f"}${teamName}§a" hinzugefügt.`);
         });
         return { status: CustomCommandStatus.Success };
     });
@@ -112,19 +112,19 @@ function registerTeamCommands(registry) {
             { type: CustomCommandParamType.String, name: "spieler" },
             { type: CustomCommandParamType.String, name: "team" }
         ]
-    }, (origin, args) => {
+    }, (origin, spieler, team) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-        const targetName = String(args?.spieler ?? "").trim();
-        const teamName = String(args?.team ?? "").trim();
+        const targetName = String(spieler ?? "").trim();
+        const teamName = String(team ?? "").trim();
         system.run(() => {
             const teams = getTeams();
-            const team = teams[teamName];
-            if (!team) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
-            team.players = Array.isArray(team.players) ? team.players.filter((name) => name !== targetName) : [];
+            const teamData = teams[teamName];
+            if (!teamData) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
+            teamData.players = Array.isArray(teamData.players) ? teamData.players.filter((name) => name !== targetName) : [];
             if (!saveTeams(teams)) { player.sendMessage("§cDie Teamänderung konnte nicht gespeichert werden."); return; }
-            player.sendMessage(`§e${targetName} wurde aus Team "${team.color || "§f"}${teamName}§e" entfernt.`);
-            world.getPlayers().find((p) => p.name === targetName)?.sendMessage(`§eDu wurdest aus dem Team "${team.color || "§f"}${teamName}§e" entfernt.`);
+            player.sendMessage(`§e${targetName} wurde aus Team "${teamData.color || "§f"}${teamName}§e" entfernt.`);
+            world.getPlayers().find((p) => p.name === targetName)?.sendMessage(`§eDu wurdest aus Team "${teamData.color || "§f"}${teamName}§e" entfernt.`);
         });
         return { status: CustomCommandStatus.Success };
     });
@@ -135,10 +135,10 @@ function registerTeamCommands(registry) {
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
         mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }]
-    }, (origin, args) => {
+    }, (origin, team) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(args?.team ?? "").trim();
+        const teamName = String(team ?? "").trim();
         system.run(() => {
             const teams = getTeams();
             if (!teams[teamName]) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
@@ -183,17 +183,17 @@ function registerTeamCommands(registry) {
             { type: CustomCommandParamType.Integer, name: "z" }
         ],
         optionalParameters: [{ type: CustomCommandParamType.Integer, name: "amount" }]
-    }, (origin, args) => {
+    }, (origin, team, x, y, z, amount) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(args?.team ?? "").trim();
+        const teamName = String(team ?? "").trim();
         system.run(() => {
             const teams = getTeams();
-            const team = teams[teamName];
-            if (!team) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
-            team.taxChest = { x: args.x, y: args.y, z: args.z };
-            if (args.amount !== undefined) team.taxAmount = Math.max(0, Number(args.amount));
-            player.sendMessage(saveTeams(teams) ? `§aSteuerkiste für Team "${team.color || "§f"}${teamName}§a" gesetzt.` : "§cDie Steuerkonfiguration konnte nicht gespeichert werden.");
+            const teamData = teams[teamName];
+            if (!teamData) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
+            teamData.taxChest = { x, y, z };
+            if (amount !== undefined) teamData.taxAmount = Math.max(0, Number(amount));
+            player.sendMessage(saveTeams(teams) ? `§aSteuerkiste für Team "${teamData.color || "§f"}${teamName}§a" gesetzt.` : "§cDie Steuerkonfiguration konnte nicht gespeichert werden.");
         });
         return { status: CustomCommandStatus.Success };
     });
