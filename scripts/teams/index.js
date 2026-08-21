@@ -40,7 +40,17 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand({ name: "siedler:team_create", description: "Erstellt ein neues Team.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "name" }], optionalParameters: [{ type: CustomCommandParamType.String, name: "farbe" }] }, (origin, args) => {
         const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(args[0] ?? "").trim(); const color = String(args[1] ?? "§f");
+        const rawArgs = Array.isArray(args) ? args.map((a) => String(a)) : [];
+        if (!rawArgs.length) return { status: CustomCommandStatus.Failure };
+
+        // Detect optional color as the last argument if it starts with the section sign (§)
+        let color = "§f";
+        if (rawArgs.length >= 2 && rawArgs[rawArgs.length - 1].startsWith("§")) {
+            color = rawArgs[rawArgs.length - 1];
+            rawArgs.pop();
+        }
+
+        const teamName = rawArgs.join(" ").trim();
         if (!teamName) { player.sendMessage("§cDer Teamname darf nicht leer sein."); return { status: CustomCommandStatus.Failure }; }
         system.run(() => {
             const teams = getTeams();
