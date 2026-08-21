@@ -89,10 +89,10 @@ if (entitySpawn && typeof entitySpawn.subscribe === "function") {
         if (!entity) return;
 
         const typeId = entity.typeId;
-        const allowed = MONSTER_CONFIG.allowedMobs?.[typeId];
-        if (allowed === undefined) return;
+        const disabled = MONSTER_CONFIG.disabledMobs?.[typeId];
+        if (disabled === undefined) return;
 
-        let shouldRemove = !allowed;
+        let shouldRemove = disabled;
 
         if (!shouldRemove) {
             try {

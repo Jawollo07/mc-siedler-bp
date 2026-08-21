@@ -8,19 +8,10 @@ export const DEFAULT_CONFIG = {
     // Normale Monster-Spawns
     globalSpawnRate: 0.7,
     nightSpawnMultiplier: 1.3,
-    allowedMobs: {
-        "minecraft:zombie": true,
-        "minecraft:skeleton": true,
-        "minecraft:creeper": true,
-        "minecraft:spider": true,
-        "minecraft:enderman": true,
-        "minecraft:witch": false,
-        "minecraft:phantom": false,
-        "minecraft:drowned": true,
-        "minecraft:husk": true,
-        "minecraft:stray": true,
-        "minecraft:slime": false,
-        "minecraft:magma_cube": false
+    disabledMobs: {
+        "minecraft:phantom": true,
+        "minecraft:slime": true,
+        "minecraft:magma_cube": true
     },
     spawnChances: {
         "minecraft:zombie": 1.0,
