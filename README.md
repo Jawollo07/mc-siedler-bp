@@ -1,71 +1,70 @@
-# Siedler Logic
+# 🏘️ Siedler Logic
 
-Ein umfangreiches **Minecraft Bedrock Behavior Pack** für Siedler-/Survival-Server. Das Pack bündelt Teams, Grundstücke (Claims), Steuern, ein konfigurierbares Monster-System mit Pillager-Trupps und Außenposten-Raids sowie verschiedene Essentials in einem Script-Modul.
+> Ein modulares Minecraft-Bedrock-Behavior-Pack für Siedler-, Survival- und Multiplayer-Server.
 
-> **Aktueller Stand:** Version **1.1.3** · Mindestversion **Minecraft Bedrock 1.26.0** · `@minecraft/server` **2.9.0**
+[![Minecraft Bedrock](https://img.shields.io/badge/Minecraft%20Bedrock-1.26.0%2B-62B47A?logo=minecraft)](https://www.minecraft.net/)
+[![API](https://img.shields.io/badge/%40minecraft%2Fserver-2.9.0-5C5CFF)](https://learn.microsoft.com/minecraft/creator/scriptapi/minecraft/server/minecraft-server)
+[![Version](https://img.shields.io/badge/Version-1.1.4-orange)](https://github.com/Jawollo07/mc-siedler-bp)
+
+Siedler Logic bündelt **Teams, Claims, Steuern, Essentials und ein konfigurierbares Monster-System** in einem Script-Modul. Dazu kommen organisierte **Pillager-Trupps, eigene KI, Belagerungen und Pillager-Außenposten-Raids**.
+
+---
+
+## 📋 Inhaltsverzeichnis
+
+- [✨ Features](#-features)
+- [📦 Installation](#-installation)
+- [🗂️ Projektstruktur](#️-projektstruktur)
+- [🎮 Befehle](#-befehle)
+- [👹 Monster-System](#-monster-system)
+- [🏴 Pillager-Trupps](#-pillager-trupps)
+- [🧠 Pillager-KI](#-pillager-ki)
+- [⚙️ Konfiguration](#️-konfiguration)
+- [💾 Speicherung](#-speicherung)
+- [🔐 Berechtigungen](#-berechtigungen)
+- [🛠️ Entwicklung](#️-entwicklung)
+- [⚠️ Hinweise](#️-hinweise)
+- [🤝 Mitwirken](#-mitwirken)
+- [📜 Lizenz](#-lizenz)
+
+---
 
 ## ✨ Features
 
 ### 👥 Teams
-- Teams erstellen, löschen und verwalten.
-- Spieler können einem Team zugeordnet oder daraus entfernt werden.
-- Teams besitzen eine frei definierbare Minecraft-Farbe.
-- Teamdaten werden als World Dynamic Properties gespeichert.
-- Teamübersicht inklusive Mitglieder und Steuerkiste.
-- Eigener Team-Chat über `@team`.
 
-### 🏠 Claims / Grundstücke
-- Ein Claim besteht aus einem **2×2-Chunk-Gebiet**.
-- Pro Team sind maximal **4 Chunks** vorgesehen.
-- Bereits vergebene Chunks werden automatisch erkannt.
-- Schutzsystem verhindert unerlaubte Aktionen in geschützten Bereichen.
-- Claim-Informationen können von jedem Spieler abgefragt werden.
-- Claim-Daten werden dauerhaft gespeichert.
+- Teams erstellen, löschen und verwalten
+- Spieler Teams hinzufügen und entfernen
+- Frei definierbare Minecraft-Teamfarbe
+- Teamübersicht mit Mitgliedern und Steuerkiste
+- Team-Chat über `@team`
+- Dauerhafte Speicherung über World Dynamic Properties
+
+### 🏠 Claims
+
+Claims schützen die Gebiete der einzelnen Teams.
+
+- Ein Claim umfasst **2×2 Chunks**
+- Bis zu **4 Chunks pro Team**
+- Bereits belegte Chunks werden erkannt
+- Schutz vor unerlaubten Aktionen in geschützten Gebieten
+- Claim-Informationen können abgefragt werden
+- Claim-Daten werden dauerhaft gespeichert
 
 ### 💰 Steuern
-- Teams können eine Steuerkiste festlegen.
-- Standardmäßig orientiert sich die Auszahlung an der Anzahl der Dorfbewohner innerhalb der Team-Claims.
-- Alternativ kann ein fester Steuerbetrag für ein Team konfiguriert werden.
-- Die Auszahlung erfolgt automatisch zu Beginn eines neuen Minecraft-Tages.
-- Emeralds werden direkt in die Steuertruhe gelegt.
-- Ist die Truhe voll, werden überschüssige Emeralds daneben gespawnt.
-- Teammitglieder werden über die Auszahlung informiert.
 
-### 👹 Monster-System
-Das Monster-System besitzt eine zentrale Konfiguration und unterstützt:
+Das Steuersystem versorgt Teams automatisch mit Emeralds.
 
-- Individuelle Spawn-Chancen für verschiedene Monster.
-- Unterschiedliche Spawnraten für normale Gebiete und Claims.
-- Nacht-Multiplikatoren.
-- Geblockte Monster innerhalb von Claims.
-- Konfigurierbares Schwäche-System.
-- Pillager-Trupps mit zufälliger Gruppengröße.
-- Vindicator- und Ravager-Anteile in Trupps.
-- Pillager-Captains.
-- Eigene Pillager-KI mit Zielsuche, Bewegung, Angriff und Gruppierungslogik.
-- Belagerungen gegnerischer Gebiete.
-- Bevorzugtes Spawnen an Pillager-Außenposten.
-- Dynamische Monster-Konfiguration ohne Neustart des Packs.
-
-### 🏴 Pillager-Trupps & Außenposten
-Das Pillager-System kann automatisch feindliche Trupps erzeugen. Dabei können Außenposten bevorzugt werden.
-
-Die Standardkonfiguration enthält unter anderem:
-
-| Einstellung | Standardwert |
-|---|---:|
-| Truppgröße | 4–7 |
-| Maximale aktive Trupps | 3 |
-| Spawnchance | 22 % |
-| Outpost-Spawnchance | 70 % |
-| Mindestdistanz | 36 Blöcke |
-| Maximaldistanz | 64 Blöcke |
-| Lebensdauer | 24.000 Ticks |
-| Denkintervall der KI | 10 Ticks |
-| Angriffsreichweite | 3,2 Blöcke |
-| Fernkampfreichweite | 18 Blöcke |
+- Steuerkiste pro Team
+- Berechnung anhand der Dorfbewohner innerhalb der Team-Claims
+- Optional fester Steuerbetrag
+- Automatische Auszahlung zu Beginn eines neuen Minecraft-Tages
+- Emeralds werden in die Steuerkiste gelegt
+- Überschüssige Emeralds werden bei voller Kiste daneben gespawnt
+- Teammitglieder werden über die Auszahlung informiert
 
 ### 🧰 Essentials
+
 Enthalten sind unter anderem:
 
 - `/siedler:spawn`
@@ -87,52 +86,62 @@ Enthalten sind unter anderem:
 
 Homes und Todespunkte werden dauerhaft gespeichert.
 
+### 👹 Monster-System
+
+Das Monster-System besitzt eine zentrale, speicherbare Konfiguration und unterstützt:
+
+- Individuelle Spawn-Chancen
+- Globale Spawnrate
+- Nacht-Multiplikator
+- Unterschiedliche Spawnregeln für Claims
+- Deaktivierbare Monster
+- Konfigurierbares Schwäche-System
+- Monster-Tokens
+- Pillager-Trupps
+- Vindicator- und Ravager-Anteile
+- Pillager-Captains
+- Eigene Pillager-KI
+- Belagerungen gegnerischer Gebiete
+- Pillager-Außenposten als bevorzugte Spawnpunkte
+- Konfiguration zur Laufzeit
+
 ---
 
 ## 📦 Installation
 
-### 1. Dateien herunterladen
+### Voraussetzungen
 
-Lade das Repository herunter oder klone es:
+| Komponente | Version |
+|---|---|
+| Minecraft Bedrock | **1.26.0+** |
+| `@minecraft/server` | **2.9.0** |
+| Script Entry Point | `scripts/main.js` |
+
+Die Versionen entsprechen dem aktuellen `manifest.json`. fileciteturn6file0
+
+### 1. Repository klonen
 
 ```bash
 git clone https://github.com/Jawollo07/mc-siedler-bp.git
+cd mc-siedler-bp
 ```
 
-### 2. Behavior Pack installieren
+### 2. Behavior Pack einbinden
 
-Der Inhalt des Repositorys ist ein Behavior Pack. Der Ordner muss als Behavior-Pack-Verzeichnis deiner Welt eingebunden werden.
+Der Repository-Ordner ist das Behavior Pack. Binde ihn in die gewünschte Minecraft-Bedrock-Welt bzw. den Server ein und aktiviere das Pack.
 
-Die zentrale Manifest-Datei ist:
+Das Manifest definiert `scripts/main.js` als Script-Einstiegspunkt. fileciteturn6file0
 
-```text
-manifest.json
-```
+### 3. Start prüfen
 
-Das Script startet über:
-
-```text
-scripts/main.js
-```
-
-### 3. Script-Abhängigkeit
-
-Das Pack verwendet:
-
-```text
-@minecraft/server 2.9.0
-```
-
-und benötigt daher eine kompatible Minecraft-Bedrock-Version.
-
-### 4. Welt starten
-
-Nach dem Aktivieren des Behavior Packs sollte im Server-/Welt-Log unter anderem erscheinen:
+Beim erfolgreichen Laden schreibt `scripts/main.js` unter anderem folgende Meldungen ins Scripting-Log:
 
 ```text
 [Siedler Logic] Alle Module geladen!
 [Siedler Logic] Erfolgreich gestartet!
 ```
+
+Der Einstiegspunkt lädt dabei Teams, Steuern, Claims, Monster/Pillager und Essentials. fileciteturn7file0
 
 ---
 
@@ -172,11 +181,34 @@ mc-siedler-bp/
         └── index.js
 ```
 
-`main.js` lädt die einzelnen Module und sorgt dafür, dass die Dynamic Properties früh registriert werden.
+Der zentrale Einstiegspunkt `scripts/main.js` lädt die Module und registriert zunächst die Dynamic Properties. fileciteturn7file0
+
+### Architektur
+
+```text
+scripts/main.js
+│
+├── Dynamic Properties
+├── Teams
+│   └── Team-Chat
+├── Steuern
+├── Claims
+│   ├── Schutz
+│   └── Anzeige
+├── Monster
+│   ├── Konfiguration
+│   ├── Tokens
+│   ├── Pillager-Trupps
+│   ├── Außenposten-Raids
+│   └── Commands
+└── Essentials
+```
 
 ---
 
-## 🎮 Team-Befehle
+## 🎮 Befehle
+
+### 👥 Team-Befehle
 
 | Befehl | Beschreibung | Berechtigung |
 |---|---|---|
@@ -187,67 +219,102 @@ mc-siedler-bp/
 | `/siedler:team_list` | Zeigt alle Teams | OP |
 | `/siedler:team_settax <team> <x> <y> <z> [amount]` | Setzt Steuerkiste und optional festen Betrag | OP |
 
-### Team-Chat
-
-Spieler können mit folgendem Präfix ausschließlich mit ihrem eigenen Team schreiben:
+### 💬 Team-Chat
 
 ```text
 @team Hallo zusammen!
 ```
 
----
+Die Nachricht wird an die Mitglieder des eigenen Teams gesendet.
 
-## 🏞️ Claim-Befehle
+### 🏞️ Claim-Befehle
 
 | Befehl | Beschreibung | Berechtigung |
 |---|---|---|
-| `/siedler:claim_set <team>` | Setzt ein 2×2-Chunk-Grundstück am Spielerstandort | OP |
-| `/siedler:claim_remove <team>` | Entfernt das Grundstück eines Teams | OP |
-| `/siedler:claim_info` | Zeigt den aktuellen Claim-Status | Alle |
-| `/siedler:claim_list` | Listet alle vergebenen Grundstücke | OP |
+| `/siedler:claim_set <team>` | Setzt einen 2×2-Chunk-Claim | OP |
+| `/siedler:claim_remove <team>` | Entfernt den Claim eines Teams | OP |
+| `/siedler:claim_info` | Zeigt den aktuellen Claim | Alle |
+| `/siedler:claim_list` | Listet Claims auf | OP |
 
 ---
 
-## 👹 Monster-Admin-Befehle
+## 👹 Monster-System
 
-Monster-Befehle werden über den Chat ausgeführt und benötigen den Tag `monster.admin` oder `admin`.
+Die Monster-Konfiguration wird zentral verwaltet und kann dauerhaft in den World Dynamic Properties gespeichert werden.
 
-```text
-!monster help
-!monster status
-!monster enable
-!monster disable
-!monster pillager on|off
-!monster outpost on|off
-!monster siege on|off
-!monster spawn [1-32]
-!monster clear
-!monster reload
-!monster save
-```
-
-Beispiel:
+### Monster-Status
 
 ```text
-/tag <spieler> add monster.admin
+/siedler:monster_status
 ```
 
-Danach kann der Spieler beispielsweise mit
+Zeigt unter anderem:
+
+- Status des Monster-Systems
+- Pillager-Status
+- Spawnchance
+- Truppgröße
+- maximale Anzahl aktiver Trupps
+- Outpost-Status
+- Belagerungsstatus
+
+### System aktivieren/deaktivieren
 
 ```text
-!monster status
+/siedler:monster_enable
+/siedler:monster_disable
 ```
 
-den aktuellen Status anzeigen.
-
-Hinweis: Zusätzlich zu den Chat-Befehlen gibt es jetzt administrative Slash-Commands mit OP-Rechteprüfung:
+### Pillager aktivieren/deaktivieren
 
 ```text
-/siedler:monster_get <path>    # Gibt einen Konfigurationswert zurück (z.B. pillager.spawnChance)
-/siedler:monster_set <path> <value>  # Setzt einen Konfigurationswert und speichert die Config
+/siedler:monster_pillager on
+/siedler:monster_pillager off
 ```
 
-Beispiele (als OP im Spiel):
+### Außenposten-Raids
+
+```text
+/siedler:monster_outpost on
+/siedler:monster_outpost off
+```
+
+### Belagerungen
+
+```text
+/siedler:monster_siege on
+/siedler:monster_siege off
+```
+
+### Trupp manuell spawnen
+
+```text
+/siedler:monster_spawn 10
+```
+
+Die Anzahl ist auf **1–32** begrenzt.
+
+### Markierte Monster entfernen
+
+```text
+/siedler:monster_clear
+```
+
+### Konfiguration neu laden/speichern
+
+```text
+/siedler:monster_reload
+/siedler:monster_save
+```
+
+### Konfigurationswerte lesen und setzen
+
+```text
+/siedler:monster_get <path>
+/siedler:monster_set <path> <value>
+```
+
+Beispiele:
 
 ```text
 /siedler:monster_get pillager.spawnChance
@@ -255,17 +322,110 @@ Beispiele (als OP im Spiel):
 /siedler:monster_set pillager.outpost.enabled true
 ```
 
+Die Custom Commands sind mit der Bedrock-Scripting-API registriert und verwenden `GameDirectors` als Berechtigungsstufe. fileciteturn9file0
+
 ---
 
-## ⚙️ Monster-Konfiguration
+## 🏴 Pillager-Trupps
 
-Die zentrale Standardkonfiguration befindet sich in:
+Pillager können als organisierte feindliche Truppen auftreten.
+
+### Standardwerte
+
+| Einstellung | Standardwert |
+|---|---:|
+| Truppgröße | `4–7` |
+| Maximale aktive Trupps | `3` |
+| Spawnchance | `22 %` |
+| Outpost-Spawnchance | `70 %` |
+| Mindestdistanz | `36 Blöcke` |
+| Maximaldistanz | `64 Blöcke` |
+| Lebensdauer | `24.000 Ticks` |
+| KI-Intervall | `10 Ticks` |
+| Nahkampfreichweite | `3,2 Blöcke` |
+| Fernkampfreichweite | `18 Blöcke` |
+
+### Truppzusammensetzung
+
+Je nach Konfiguration können Truppen enthalten:
+
+- Pillager
+- Pillager-Captain
+- Vindicator
+- Ravager
+
+Die Truppgröße kann zufällig aus dem konfigurierten Bereich gewählt werden. Manuell erzeugte Truppen können über den Monster-Befehl eine feste Anzahl erhalten. fileciteturn9file0
+
+---
+
+## 🏰 Pillager-Außenposten
+
+Das Monster-System kann Pillager-Truppen bevorzugt an bzw. in der Nähe von **Pillager-Außenposten** erzeugen.
+
+Damit lassen sich Außenposten als Ausgangspunkt für gegnerische Truppen und Raids verwenden.
+
+Die relevanten Einstellungen befinden sich im Bereich:
+
+```text
+pillager.outpost
+```
+
+Beispiel:
+
+```text
+/siedler:monster_get pillager.outpost.enabled
+/siedler:monster_set pillager.outpost.enabled true
+```
+
+---
+
+## ⚔️ Belagerungen
+
+Pillager-Truppen können gegnerische Gebiete als Ziele verwenden. In Verbindung mit Claims entsteht dadurch ein Server-System, bei dem Spielergebiete von feindlichen Truppen angegriffen werden können.
+
+Die Einstellungen befinden sich im Bereich:
+
+```text
+pillager.siege
+```
+
+Aktivieren/deaktivieren:
+
+```text
+/siedler:monster_siege on
+/siedler:monster_siege off
+```
+
+---
+
+## 🧠 Pillager-KI
+
+Die Pillager-Truppen besitzen eine eigene Logik und sind nicht nur einfache zufällige Mob-Spawns.
+
+Je nach aktivierten Funktionen kann die KI unter anderem:
+
+- Ziele suchen
+- Entfernungen bewerten
+- zu Zielen laufen
+- Nah- und Fernkampf einsetzen
+- Truppmitglieder zusammenhalten
+- getrennte Einheiten wieder gruppieren
+- gegnerische Claims als Ziele verwenden
+- Angriffe bzw. Belagerungen durchführen
+
+Dadurch können Pillager als organisierte gegnerische Fraktion eingesetzt werden.
+
+---
+
+## ⚙️ Konfiguration
+
+Die Standardkonfiguration liegt in:
 
 ```text
 scripts/monster/config.js
 ```
 
-Dort können unter anderem folgende Bereiche angepasst werden:
+Typischer Aufbau:
 
 ```js
 DEFAULT_CONFIG = {
@@ -283,61 +443,45 @@ DEFAULT_CONFIG = {
 };
 ```
 
-Die Pillager-Konfiguration ist in die Bereiche `ai`, `siege`, `outpost` und `composition` unterteilt. Dadurch lassen sich KI-Verhalten, Belagerungen, Außenposten und Truppzusammensetzung getrennt anpassen.
-
-Änderungen können außerdem über die Monster-Admin-Befehle gespeichert bzw. neu geladen werden.
-
-Konfiguration per Befehl
------------------------
-
-Das Pack bietet nun komfortable Befehle zum Lesen und Setzen von Konfigurationswerten zur Laufzeit:
-
-- `/siedler:monster_get <path>` — Liefert den aktuellen Wert zurück. Pfade verwenden Punkt-Notation (z.B. `pillager.spawnChance`).
-- `/siedler:monster_set <path> <value>` — Setzt einen Wert und speichert die Config in den World Dynamic Properties.
-
-Werteparsing beim `monster_set`:
-- `true` / `false` → Boolean
-- numerische Strings → Number (z.B. `0.5` → Zahl)
-- JSON-Objekte/Arrays (`{...}` / `[...]`) werden versucht zu parsen
-- sonst → String
-
-Beispiele:
+Der `pillager`-Bereich ist wiederum in verschiedene Teilbereiche gegliedert, darunter:
 
 ```text
-/siedler:monster_get pillager.spawnChance
-/siedler:monster_set pillager.spawnChance 0.35
-/siedler:monster_set pillager.outpost.enabled true
-/siedler:monster_set pillager.composition '{"includeRavager":false}'
+pillager
+├── ai
+├── siege
+├── outpost
+└── composition
 ```
 
-Hinweis: Diese Befehle erfordern OP-Rechte (`GameDirectors`). Für zusätzliche Sicherheit kann eine Whitelist implementiert werden, die nur bestimmte Pfade änderbar macht. Frage mich, wenn du das möchtest.
+### Konfiguration zur Laufzeit
 
----
+Werte können über `monster_get` gelesen und über `monster_set` verändert werden.
 
-## 🧠 Pillager-KI
+Unterstützte Eingaben bei `monster_set`:
 
-Das Pillager-System ist nicht nur ein einfacher zufälliger Spawn. Die Trupp-Logik berücksichtigt unter anderem:
+| Eingabe | Ergebnis |
+|---|---|
+| `true` / `false` | Boolean |
+| `0.5`, `10`, usw. | Number |
+| `{...}` | JSON-Objekt, sofern gültig |
+| `[...]` | JSON-Array, sofern gültig |
+| sonstiger Text | String |
 
-- Zielauswahl.
-- Entfernung zum Ziel.
-- Angriffsreichweite.
-- Fernkampfreichweite.
-- Gruppierung und Formation.
-- Bewegung zum Ziel.
-- Verlust eines Ziels.
-- Rückzug nach längerer erfolgloser Suche.
-- Gegnerische Claims als mögliche Angriffsziele.
-- Pillager-Außenposten als bevorzugte Spawnpunkte.
+Beispiel:
 
-Damit können Pillager als organisierte feindliche Trupps eingesetzt werden.
+```text
+/siedler:monster_set pillager.spawnChance 0.35
+/siedler:monster_set pillager.outpost.enabled true
+/siedler:monster_get pillager.spawnChance
+```
 
 ---
 
 ## 💾 Speicherung
 
-Das Pack verwendet Minecraft **World Dynamic Properties**, um Daten dauerhaft in der Welt zu speichern.
+Siedler Logic verwendet **World Dynamic Properties** für dauerhafte Daten.
 
-Gespeichert werden unter anderem:
+Dazu gehören unter anderem:
 
 - Teams
 - Claims
@@ -345,15 +489,19 @@ Gespeichert werden unter anderem:
 - Todespunkte
 - Monster-Konfiguration
 
-Die Daten sind damit nicht an einen einzelnen Server-Prozess gebunden und bleiben beim Neustart der Welt erhalten.
+Das Pack lädt die Dynamic-Property-Registrierung bewusst früh im Startvorgang. fileciteturn7file0
 
 ---
 
 ## 🔐 Berechtigungen
 
-Die meisten Verwaltungsbefehle verwenden die Bedrock-Berechtigungsstufe `GameDirectors` und sind damit für normale Spieler nicht verfügbar.
+Die administrativen Monster-Custom-Commands verwenden die Berechtigungsstufe:
 
-Das Monster-Chat-Interface besitzt zusätzlich eine eigene Tag-Prüfung:
+```text
+GameDirectors
+```
+
+Zusätzlich existiert für das Monster-Chat-Interface eine eigene Tag-basierte Berechtigung:
 
 ```text
 monster.admin
@@ -365,13 +513,11 @@ oder
 admin
 ```
 
-Normale Spieler können die allgemeinen Spielerfunktionen wie Home, TPA, Back und private Nachrichten verwenden.
+Für normale Spieler sind die vorgesehenen Spielerfunktionen wie Home, TPA, Back und private Nachrichten verfügbar.
 
 ---
 
 ## 🛠️ Entwicklung
-
-Das Projekt ist in einzelne Module aufgeteilt, damit Systeme unabhängig voneinander angepasst werden können.
 
 ### Einstiegspunkt
 
@@ -379,45 +525,91 @@ Das Projekt ist in einzelne Module aufgeteilt, damit Systeme unabhängig voneina
 scripts/main.js
 ```
 
-### Neue Module hinzufügen
+Die Module werden dort zentral importiert. fileciteturn7file0
 
-Ein neues System kann als eigenes Modul unter `scripts/` angelegt und anschließend in `scripts/main.js` importiert werden.
+### Neues Modul
 
-Beispiel:
+Ein neues System kann beispielsweise so eingebunden werden:
 
 ```js
 import "./mein_modul/index.js";
 ```
 
-### Fehlerdiagnose
+### Debugging
 
-Das Pack schreibt Status- und Fehlermeldungen in die Minecraft-Scripting-Logs. Für das Monster-System kann zusätzlich `debug: true` in der zentralen Konfiguration aktiviert werden.
+Bei Problemen zuerst die Minecraft-Scripting-Logs prüfen.
+
+Für umfangreichere Fehlersuche kann das Debugging in der jeweiligen Konfiguration aktiviert werden.
 
 ---
 
 ## ⚠️ Hinweise
 
-- Das Pack verwendet die aktuelle `@minecraft/server`-API-Version aus dem Manifest und ist nicht für beliebig alte Bedrock-Versionen ausgelegt.
-- Bei Änderungen an der Minecraft-Scripting-API können einzelne Funktionen angepasst werden müssen.
-- Vor größeren Änderungen an einer produktiven Welt sollte ein Backup der Welt erstellt werden.
-- Die Monster- und Pillager-Systeme können je nach Konfiguration zusätzliche Serverlast erzeugen.
+- Siedler Logic ist für **Minecraft Bedrock 1.26.0+** ausgelegt.
+- Die aktuelle Manifest-Abhängigkeit ist `@minecraft/server 2.9.0`. fileciteturn6file0
+- Änderungen an der Bedrock-Scripting-API können Anpassungen am Code erforderlich machen.
+- Vor Änderungen an einer produktiven Welt sollte ein Backup erstellt werden.
+- Große Pillager-Truppen, häufige Spawns und intensive KI-Berechnungen können zusätzliche Serverlast verursachen.
+- Befehle und Konfigurationsoptionen können sich zwischen Versionen ändern.
+
+---
+
+## 🐛 Fehler melden
+
+Bei einem Fehler bitte möglichst folgende Informationen angeben:
+
+1. Minecraft-Bedrock-Version
+2. Siedler-Logic-Version
+3. `@minecraft/server`-Version
+4. vollständiger relevanter Log-Auszug
+5. Schritte zum Reproduzieren
+6. betroffenes Modul bzw. betroffene Datei
+
+Beispiel:
+
+```text
+Minecraft: 1.26.x
+Siedler Logic: 1.1.4
+@minecraft/server: 2.9.0
+Modul: Monster / Pillager
+Fehler: ...
+```
+
+---
+
+## 🤝 Mitwirken
+
+Beiträge, Bugfixes und neue Features sind willkommen.
+
+```bash
+git clone https://github.com/Jawollo07/mc-siedler-bp.git
+cd mc-siedler-bp
+```
+
+Bitte bei Änderungen möglichst die bestehende modulare Struktur beibehalten und neue Systeme sauber in eigene Module aufteilen.
 
 ---
 
 ## 📜 Lizenz
 
-Aktuell ist im Repository keine Lizenzdatei hinterlegt. Falls das Projekt öffentlich weitergegeben oder von anderen Personen verändert werden soll, empfiehlt sich eine ausdrückliche Lizenz im Repository.
+Aktuell ist im Repository keine separate Lizenzdatei hinterlegt.
+
+Ohne ausdrückliche Lizenz gelten die gesetzlichen Urheberrechte. Wenn das Projekt ausdrücklich als Open Source genutzt, verändert und weiterveröffentlicht werden soll, sollte eine passende Lizenzdatei wie `LICENSE` ergänzt werden.
 
 ---
 
-## 🔗 Repository
+## 🔗 Links
 
-**GitHub:** https://github.com/Jawollo07/mc-siedler-bp
+- **Repository:** https://github.com/Jawollo07/mc-siedler-bp
+- **Minecraft Creator:** https://learn.microsoft.com/minecraft/creator/
 
 ---
 
 ## 👤 Autor
 
-**Jawollo07**
-
+**Jawollo07**  
 Projekt: **Siedler Logic**
+
+---
+
+> 🚧 **Siedler Logic befindet sich in aktiver Entwicklung.** Funktionen, Befehle und Konfigurationswerte können sich mit zukünftigen Versionen ändern.
