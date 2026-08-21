@@ -1,6 +1,6 @@
 import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
-import { getChunkCoords, getChunkKey, getClaims, saveClaims, get2x2Chunks, areChunksFree, countTeamClaims } from "./utils.js";
+import { getChunkCoords, getChunkKey, getClaims, saveClaims, get2x2ChunksCentered, areChunksFree, countTeamClaims } from "./utils.js";
 import { getTeams } from "../teams/index.js";
 
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
