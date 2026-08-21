@@ -1,8 +1,20 @@
 import { system, world, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 
-const CONFIG = () => MONSTER_CONFIG.token;
+const CONFIG = MONSTER_CONFIG?.token ?? null;
 
 const OVERWORLD_ID = "minecraft:overworld";
+
+function hasConfig() {
+    if (!CONFIG) {
+        console.error(
+            "[Token] MONSTER_CONFIG.token ist nicht verfügbar. Das Token-System wurde deaktiviert."
+        );
+
+        return false;
+    }
+
+    return true;
+}
 
 /**
  * Gibt die Overworld zurück.
@@ -15,6 +27,10 @@ function getOverworld() {
  * Gibt alle aktuell existierenden Token-Mobs zurück.
  */
 function getTokenMobs() {
+    if (!hasConfig()) {
+        return [];
+    }
+
     try {
         return getOverworld().getEntities({
             tags: [CONFIG.mobTag]
@@ -142,7 +158,7 @@ function findSpawnPosition(dimension, center) {
  * Spawnt einen Token-Mob.
  */
 function spawnTokenMob(player) {
-    if (!player) {
+    if (!player || !hasConfig()) {
         return null;
     }
 
@@ -236,12 +252,16 @@ function disableAllMonsters() {
  * Registriert den Token-Custom-Command.
  */
 system.beforeEvents.startup.subscribe((event) => {
+    if (!hasConfig()) {
+        return;
+    }
+
     const registry = event.customCommandRegistry;
 
     registry.registerCommand(
         {
-            name: CONFIG.token.command.name,
-            description: CONFIG.token.command.description,
+            name: CONFIG.command.name,
+            description: CONFIG.command.description,
             permissionLevel: 0,
             cheatsRequired: false
         },
@@ -273,6 +293,10 @@ system.beforeEvents.startup.subscribe((event) => {
  * Erkennt den Tod eines Token-Mobs.
  */
 world.afterEvents.entityDie.subscribe((event) => {
+    if (!hasConfig()) {
+        return;
+    }
+
     const deadEntity = event.deadEntity;
 
     if (!deadEntity) {
