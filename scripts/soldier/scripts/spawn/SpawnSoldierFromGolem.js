@@ -1,18 +1,12 @@
 import { world } from "@minecraft/server";
 
-const UNSAFE_BLOCKS = ["bed", "carpet", "slab", "water", "lava"];
-
-function isUnsafeBlock(block) {
-    return !block || UNSAFE_BLOCKS.some(unsafe => block.typeId.includes(unsafe));
-}
-
 // Listen for the DataDrivenEntityTrigger event
 world.afterEvents.dataDrivenEntityTrigger.subscribe(({ eventId, entity }) => {
     // only handle processing with event "minecraft:from_village" and correct entity is minecraft:villager_v2
     if (eventId !== "minecraft:from_village" || entity.typeId !== "minecraft:iron_golem") return;
 
     const { location, dimension } = entity;
-    if (!entity.isValid || !location || !dimension) return;
+    if (!location || !dimension) return;
 
     spawnRandomCustomVillager(dimension, location);
 });
@@ -26,9 +20,9 @@ function spawnRandomCustomVillager(dimension, location) {
         const offsetX = Math.random() * 10 - 5;
         const offsetZ = Math.random() * 10 - 5;
 
-        const spawnX = Math.floor(location.x + offsetX) + 0.5;
+        const spawnX = location.x + offsetX;
         const spawnY = location.y;
-        const spawnZ = Math.floor(location.z + offsetZ) + 0.5;
+        const spawnZ = location.z + offsetZ;
 
         const blockBelow = dimension.getBlock({ x: spawnX, y: spawnY - 1, z: spawnZ });
         const blockAt = dimension.getBlock({ x: spawnX, y: spawnY, z: spawnZ });
@@ -36,11 +30,11 @@ function spawnRandomCustomVillager(dimension, location) {
 
         if (!blockAt || !blockAbove || !blockBelow) continue;
 
-        const isAirAt = blockAt.typeId === "minecraft:air" || blockAt.typeId === "minecraft:light_block";
-        const isAirAbove = blockAbove.typeId === "minecraft:air" || blockAbove.typeId === "minecraft:light_block";
-        const hasSafeGround = blockBelow.typeId !== "minecraft:air" && !isUnsafeBlock(blockBelow);
-
-        if (isAirAt && isAirAbove && hasSafeGround) {
+        if (
+            blockAt.typeId === "minecraft:air" &&
+            blockAbove.typeId === "minecraft:air" &&
+            blockBelow.typeId !== "minecraft:air"
+        ) {
             try {
                 dimension.spawnEntity(randomMob, { x: spawnX, y: spawnY, z: spawnZ });
                 return;

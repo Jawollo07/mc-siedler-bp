@@ -63,7 +63,7 @@ world.afterEvents.playerInteractWithEntity.subscribe((event) => {
         // Skip Nitwit/Unskilled during interaction (let OnHit handle it)
         if (fam.hasTypeFamily("nitwit") || fam.hasTypeFamily("unskilled")) return;
 
-        let finalEntityType = "fv:villager_melee";
+        let finalEntityType = "fv:villager_free_handle";
         let spawnEvent = getVillagerEventSafe(target);
 
         // JOB CLASSIFICATION
@@ -121,7 +121,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
         }
         // Nitwit or unemployed villager is converted to free soldier
         else if (fam.hasTypeFamily("nitwit") || fam.hasTypeFamily("unskilled")) {
-            finalEntityType = "fv:villager_melee";
+            finalEntityType = "fv:villager_free_handle";
             spawnEvent = getVillagerEventSafe(target);
         }
 

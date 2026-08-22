@@ -5,9 +5,7 @@ import { world } from "@minecraft/server";
 const UNSAFE_BLOCKS = [
     "bed",      // block all bed types (minecraft:yellow_bed, red_bed...)
     "carpet",   // (Optional) block carpets to prevent floating objects
-    "slab",     // (Optional) block slabs if the ceiling is too low
-    "water",
-    "lava"
+    "slab"      // (Optional) block slabs if the ceiling is too low];
 ]
 // Function to check if a block is unsafe for spawning
 function isUnsafeBlock(block) {
@@ -28,9 +26,7 @@ world.afterEvents.dataDrivenEntityTrigger.subscribe(({ eventId, entity }) => {
     // Check if the entity is valid for safe spawning
     if (!entity.isValid || !location || !dimension) return;
 
-    if (spawnRandomCustomVillager(dimension, location)) {
-        entity.remove();
-    }
+    spawnRandomCustomVillager(dimension, location);
 });
 
 // Function to spawn 1 in 2 custom entities randomly near Villager
@@ -60,7 +56,7 @@ function spawnRandomCustomVillager(dimension, location) {
         const isAirAbove = blockAbove.typeId === "minecraft:air" || blockAbove.typeId === "minecraft:light_block";
 
         // 2. Check for ground (Must not be Air)
-        const hasGround = blockBelow.typeId !== "minecraft:air" && !isUnsafeBlock(blockBelow);
+        const hasGround = blockBelow.typeId !== "minecraft:air";
 
         // 3. IMPORTANT: Check if the block below OR the block the entity is standing on is a Bed
         // (Sometimes the entity's feet are considered to be inside the bed block)
@@ -70,7 +66,7 @@ function spawnRandomCustomVillager(dimension, location) {
             try {
                 dimension.spawnEntity(randomMob, { x: spawnX, y: spawnY, z: spawnZ });
                 // console.log(`Spawned ${randomMob} at safe location.`);
-                return true;
+                return;
             } catch (e) {
                 console.warn(`Failed to spawn ${randomMob}: ${e}`);
             }
@@ -78,5 +74,4 @@ function spawnRandomCustomVillager(dimension, location) {
     }
 
     // console.warn("No suitable spawn location found (bed avoided).");
-    return false;
 }

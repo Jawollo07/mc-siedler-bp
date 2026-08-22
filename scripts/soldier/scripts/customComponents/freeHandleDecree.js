@@ -48,7 +48,7 @@ const FreehandHitComponent = {
         if (hitEntity.hasComponent("minecraft:is_baby")) return;
 
         // --- JOB CLASSIFICATION (logic NEW) ---
-        let finalEntityId = "fv:villager_melee"; // Default soldier for Nitwit, Unskilled, Farmer...
+        let finalEntityId = "fv:villager_free_handle"; // Default for Nitwit, Unskilled, Farmer...
 
         const fam = hitEntity.getComponent("minecraft:type_family");
         if (fam) {
