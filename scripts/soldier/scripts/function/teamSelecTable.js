@@ -55,8 +55,9 @@ world.afterEvents.itemUse.subscribe(ev => {
         const form = new ActionFormData().title({ translate: "gui.team_book.select_title" }).body({ translate: "gui.team_book.select_body" });
         teams.forEach(t => form.button({ translate: `team.${t}` }));
         form.show(p).then(res => {
-            if (res.selection !== undefined) {
+            if (res.selection !== undefined && p.isValid) {
                 const team = teams[res.selection];
+                teams.forEach(t => p.removeTag(t));
                 p.addTag(team);
                 p.nameTag = `${teamColors[team]}[${team} team] ${p.name}`;
                 p.getComponent("minecraft:equippable")?.setEquipment(EquipmentSlot.Mainhand, new ItemStack(`fv:team_book_${team}`, 1));

@@ -26,7 +26,7 @@ system.beforeEvents.startup.subscribe((initEvent) => {
             const eventToTrigger = ARMOR_SET_MAP[itemStack.typeId];
             if (!eventToTrigger) return;
 
-            // 1. Vị trí spawn
+            // 1. spawn position
             const spawnLoc = {
                 x: block.location.x + 0.5,
                 y: block.location.y + 1,
@@ -36,18 +36,18 @@ system.beforeEvents.startup.subscribe((initEvent) => {
             try {
                 const dimension = player.dimension;
 
-                // 2. Spawn thực thể
+                // 2. spawn perform entity
                 const armorStand = dimension.spawnEntity("fv:copy_armor_stand", spawnLoc);
 
-                // 3. Tính toán hướng nhìn (Rotation)
-                // Lấy góc quay hiện tại của player. quay 180 độ để thực thể nhìn đối diện player.
+                // 3. Calculate look direction (Rotation)
+                // take angle roll perform exist of player. roll 180 mode to perform entity look facing player.
                 const playerRot = player.getRotation();
                 armorStand.setRotation({ x: 0, y: playerRot.y + 180 });
 
-                // 4. Kích hoạt Event
+                // 4. Trigger the event
                 armorStand.triggerEvent(eventToTrigger);
 
-                // 5. Trừ item
+                // 5. Remove item
                 const inventory = player.getComponent("minecraft:inventory");
                 if (inventory) {
                     const container = inventory.container;
@@ -62,7 +62,7 @@ system.beforeEvents.startup.subscribe((initEvent) => {
                     }
                 }
             } catch (error) {
-                console.warn("Lỗi: " + error);
+                console.warn("Error: " + error);
             }
         }
     });

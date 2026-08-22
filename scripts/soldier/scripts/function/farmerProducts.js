@@ -1,6 +1,6 @@
 import { system, ItemStack } from "@minecraft/server";
 
-// Cấu hình đổi đồ nghề nông (Giữ nguyên logic cũ)
+// Trade configuration farming profession (Keep old logic unchanged)
 const FARMER_RECIPES = [
     { source: "minecraft:wheat", ratio: 1, result: "minecraft:bread", resultAmount: 1 },
     {
@@ -36,7 +36,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- LẤY CẤP ĐỘ VÀ XP HIỆN TẠI ---
+    // --- GET LEVEL AND XP perform exist ---
     let level = 0;
     let xp = 0;
     try {
@@ -46,7 +46,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         level = 0;
     }
 
-    // --- PHẦN 1: PHẦN THƯỞNG THEO CẤP ĐỘ ---
+    // --- SECTION 1: REWARDS BY LEVEL ---
     if (level === 0) {
         safeAddItems(container, "minecraft:wheat_seeds", 4);
     }
@@ -71,7 +71,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         safeAddItems(container, "minecraft:bread", 8);
     }
 
-    // --- CƠ CHẾ CỘNG XP VÀ LÊN CẤP (CỐ ĐỊNH) ---
+    // --- MECHANISM ADD XP AND LEVEL UP (FIXED) ---
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -90,7 +90,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- PHẦN 2: LOGIC CHẾ TẠO (GIỮ NGUYÊN) ---
+    // --- SECTION 2: logic CRAFTING (KEEP UNCHANGED) ---
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
         if (!item) continue;

@@ -2,10 +2,10 @@ import { world, system, EquipmentSlot } from "@minecraft/server";
 
 console.warn("[FV-DEBUG] >>> VILLAGER HANDLE SCRIPT UPDATED <<<");
 
-// --- HÀM LẤY EVENT BIOME (Dành cho lính thường) ---
+// --- GET BIOME event (for regular soldiers) ---
 function getVillagerEventSafe(target) {
     try {
-        // Module 2.4.0: isValid không có ngoặc
+        // Module 2.4.0: isValid has no parentheses
         if (!target || !target.isValid) return "fv:plains";
         const markComp = target.getComponent("minecraft:mark_variant");
         const val = markComp ? markComp.value : 0;
@@ -14,20 +14,20 @@ function getVillagerEventSafe(target) {
     } catch (e) { return "fv:plains"; }
 }
 
-// --- HÀM THỰC THI SPAWN ---
+// --- EXECUTE spawn ---
 function executeSpawn(dimension, spawnPos, eventName, target, player, equippableComp, entityTypeId) {
     system.run(() => {
-        // Kiểm tra an toàn trước khi xóa target
+        // Check safe before removing the target
         if (target && target.isValid) target.remove();
 
         try {
-            // Thực hiện spawn với event được chỉ định
+            // perform perform spawn with the specified event
             dimension.spawnEntity(entityTypeId, spawnPos, { spawnEvent: eventName });
         } catch (err) {
             try { dimension.spawnEntity(entityTypeId, spawnPos); } catch (e) { }
         }
 
-        // Trừ Item (Chỉ trừ nếu là người chơi dùng)
+        // Remove item (Only deduct if used by a player)
         try {
             if (player && player.isValid && equippableComp) {
                 const item = equippableComp.getEquipment(EquipmentSlot.Mainhand);
@@ -42,15 +42,15 @@ function executeSpawn(dimension, spawnPos, eventName, target, player, equippable
     });
 }
 
-// --- XỬ LÝ TƯƠNG TÁC (INTERACT) ---
+// --- HANDLE INTERACTION (INTERACT) ---
 world.afterEvents.playerInteractWithEntity.subscribe((event) => {
     const { player, target } = event;
 
-    // Kiểm tra an toàn tuyệt đối cho player và target
+    // Check safe absolute object for player and target
     if (!player || !target || !player.isValid || !target.isValid) return;
     if (target.typeId !== "minecraft:villager_v2") return;
 
-    // Kiểm tra Item trên tay
+    // Check item in hand
     const eq = player.getComponent("minecraft:equippable");
     const item = eq?.getEquipment(EquipmentSlot.Mainhand);
     if (item?.typeId !== "fv:freehand_decree") return;
@@ -60,19 +60,19 @@ world.afterEvents.playerInteractWithEntity.subscribe((event) => {
         const fam = target.getComponent("minecraft:type_family");
         if (!fam) return;
 
-        // Bỏ qua Nitwit/Unskilled trong phần interact (để OnHit xử lý)
+        // Skip Nitwit/Unskilled during interaction (let OnHit handle it)
         if (fam.hasTypeFamily("nitwit") || fam.hasTypeFamily("unskilled")) return;
 
-        let finalEntityType = "fv:villager_free_handle";
+        let finalEntityType = "fv:villager_melee";
         let spawnEvent = getVillagerEventSafe(target);
 
-        // PHÂN LOẠI NGHỀ
+        // JOB CLASSIFICATION
         if (fam.hasTypeFamily("fletcher")) {
             finalEntityType = "fv:villager_ranged";
         } else if (fam.hasTypeFamily("weaponsmith")) {
             finalEntityType = "fv:villager_melee";
         }
-        // Xử lý Healer từ Cleric
+        // Handle Healer from Cleric
         else if (fam.hasTypeFamily("cleric")) {
             finalEntityType = "fv:villager_healer";
             spawnEvent = "minecraft:entity_spawned";
@@ -86,22 +86,22 @@ world.afterEvents.playerInteractWithEntity.subscribe((event) => {
     } catch (e) { }
 });
 
-// --- XỬ LÝ KHI BỊ ĐÁNH (ON HIT) ---
+// --- PROCESSING when is attack (ON HIT) ---
 world.afterEvents.entityHurt.subscribe((event) => {
     const { damageSource, target } = event;
 
-    // Đảm bảo damageSource tồn tại trước khi lấy damagingEntity
+    // Ensure damageSource exists before getting damagingEntity
     if (!damageSource) return;
     const player = damageSource.damagingEntity;
 
-    // SỬA LỖI DÒNG 91: Tách điều kiện kiểm tra để tránh lỗi "of undefined"
+    // FIX BUG line 91: Separate the check conditions to to avoid the error "of undefined"
     if (!player) return;
     if (!player.isValid || player.typeId !== "minecraft:player") return;
 
-    // Kiểm tra target (Villager)
+    // Check target (Villager)
     if (!target || !target.isValid || target.typeId !== "minecraft:villager_v2") return;
 
-    // Kiểm tra Item trên tay
+    // Check item in hand
     const eq = player.getComponent("minecraft:equippable");
     const item = eq?.getEquipment(EquipmentSlot.Mainhand);
     if (item?.typeId !== "fv:freehand_decree") return;
@@ -114,14 +114,14 @@ world.afterEvents.entityHurt.subscribe((event) => {
         let finalEntityType = "";
         let spawnEvent = "";
 
-        // Cleric bị đánh thành Healer
+        // Cleric is converted to Healer
         if (fam.hasTypeFamily("cleric")) {
             finalEntityType = "fv:villager_healer";
             spawnEvent = "minecraft:entity_spawned";
         }
-        // Nitwit hoặc dân làng không nghề bị đánh thành lính tự do
+        // Nitwit or unemployed villager is converted to free soldier
         else if (fam.hasTypeFamily("nitwit") || fam.hasTypeFamily("unskilled")) {
-            finalEntityType = "fv:villager_free_handle";
+            finalEntityType = "fv:villager_melee";
             spawnEvent = getVillagerEventSafe(target);
         }
 

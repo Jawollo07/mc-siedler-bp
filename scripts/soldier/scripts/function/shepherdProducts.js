@@ -1,6 +1,6 @@
 import { system, ItemStack } from "@minecraft/server";
 
-// Bảng màu tương ứng với Data Value của Bed/Dye/Wool
+// Color table corresponding with Data Value of Bed/Dye/Wool
 const COLOR_DATA = {
     "white": 0, "orange": 1, "magenta": 2, "light_blue": 3, "yellow": 4, "lime": 5, "pink": 6, "gray": 7, "light_gray": 8, "cyan": 9, "purple": 10, "blue": 11, "brown": 12, "green": 13, "red": 14, "black": 15
 };
@@ -36,7 +36,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- 1. LẤY CẤP ĐỘ VÀ XP (MỚI) ---
+    // --- 1. GET LEVEL AND XP (NEW) ---
     let level = 0;
     let xp = 0;
     try {
@@ -44,9 +44,9 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         xp = sourceEntity.getProperty("fv:xp") ?? 0;
     } catch (e) { level = 0; }
 
-    // --- 2. PHẦN THƯỞNG THEO LEVEL (Dùng replaceitem để fix màu) ---
+    // --- 2. REWARDS BY LEVEL (Use replaceitem to fix color) ---
 
-    // Thuốc nhuộm (Luôn có: level + 1 cái)
+    // Dye (Always included: level + 1 item)
     for (let d = 0; d < (level + 1); d++) {
         let slot = findEmptySlot(container);
         if (slot !== -1) {
@@ -56,7 +56,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // Giường (50% cơ hội)
+    // bed (50% chance)
     if (Math.random() < 0.5) {
         let slot = findEmptySlot(container);
         if (slot !== -1) {
@@ -66,14 +66,14 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // Các vật phẩm khác (Dùng addItem bình thường)
+    // Other items (Use addItem normally)
     if (level >= 1 && Math.random() < 0.5) container.addItem(new ItemStack("minecraft:shears", 1));
     if (level >= 2 && Math.random() < 0.5) container.addItem(new ItemStack("minecraft:armor_stand", 1));
     if (level >= 3 && Math.random() < 0.5) container.addItem(new ItemStack("minecraft:feather", 2));
     if (level >= 4 && Math.random() < 0.5) container.addItem(new ItemStack("minecraft:painting", 1));
     if (level === 5) container.addItem(new ItemStack("minecraft:string", 1));
 
-    // CỘNG XP VÀ LÊN CẤP
+    // ADD XP AND LEVEL UP
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -88,12 +88,12 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- 3. LOGIC CHẾ TẠO GỐC (KHÔI PHỤC 100%) ---
+    // --- 3. logic CRAFTING original (RESTORE 100%) ---
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
         if (!item) continue;
 
-        // Chế tạo Giường: 3 Len + 2 Gỗ
+        // Craft Bed: 3 Wool + 2 Wood
         if (item.typeId.endsWith("_wool")) {
             const color = item.typeId.replace("minecraft:", "").replace("_wool", "");
             const dataValue = COLOR_DATA[color] ?? 0;
@@ -111,14 +111,14 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                 if (plankType) {
                     removeItem(container, item.typeId, 3);
                     removeItem(container, plankType, 2);
-                    // Dùng replaceitem vào chính ô vừa xử lý để nhận giường đúng màu
+                    // Use replaceitem in the processed slot to receive the bed with the correct color
                     sourceEntity.runCommand(`replaceitem entity @s slot.inventory ${i} bed 1 ${dataValue}`);
                     continue;
                 }
             }
         }
 
-        // Chế tạo Tù và (Goat Horn)
+        // Craft Goat Horn (Goat Horn)
         if (item.typeId === "minecraft:goat_horn") {
             const dyeToHorn = {
                 "minecraft:yellow_dye": "fv:team_call_horn",

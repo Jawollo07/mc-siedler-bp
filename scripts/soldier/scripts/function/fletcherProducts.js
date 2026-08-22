@@ -34,8 +34,8 @@ function removeItem(container, typeId, amount) {
 function safeAddItems(container, typeId, totalAmount) {
     let remaining = totalAmount;
     while (remaining > 0) {
-        // Mặc định chia 64, nhưng với item đặc biệt như fv:copper_boom (stack 8), 
-        // Minecraft sẽ tự xử lý nếu item đó được định nghĩa max_stack_size là 8.
+        // Default split is 64, but with special items such as fv:copper_boom (stack 8), 
+        // Minecraft will handle it automatically if the item is defined with max_stack_size 8.
         let stackSize = Math.min(remaining, 64);
         try {
             const itemStack = new ItemStack(typeId, stackSize);
@@ -44,8 +44,8 @@ function safeAddItems(container, typeId, totalAmount) {
                 return remaining - (stackSize - result.amount);
             }
         } catch (e) {
-            // Trường hợp stackSize vượt quá max_stack_size của item (ví dụ copper_boom)
-            // Ta thử thêm từng cái 1 cho an toàn tuyệt đối
+            // Case stackSize exceeds max_stack_size of item (example example copper_boom)
+            // Add one at a time for maximum safety for safe absolute object
             const singleItem = new ItemStack(typeId, 1);
             const result = container.addItem(singleItem);
             if (result) return remaining;
@@ -65,7 +65,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- LẤY CẤP ĐỘ VÀ XP HIỆN TẠI ---
+    // --- GET LEVEL AND XP perform exist ---
     let level = 0;
     let xp = 0;
     try {
@@ -75,7 +75,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         level = 0;
     }
 
-    // --- PHẦN 1: PHẦN THƯỞNG THEO CẤP ĐỘ ---
+    // --- SECTION 1: REWARDS BY LEVEL ---
     if (level === 0) {
         safeAddItems(container, "minecraft:arrow", 8);
         safeAddItems(container, "minecraft:stick", 8);
@@ -101,7 +101,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         safeAddItems(container, "fv:copper_boom", 4);
     }
 
-    // --- CƠ CHẾ CỘNG XP VÀ LÊN CẤP (CỐ ĐỊNH) ---
+    // --- MECHANISM ADD XP AND LEVEL UP (FIXED) ---
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -120,13 +120,13 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- PHẦN 2: CHẾ TẠO CÔNG CỤ (GIỮ NGUYÊN LOGIC CŨ) ---
+    // --- SECTION 2: CRAFTING success tools (KEEP UNCHANGED logic old) ---
     let sticks = getItemCount(container, "minecraft:stick");
     let hooks = getItemCount(container, "minecraft:tripwire_hook");
     let copper = getItemCount(container, "minecraft:copper_ingot");
     let gunpowder = getItemCount(container, "minecraft:gunpowder");
 
-    // 1. Chế tạo Nỏ (Crossbow) - 2 Gậy + 1 Móc dây
+    // 1. Craft Crossbow (Crossbow) - 2 Stick + 1 String
     let canCraftCrossbow = Math.min(Math.floor(sticks / 2), hooks);
     if (canCraftCrossbow > 0) {
         let actualAdded = canCraftCrossbow - safeAddItems(container, "minecraft:crossbow", canCraftCrossbow);
@@ -137,7 +137,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // 2. Chế tạo Cung (Bow) - 3 Gậy
+    // 2. Craft Bow (Bow) - 3 Stick
     let canCraftBow = Math.floor(sticks / 3);
     if (canCraftBow > 0) {
         let actualAdded = canCraftBow - safeAddItems(container, "minecraft:bow", canCraftBow);
@@ -147,7 +147,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // 3. Chế tạo Copper Boom - 2 Thỏi đồng + 1 Gunpowder
+    // 3. Craft Copper Boom - 2 Copper Ingots + 1 Gunpowder
     let canCraftBoom = Math.min(Math.floor(copper / 2), gunpowder);
     if (canCraftBoom > 0) {
         let actualAdded = canCraftBoom - safeAddItems(container, "fv:copper_boom", canCraftBoom);

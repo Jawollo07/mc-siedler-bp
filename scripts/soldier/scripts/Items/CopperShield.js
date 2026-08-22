@@ -1,13 +1,13 @@
 import { world, system, EquipmentSlot } from "@minecraft/server";
 import { damageItem } from "../function/shieldDamage.js";
 
-// 1. CẤU HÌNH
+// 1. CONFIGURATION
 const VALID_SHIELDS = [
     "fv:copper_shield",
-    // Thêm khiên khác vào đây
+    // Add other shields here
 ];
 
-// 2. HÀM HỖ TRỢ
+// 2. function HELPERS
 function isValidShield(item) {
     if (!item) return false;
     if (VALID_SHIELDS.includes(item.typeId)) return true;
@@ -28,7 +28,7 @@ function isBlockingFacing(player, damager) {
     return dotProduct > 0;
 }
 
-// 3. ANIMATION (Không Lag)
+// 3. animation (No lag)
 const playerBlockState = new Map();
 
 system.runInterval(() => {
@@ -72,19 +72,19 @@ world.afterEvents.playerLeave.subscribe((ev) => {
     playerBlockState.delete(ev.playerId);
 });
 
-// 4. LOGIC CHẶN ĐÒN (ỔN ĐỊNH)
+// 4. BLOCKING logic (STABLE)
 world.afterEvents.entityHurt.subscribe((event) => {
     const player = event.hurtEntity;
     const damageSource = event.damageSource;
-    const damager = damageSource.damagingEntity; // Có thể là Mob hoặc Mũi tên
+    const damager = damageSource.damagingEntity; // Can be a mob or safe Arrow
 
     if (player.typeId !== "minecraft:player") return;
     if (!player.isSneaking || !damager) return;
 
-    // Check góc chặn
+    // Check block angle
     if (!isBlockingFacing(player, damager)) return;
 
-    // Check khiên
+    // Check shield
     const eq = player.getComponent("minecraft:equippable");
     const mainHand = eq?.getEquipment(EquipmentSlot.Mainhand);
     const offHand = eq?.getEquipment(EquipmentSlot.Offhand);
@@ -102,9 +102,9 @@ world.afterEvents.entityHurt.subscribe((event) => {
 
     if (!blockingShield || !slotName) return;
 
-    // --- XỬ LÝ (System Run để tránh lag logic) ---
+    // --- PROCESSING (system Run to avoid lag logic) ---
     system.run(() => {
-        // 1. Hồi máu (Block Damage)
+        // 1. Heal (block damage)
         const healthComp = player.getComponent("minecraft:health");
         if (healthComp) {
             const damageTaken = Math.round(event.damage);
@@ -112,10 +112,10 @@ world.afterEvents.entityHurt.subscribe((event) => {
             healthComp.setCurrentValue(newHealth);
         }
 
-        // 2. Âm thanh block
+        // 2. block sound
         player.runCommand("playsound item.shield.block @s");
 
-        // 3. Xử lý Đẩy lùi Kẻ địch (Chỉ áp dụng nếu KHÔNG PHẢI là đạn đạo)
+        // 3. Handle enemy knockback (only apply if it is NOT a projectile)
         if (damager.isValid && damageSource.cause !== "projectile") {
             const dx = damager.location.x - player.location.x;
             const dz = damager.location.z - player.location.z;
@@ -124,7 +124,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
             } catch (e) { }
         }
 
-        // 4. Trừ độ bền
+        // 4. Deduct durability
         if (player.getGameMode() === "survival") {
             const currentEq = player.getComponent("minecraft:equippable");
             const currentShield = currentEq.getEquipment(slotName);
@@ -142,7 +142,7 @@ world.afterEvents.entityHurt.subscribe((event) => {
     });
 });
 
-// 5. TRỪ ĐỘ BỀN KHI ĐẬP BLOCK
+// 5. DEDUCT DURABILITY when BREAK block
 world.afterEvents.playerBreakBlock.subscribe(({ player, itemStackAfterBreak: item }) => {
     if (!item) return;
     if (item.hasTag("fv:durability") || isValidShield(item)) {

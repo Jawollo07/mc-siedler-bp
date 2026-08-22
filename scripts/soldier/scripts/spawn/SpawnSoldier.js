@@ -3,9 +3,11 @@ import { world } from "@minecraft/server";
 // List of keywords in block IDs that troops are NOT allowed to spawn on
 // (Beds are the main cause of head-on collisions with ceilings)
 const UNSAFE_BLOCKS = [
-    "bed",      // Block all bed types (minecraft:yellow_bed, red_bed...)
-    "carpet",   // (Optional) Block carpets to prevent floating objects
-    "slab"      // (Optional) Block slabs if the ceiling is too low];
+    "bed",      // block all bed types (minecraft:yellow_bed, red_bed...)
+    "carpet",   // (Optional) block carpets to prevent floating objects
+    "slab",     // (Optional) block slabs if the ceiling is too low
+    "water",
+    "lava"
 ]
 // Function to check if a block is unsafe for spawning
 function isUnsafeBlock(block) {
@@ -26,7 +28,9 @@ world.afterEvents.dataDrivenEntityTrigger.subscribe(({ eventId, entity }) => {
     // Check if the entity is valid for safe spawning
     if (!entity.isValid || !location || !dimension) return;
 
-    spawnRandomCustomVillager(dimension, location);
+    if (spawnRandomCustomVillager(dimension, location)) {
+        entity.remove();
+    }
 });
 
 // Function to spawn 1 in 2 custom entities randomly near Villager
@@ -56,7 +60,7 @@ function spawnRandomCustomVillager(dimension, location) {
         const isAirAbove = blockAbove.typeId === "minecraft:air" || blockAbove.typeId === "minecraft:light_block";
 
         // 2. Check for ground (Must not be Air)
-        const hasGround = blockBelow.typeId !== "minecraft:air";
+        const hasGround = blockBelow.typeId !== "minecraft:air" && !isUnsafeBlock(blockBelow);
 
         // 3. IMPORTANT: Check if the block below OR the block the entity is standing on is a Bed
         // (Sometimes the entity's feet are considered to be inside the bed block)
@@ -66,7 +70,7 @@ function spawnRandomCustomVillager(dimension, location) {
             try {
                 dimension.spawnEntity(randomMob, { x: spawnX, y: spawnY, z: spawnZ });
                 // console.log(`Spawned ${randomMob} at safe location.`);
-                return;
+                return true;
             } catch (e) {
                 console.warn(`Failed to spawn ${randomMob}: ${e}`);
             }
@@ -74,4 +78,5 @@ function spawnRandomCustomVillager(dimension, location) {
     }
 
     // console.warn("No suitable spawn location found (bed avoided).");
+    return false;
 }

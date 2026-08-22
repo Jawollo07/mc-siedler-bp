@@ -1,17 +1,17 @@
 // File: shootCatapult.js
 import { system } from "@minecraft/server";
 
-// Nhận scriptevent catapult:fire
+// Receive scriptevent catapult:fire
 system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (event.id !== "catapult:fire") return;
 
     const catapult = event.sourceEntity;
-    // Kiểm tra tính hợp lệ của Entity nguồn
+    // Check whether the source entity is valid
     if (!catapult || !catapult.isValid) return;
 
     const ammoType = catapult.getProperty("fv:reload_catapult");
     if (ammoType === "empty") {
-        console.warn("Catapult chưa nạp đạn!");
+        console.warn("Catapult is not loaded!");
         return;
     }
 
@@ -38,19 +38,19 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         z: catapult.location.z + direction.z * offset
     };
 
-    // Spawn fv:block_fly
+    // spawn fv:block_fly
     const projectile = catapult.dimension.spawnEntity("fv:block_fly", spawnPos);
     if (!projectile || !projectile.isValid) return;
 
     try {
         const projComp = projectile.getComponent("minecraft:projectile");
         if (projComp) {
-            // FIX: Đặt owner là Entity kích hoạt (Catapult)
+            // FIX: Set owner to the triggering Entity (Catapult)
             projComp.owner = catapult;
 
             projComp.shoot(
                 {
-                    x: direction.x * 2.2,  // bạn có thể chỉnh power tùy ý
+                    x: direction.x * 2.2,  // you can adjust power as desired
                     y: direction.y * 2.2,
                     z: direction.z * 2.2
                 },
@@ -58,12 +58,12 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
             );
         }
     } catch (e) {
-        console.warn("Lỗi khi gán owner hoặc bắn Projectile:", e);
+        console.warn("Error assigning owner or firing projectile:", e);
     }
 
-    // Gọi event tương ứng lên viên block_fly
+    // Trigger the corresponding event up round block_fly
     projectile.triggerEvent(ammoType);
 
-    // Reset reload_catapult về empty
+    // reset reload_catapult to empty
     catapult.setProperty("fv:reload_catapult", "empty");
 });

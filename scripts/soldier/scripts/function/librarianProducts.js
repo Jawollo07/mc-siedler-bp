@@ -1,8 +1,8 @@
 import { system, ItemStack, EnchantmentTypes } from "@minecraft/server";
 
-// --- 1. CẤU HÌNH HỆ THỐNG ---
+// --- 1. SYSTEM CONFIGURATION ---
 const FULL_SET_UPGRADES = {
-    // Giữ fv: cho đồ custom của ông
+    // Keep the fv: namespace for your custom items
     "fv:full_set_copper_armor": "fv:full_set_copper_armor_enchanted",
     "fv:full_set_chainmail_armor": "fv:full_set_chainmail_armor_enchanted",
     "fv:full_set_gold_armor": "fv:full_set_gold_armor_enchanted",
@@ -23,7 +23,7 @@ const REROLL_POOLS = {
     spear: ["sharpness", "smite", "bane_of_arthropods", "looting", "knockback", "fire_aspect", "lunge"]
 };
 
-// --- 2. HÀM HỖ TRỢ ---
+// --- 2. function HELPERS ---
 
 function getItemCount(container, typeId) {
     let count = 0;
@@ -58,17 +58,17 @@ function safeAddItems(container, typeId, totalAmount) {
     return 0;
 }
 
-// --- 3. LOGIC PHÙ PHÉP TINH LUYỆN ---
+// --- 3. REFINED ENCHANTMENT FLAG LOGIC ---
 
 function applyLibrarianEnchant(itemStack, config) {
     const enchantable = itemStack.getComponent("minecraft:enchantable");
     if (!enchantable) return;
 
     const tid = itemStack.typeId;
-    // Kiểm tra Spear bằng tag hoặc typeId
+    // Check Spears by tag or typeId
     const isSpear = tid.includes("_spear") || itemStack.hasTag("minecraft:is_spear");
 
-    // A. NHÓM ĐỒ CỐ ĐỊNH
+    // A. FIXED ITEMS GROUP
     if (tid.includes("_helmet") || tid.includes("_chestplate") || tid.includes("_leggings") || tid.includes("_boots") || tid === "minecraft:crossbow") {
         let targetList = FIXED_ARMOR_ENCHANTS;
         if (tid.includes("_boots")) targetList = FIXED_BOOTS_ENCHANTS;
@@ -81,8 +81,8 @@ function applyLibrarianEnchant(itemStack, config) {
         return;
     }
 
-    // B. NHÓM ĐỒ RE-ROLL
-    // Thêm các dòng chung (Unbreaking, Mending)
+    // B. RE-ROLL ITEMS GROUP
+    // Add common lines (Unbreaking, Mending)
     if (tid !== "minecraft:book" && tid !== "minecraft:enchanted_book") {
         COMMON_ENCHANTS.forEach(enchId => {
             const type = EnchantmentTypes.get(enchId);
@@ -112,7 +112,7 @@ function applyLibrarianEnchant(itemStack, config) {
     }
 }
 
-// --- 4. SỰ KIỆN CHÍNH ---
+// --- 4. MAIN event ---
 
 system.afterEvents.scriptEventReceive.subscribe((event) => {
     const { id, sourceEntity } = event;

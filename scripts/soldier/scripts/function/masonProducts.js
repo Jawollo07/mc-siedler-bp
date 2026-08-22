@@ -1,6 +1,6 @@
 import { system, ItemStack } from "@minecraft/server";
 
-// Cấu hình danh sách đổi đồ (Giữ nguyên logic gốc)
+// Configure the item exchange list (Keep original logic)
 const MASON_RECIPES = {
     "minecraft:cobblestone": { result: "minecraft:stone", ratio: 1 },
     "minecraft:stone": { result: "minecraft:stone_bricks", ratio: 1 },
@@ -36,7 +36,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- LẤY CẤP ĐỘ VÀ XP HIỆN TẠI ---
+    // --- GET LEVEL AND XP perform exist ---
     let level = 0;
     let xp = 0;
     try {
@@ -46,12 +46,12 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         level = 0;
     }
 
-    // --- PHẦN 1: TẶNG COBBLESTONE THEO CẤP ĐỘ ---
-    // Level 0: 8, Level 1: 16, Level 2: 24... (mỗi cấp +8)
+    // --- SECTION 1: GIVE COBBLESTONE BY LEVEL ---
+    // Level 0: 8, Level 1: 16, Level 2: 24... (+8 per level)
     const rewardAmount = (level + 1) * 8;
     safeAddItems(container, "minecraft:cobblestone", rewardAmount);
 
-    // --- CƠ CHẾ CỘNG XP VÀ LÊN CẤP (CỐ ĐỊNH) ---
+    // --- MECHANISM ADD XP AND LEVEL UP (FIXED) ---
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -63,7 +63,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
             if (newLevel > 5) newLevel = 5;
             if (newLevel === 5) newXp = 0;
 
-            // Thông báo debug qua console.warn
+            // Debug notification qua console.warn
             console.warn(`§e[Scripting][warning]-§f [Mason] Dân làng thăng cấp: §6Cấp độ ${newLevel}`);
         }
 
@@ -71,7 +71,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- PHẦN 2: LOGIC ĐỔI ĐỒ (GIỮ NGUYÊN) ---
+    // --- SECTION 2: logic change item (KEEP UNCHANGED) ---
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
         if (!item) continue;
@@ -86,13 +86,13 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                 const remainder = amount % ratio;
                 const sourceId = item.typeId;
 
-                // Xóa sạch ô hiện tại để tránh chiếm slot
+                // Clear the current slot to avoid occupying it
                 container.setItem(i, undefined);
 
-                // Thêm vật phẩm kết quả (Gộp stack an toàn)
+                // Add the resulting item (Safely merge stacks)
                 safeAddItems(container, result, resultAmount);
 
-                // Nếu còn dư nguyên liệu cũ, thêm lại
+                // If old materials remain, add them back
                 if (remainder > 0) {
                     safeAddItems(container, sourceId, remainder);
                 }

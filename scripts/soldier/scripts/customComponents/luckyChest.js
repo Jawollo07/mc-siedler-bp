@@ -1,6 +1,6 @@
 import { world, system, EquipmentSlot, GameMode } from "@minecraft/server";
 
-// Cấu hình ID Item -> ID Entity sẽ spawn
+// Configure Item ID -> Entity ID to spawn
 const SPAWN_MAPPING = {
     "fv:golden_lucky_chest": "fv:normal_lucky_chest",
     "fv:diamond_lucky_chest": "fv:good_lucky_chest",
@@ -13,7 +13,7 @@ const SPAWN_MAPPING = {
     "fv:potato_cannon": "fv:potato_cannon",
     "fv:big_potato_cannon": "fv:big_potato_cannon",
     "fv:ballista": "fv:ballista",
-    "fv:ballista_structure": "fv:ballista_structure" // <-- THÊM DÒNG NÀY Ở ĐÂY
+    "fv:ballista_structure": "fv:ballista_structure" // <-- ADD THIS LINE HERE
 };
 
 const LuckyChestComponent = {
@@ -25,7 +25,7 @@ const LuckyChestComponent = {
         const entityIdToSpawn = SPAWN_MAPPING[itemStack.typeId];
         if (!entityIdToSpawn) return;
 
-        // 1. Tính toán vị trí spawn dựa trên mặt block
+        // 1. Calculate spawn position based on the block face
         let targetLoc = {
             x: block.location.x + 0.5,
             y: block.location.y,
@@ -42,19 +42,19 @@ const LuckyChestComponent = {
             default: targetLoc.y += 1; break;
         }
 
-        // 2. Spawn thực thể và xoay hướng
+        // 2. spawn perform entity and rotate direction
         try {
             const spawnedEntity = player.dimension.spawnEntity(entityIdToSpawn, targetLoc);
             if (spawnedEntity) {
                 const playerRot = player.getRotation();
-                // Thực thể quay mặt về phía người chơi
+                // perform entity roll face toward toward player
                 spawnedEntity.setRotation({ x: 0, y: playerRot.y + 180 });
             }
         } catch (err) {
             return;
         }
 
-        // 3. Trừ Item (Chỉ trừ ở Sinh tồn)
+        // 3. Remove item (only deduct in Survival)
         if (player.getGameMode() !== GameMode.creative) {
             const eq = player.getComponent("minecraft:equippable");
             if (eq) {
@@ -72,7 +72,7 @@ const LuckyChestComponent = {
     }
 };
 
-// Đăng ký component
+// Register component
 system.beforeEvents.startup.subscribe((event) => {
     event.itemComponentRegistry.registerCustomComponent("fv:lucky_chest_place", LuckyChestComponent);
 });

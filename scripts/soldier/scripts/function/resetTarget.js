@@ -1,11 +1,11 @@
-import { world, system } from "@minecraft/server"; // Đã xóa import MinecraftDimensionTypes
+import { world, system } from "@minecraft/server"; // Removed import MinecraftDimensionTypes
 
 const RAY_OPTIONS = {
     maxDistance: 20,
     includePassableBlocks: false,
 };
 
-// SỬA LỖI API: Thay thế MinecraftDimensionTypes bằng chuỗi tên chiều không gian
+// FIX API ERROR: Replace MinecraftDimensionTypes by dimension name strings
 const DIMENSIONS = [
     "overworld",
     "nether",
@@ -31,9 +31,9 @@ system.runInterval(() => {
 
             let hits;
             try {
-                // LƯU Ý: API getEntitiesFromViewDirection yêu cầu EntityQueryOptions. 
-                // Ở đây bạn đang dùng RAY_OPTIONS, nó có thể không phải là vấn đề gây crash, 
-                // nhưng nếu gặp lỗi về sau, hãy kiểm tra lại API này.
+                // NOTE: API getEntitiesFromViewDirection requires EntityQueryOptions. 
+                // Here you are currently using RAY_OPTIONS; it may not be the cause of the crash, 
+                // but if an error occurs later, check this API again.
                 hits = entity.getEntitiesFromViewDirection(RAY_OPTIONS);
             } catch (e) {
                 continue;
@@ -43,12 +43,12 @@ system.runInterval(() => {
 
             const target = hits[0].entity;
 
-            // Kiểm tra family "player"
-            // Lưu ý: getComponent("minecraft:type_family") trả về null nếu không tồn tại, nên cú pháp ? là an toàn
+            // Check family "player"
+            // Note: getComponent("minecraft:type_family") returns null if it does not exist, so the ? syntax is safe
             const famComp = target.getComponent("minecraft:type_family");
             if (!famComp?.hasTypeFamily("player")) continue;
 
-            // So sánh tag định danh
+            // Compare identification tags
             const selfTags = entity.getTags().filter(t => t.startsWith("owner_"));
             const targetTags = target.getTags().filter(t => t.startsWith("owner_"));
 

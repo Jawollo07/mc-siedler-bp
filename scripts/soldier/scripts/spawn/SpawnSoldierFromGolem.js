@@ -1,17 +1,23 @@
 import { world } from "@minecraft/server";
 
-// Lắng nghe sự kiện DataDrivenEntityTrigger
+const UNSAFE_BLOCKS = ["bed", "carpet", "slab", "water", "lava"];
+
+function isUnsafeBlock(block) {
+    return !block || UNSAFE_BLOCKS.some(unsafe => block.typeId.includes(unsafe));
+}
+
+// Listen for the DataDrivenEntityTrigger event
 world.afterEvents.dataDrivenEntityTrigger.subscribe(({ eventId, entity }) => {
-    // Chỉ xử lý với event "minecraft:from_village" và đúng entity là minecraft:villager_v2
+    // only handle processing with event "minecraft:from_village" and correct entity is minecraft:villager_v2
     if (eventId !== "minecraft:from_village" || entity.typeId !== "minecraft:iron_golem") return;
 
     const { location, dimension } = entity;
-    if (!location || !dimension) return;
+    if (!entity.isValid || !location || !dimension) return;
 
     spawnRandomCustomVillager(dimension, location);
 });
 
-// Hàm spawn 1 trong 2 thực thể custom ngẫu nhiên gần Villager
+// Function to randomly spawn 1 of 2 custom entities near the Villager
 function spawnRandomCustomVillager(dimension, location) {
     const mobTypes = ["fv:hay_golem", "fv:villager_healer"];
     const randomMob = mobTypes[Math.floor(Math.random() * mobTypes.length)];
@@ -20,9 +26,9 @@ function spawnRandomCustomVillager(dimension, location) {
         const offsetX = Math.random() * 10 - 5;
         const offsetZ = Math.random() * 10 - 5;
 
-        const spawnX = location.x + offsetX;
+        const spawnX = Math.floor(location.x + offsetX) + 0.5;
         const spawnY = location.y;
-        const spawnZ = location.z + offsetZ;
+        const spawnZ = Math.floor(location.z + offsetZ) + 0.5;
 
         const blockBelow = dimension.getBlock({ x: spawnX, y: spawnY - 1, z: spawnZ });
         const blockAt = dimension.getBlock({ x: spawnX, y: spawnY, z: spawnZ });
@@ -30,11 +36,11 @@ function spawnRandomCustomVillager(dimension, location) {
 
         if (!blockAt || !blockAbove || !blockBelow) continue;
 
-        if (
-            blockAt.typeId === "minecraft:air" &&
-            blockAbove.typeId === "minecraft:air" &&
-            blockBelow.typeId !== "minecraft:air"
-        ) {
+        const isAirAt = blockAt.typeId === "minecraft:air" || blockAt.typeId === "minecraft:light_block";
+        const isAirAbove = blockAbove.typeId === "minecraft:air" || blockAbove.typeId === "minecraft:light_block";
+        const hasSafeGround = blockBelow.typeId !== "minecraft:air" && !isUnsafeBlock(blockBelow);
+
+        if (isAirAt && isAirAbove && hasSafeGround) {
             try {
                 dimension.spawnEntity(randomMob, { x: spawnX, y: spawnY, z: spawnZ });
                 return;
@@ -44,5 +50,5 @@ function spawnRandomCustomVillager(dimension, location) {
         }
     }
 
-    console.warn("Không tìm được vị trí spawn lính phù hợp quanh Villager.");
+    console.warn("No suitable soldier spawn location found around the Villager.");
 }

@@ -15,6 +15,9 @@
 			}
 		},
 		"component_groups": {
+			"disabled_village_spawn": {
+				"minecraft:instant_despawn": {}
+			},
 			"minecraft:melee_attack": {
 				"minecraft:behavior.melee_attack": {
 					"priority": 3,
@@ -863,6 +866,13 @@
 			},
 			"minecraft:spawn_from_village": {
 				"sequence": [
+					{
+						"add": {
+							"component_groups": [
+								"disabled_village_spawn"
+							]
+						}
+					},
 					{
 						"filters": {
 							"any_of": [

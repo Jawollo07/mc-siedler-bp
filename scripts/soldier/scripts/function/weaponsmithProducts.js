@@ -36,7 +36,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- [MỚI] LẤY CẤP ĐỘ VÀ XP ---
+    // --- [NEW] GET LEVEL AND XP ---
     let level = 0;
     let xp = 0;
     try {
@@ -44,7 +44,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         xp = sourceEntity.getProperty("fv:xp") ?? 0;
     } catch (e) { level = 0; }
 
-    // --- PHẦN 1: PHẦN THƯỞNG THEO LEVEL (THAY THẾ QUÀ TẶNG CŨ) ---
+    // --- SECTION 1: REWARDS BY LEVEL (REPLACE OLD REWARDS) ---
     const toolTypes = ["sword", "axe", "spear"];
     const randType = toolTypes[Math.floor(Math.random() * toolTypes.length)];
 
@@ -58,22 +58,22 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         container.addItem(new ItemStack(`minecraft:copper_${randType}`, 1));
     }
     else if (level === 3) {
-        // Vũ khí sắt hoặc Khiên (Random)
+        // Iron weapon or Shield (random)
         if (Math.random() < 0.5) container.addItem(new ItemStack(`minecraft:iron_${randType}`, 1));
         else container.addItem(new ItemStack("minecraft:shield", 1));
     }
     else if (level === 4) {
-        // Vũ khí kim cương hoặc Khiên (Random)
+        // Diamond weapon or Shield (random)
         if (Math.random() < 0.5) container.addItem(new ItemStack(`minecraft:diamond_${randType}`, 1));
         else container.addItem(new ItemStack("minecraft:shield", 1));
     }
     else if (level === 5) {
-        // Vũ khí kim cương VÀ Khiên (100%)
+        // Diamond weapon AND Shield (100%)
         container.addItem(new ItemStack(`minecraft:diamond_${randType}`, 1));
         container.addItem(new ItemStack("minecraft:shield", 1));
     }
 
-    // [MỚI] CƠ CHẾ CỘNG XP VÀ LÊN CẤP
+    // [NEW] MECHANISM ADD XP AND LEVEL UP
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -90,7 +90,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- PHẦN 2: LOGIC CHẾ TẠO CHIA LÔ (6-6-6) (GIỮ NGUYÊN GỐC) ---
+    // --- SECTION 2: BATCH CRAFTING LOGIC (6-6-6) (KEEP ORIGINAL) ---
     const materials = [
         { id: "minecraft:gold_ingot", sword: "minecraft:golden_sword", axe: "minecraft:golden_axe", spear: "minecraft:golden_spear" },
         { id: "minecraft:copper_ingot", sword: "minecraft:copper_sword", axe: "minecraft:copper_axe", spear: "minecraft:copper_spear" },
@@ -103,7 +103,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         while (count >= 1) {
             let hasCrafted = false;
 
-            // 6 Kiếm (2 thỏi)
+            // 6 Swords (2 ingots)
             for (let i = 0; i < 6 && count >= 2; i++) {
                 if (!container.addItem(new ItemStack(mat.sword, 1))) {
                     removeItem(container, mat.id, 2);
@@ -111,7 +111,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                     hasCrafted = true;
                 } else break;
             }
-            // 6 Rìu (3 thỏi)
+            // 6 Axes (3 ingots)
             for (let i = 0; i < 6 && count >= 3; i++) {
                 if (!container.addItem(new ItemStack(mat.axe, 1))) {
                     removeItem(container, mat.id, 3);
@@ -119,7 +119,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                     hasCrafted = true;
                 } else break;
             }
-            // 6 Spear (1 thỏi)
+            // 6 Spears (1 ingot)
             for (let i = 0; i < 6 && count >= 1; i++) {
                 if (!container.addItem(new ItemStack(mat.spear, 1))) {
                     removeItem(container, mat.id, 1);
@@ -131,7 +131,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- PHẦN 3: NÂNG CẤP NETHERITE (GIỮ NGUYÊN GỐC) ---
+    // --- SECTION 3: NETHERITE UPGRADE (KEEP ORIGINAL) ---
     let netherCount = getItemCount(container, "minecraft:netherite_ingot");
     if (netherCount > 0) {
         for (let i = 0; i < container.size; i++) {
@@ -148,7 +148,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                 const oldEnchantable = item.getComponent("minecraft:enchantable");
                 const newEnchantable = netherItem.getComponent("minecraft:enchantable");
 
-                // Chuyển phù phép
+                // Transfer enchantments
                 if (oldEnchantable && newEnchantable) {
                     const enchants = oldEnchantable.getEnchantments();
                     for (const ench of enchants) {
@@ -156,9 +156,9 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                     }
                 }
 
-                // Thực hiện đổi item
+                // Perform item swap
                 if (!container.addItem(netherItem)) {
-                    container.setItem(i, undefined); // Xóa đồ kim cương cũ
+                    container.setItem(i, undefined); // Remove old diamond equipment
                     removeItem(container, "minecraft:netherite_ingot", 1);
                     netherCount--;
                 }

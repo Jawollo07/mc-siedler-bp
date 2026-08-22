@@ -36,7 +36,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- LẤY CẤP ĐỘ VÀ XP HIỆN TẠI ---
+    // --- GET LEVEL AND XP perform exist ---
     let level = 0;
     let xp = 0;
     try {
@@ -46,7 +46,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         level = 0;
     }
 
-    // --- PHẦN 1: PHẦN THƯỞNG THEO CẤP ĐỘ ---
+    // --- SECTION 1: REWARDS BY LEVEL ---
     if (level === 0) {
         safeAddItems(container, "minecraft:cookie", 8);
     } else if (level === 1) {
@@ -68,7 +68,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- CƠ CHẾ CỘNG XP VÀ LÊN CẤP ---
+    // --- MECHANISM ADD XP AND LEVEL UP ---
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -80,7 +80,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
             if (newLevel > 5) newLevel = 5;
             if (newLevel === 5) newXp = 0;
 
-            // Thông báo chỉ qua console.warn
+            // Notify only through console.warn
             console.warn(`§e[Scripting][warning]-§f [Butcher] Dân làng thăng cấp: §6Cấp độ ${newLevel}`);
         }
 
@@ -88,8 +88,8 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- PHẦN 2: CHẾ TẠO ĐẶC BIỆT ---
-    // 1. Súp nấm
+    // --- SECTION 2: CRAFTING special special ---
+    // 1. Mushroom Soup
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
         if (item?.typeId === "minecraft:bowl") {
@@ -99,7 +99,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // 2. Bánh bí ngô
+    // 2. Pumpkin Pie
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
         if (item?.typeId === "minecraft:pumpkin") {
@@ -111,7 +111,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- PHẦN 3: NẤU ĐỒ ĂN ---
+    // --- SECTION 3: COOK FOOD ---
     const cookMap = {
         "minecraft:porkchop": "minecraft:cooked_porkchop",
         "minecraft:mutton": "minecraft:cooked_mutton",

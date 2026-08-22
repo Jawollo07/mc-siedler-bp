@@ -1,8 +1,8 @@
 import { world, Player, ItemStack, ItemCustomComponentAlreadyRegisteredError, EquipmentSlot, system } from '@minecraft/server';
 import { ActionFormData } from '@minecraft/server-ui';
 
-// SỬA LỖI API: Thay thế world.beforeEvents.worldInitialize bằng system.beforeEvents.startup
-// Đăng ký custom component fv:paper_writable
+// FIX API ERROR: Replace world.beforeEvents.worldInitialize with system.beforeEvents.startup
+// register register custom component fv:paper_writable
 system.beforeEvents.startup.subscribe((initEvent) => {
     try {
         initEvent.itemComponentRegistry.registerCustomComponent("fv:paper_writable", {
@@ -15,14 +15,14 @@ system.beforeEvents.startup.subscribe((initEvent) => {
         });
     } catch (error) {
         if (error instanceof ItemCustomComponentAlreadyRegisteredError) {
-            console.warn("Custom component fv:paper_writable đã đăng ký trước.");
+            console.warn("Custom component fv:paper_writable is already registered.");
         } else {
-            console.error("Lỗi khi đăng ký custom component:", error);
+            console.error("Error registering custom component:", error);
         }
     }
 });
 
-// Hàm mở form giấy quyền lực
+// Function to open the authority paper form
 function openWritablePaperUI(player) {
     const form = new ActionFormData()
         .title({ translate: 'title.writable.name' })
@@ -49,13 +49,13 @@ function openWritablePaperUI(player) {
     });
 }
 
-// Trừ item trên tay mainhand, kiểm tra an toàn
+// Deduct item from mainhand, safety check
 function removeItem(player, itemType, amount) {
     const equippable = player.getComponent("minecraft:equippable");
     const mainHandItem = equippable.getEquipment(EquipmentSlot.Mainhand);
 
     if (!mainHandItem || mainHandItem.typeId !== itemType) {
-        console.warn('Item không đúng trong mainhand!');
+        console.warn('Incorrect item in mainhand!');
         return false;
     }
 
@@ -67,12 +67,12 @@ function removeItem(player, itemType, amount) {
         equippable.setEquipment(EquipmentSlot.Mainhand); // clear slot
         return true;
     } else {
-        console.warn('Không đủ số lượng item trong mainhand!');
+        console.warn('Not enough items in mainhand!');
         return false;
     }
 }
 
-// Thêm item vào inventory
+// Add item to inventory
 function addItemToPlayer(player, itemType, amount) {
     const inventory = player.getComponent("minecraft:inventory");
     const newItem = new ItemStack(itemType, amount);

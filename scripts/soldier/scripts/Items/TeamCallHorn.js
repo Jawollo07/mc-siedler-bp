@@ -14,7 +14,7 @@ system.beforeEvents.startup.subscribe(({ itemComponentRegistry }) => {
             system.run(() => {
                 if (!player.isValid) return;
 
-                // Quét lính không cần chỉ định tag
+                // scan soldier not needed only define tag
                 const nearby = player.dimension.getEntities({
                     location: origin, maxDistance: 60,
                     families: ["irongolem", "can_tp"],
@@ -27,7 +27,7 @@ system.beforeEvents.startup.subscribe(({ itemComponentRegistry }) => {
 
                     let isMine = tags.includes(newTag);
                     if (!isMine && tags.some(t => t.startsWith(oldTagPrefix))) {
-                        // Nâng cấp Tag cũ lên mới
+                        // Upgrade old tag to new
                         tags.forEach(t => { if (t.startsWith("owner_")) ent.removeTag(t); });
                         ent.addTag(newTag);
                         isMine = true;

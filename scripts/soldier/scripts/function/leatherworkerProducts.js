@@ -44,7 +44,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- [MỚI] LẤY CẤP ĐỘ VÀ XP ---
+    // --- [NEW] GET LEVEL AND XP ---
     let level = 0;
     let xp = 0;
     try {
@@ -52,7 +52,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         xp = sourceEntity.getProperty("fv:xp") ?? 0;
     } catch (e) { level = 0; }
 
-    // --- PHẦN 1: PHẦN THƯỞNG THEO LEVEL (THAY THẾ QUÀ TẶNG CŨ) ---
+    // --- SECTION 1: REWARDS BY LEVEL (REPLACE OLD REWARDS) ---
     if (level === 0) {
         safeAddItems(container, "minecraft:leather", 1);
     }
@@ -82,7 +82,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         safeAddItems(container, "minecraft:saddle", 1);
     }
 
-    // [MỚI] CƠ CHẾ CỘNG XP VÀ LÊN CẤP
+    // [NEW] MECHANISM ADD XP AND LEVEL UP
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -99,7 +99,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- PHẦN 2: CHẾ TẠO GIÁP NGỰA (GIỮ NGUYÊN GỐC) ---
+    // --- SECTION 2: CRAFTING ARMOR horse (KEEP ORIGINAL) ---
     const horseMaterials = [
         { matId: "minecraft:diamond", armorId: "minecraft:diamond_horse_armor" },
         { matId: "minecraft:iron_ingot", armorId: "minecraft:iron_horse_armor" },
@@ -118,7 +118,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- PHẦN 3: NÂNG CẤP GIÁP NGỰA NETHERITE (GIỮ NGUYÊN GỐC) ---
+    // --- SECTION 3: UPGRADE ARMOR horse NETHERITE (KEEP ORIGINAL) ---
     let netherCount = getItemCount(container, "minecraft:netherite_ingot");
     if (netherCount > 0) {
         for (let i = 0; i < container.size; i++) {
@@ -141,9 +141,9 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- PHẦN 4: CHẾ TẠO TỪ VẢY ĐỘNG VẬT (GIỮ NGUYÊN GỐC) ---
+    // --- SECTION 4: CRAFTING FROM ANIMAL SCALES (KEEP ORIGINAL) ---
 
-    // 1. Giáp mũ rùa (4 vảy rùa)
+    // 1. Turtle helmet armor (4 turtle scutes)
     let turtleScutes = getItemCount(container, "minecraft:turtle_scute");
     while (turtleScutes >= 4) {
         if (safeAddItems(container, "minecraft:turtle_helmet", 1) === 0) {
@@ -152,7 +152,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         } else break;
     }
 
-    // 2. Giáp chó (6 vảy Armadillo)
+    // 2. Armor dog (6 Armadillo scutes)
     let armadilloScutes = getItemCount(container, "minecraft:armadillo_scute");
     while (armadilloScutes >= 6) {
         if (safeAddItems(container, "minecraft:wolf_armor", 1) === 0) {

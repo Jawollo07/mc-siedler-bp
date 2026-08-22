@@ -1,5 +1,5 @@
 // onMineBlock.js
-import { world, system, EquipmentSlot, GameMode, Player } from "@minecraft/server"; // Đã thêm system
+import { world, system, EquipmentSlot, GameMode, Player } from "@minecraft/server"; // Added system
 
 const ItemOnMineComponent = {
     onMineBlock({ source }) {
@@ -39,7 +39,7 @@ const ItemOnMineComponent = {
     }
 };
 
-// SỬA LỖI API: Dùng system.beforeEvents.startup thay vì world.beforeEvents.worldInitialize
+// FIX API ERROR: Use system.beforeEvents.startup instead of world.beforeEvents.worldInitialize
 system.beforeEvents.startup.subscribe(({ itemComponentRegistry }) => {
     itemComponentRegistry.registerCustomComponent("fv:on_mine_block", ItemOnMineComponent);
 });

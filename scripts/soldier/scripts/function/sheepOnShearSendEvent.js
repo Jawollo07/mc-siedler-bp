@@ -10,26 +10,26 @@ const COLOR_ID_MAP = {
 };
 
 world.afterEvents.dataDrivenEntityTrigger.subscribe((data) => {
-    // SỬA LỖI: Sử dụng eventId theo đúng tài liệu bạn vừa gửi
+    // FIX BUG: Use eventId according to the documentation you just provided
     const { entity, eventId } = data;
 
-    // 1. Kiểm tra thực thể và đúng tên Event
+    // 1. Check perform entity and correct name event
     if (!entity || entity.typeId !== "minecraft:sheep") return;
 
-    // Kiểm tra tên event chính xác từ log nếu cần, nhưng theo sheep.json là minecraft:on_sheared
+    // Check name event main confirmation from log if needed, likeng theo sheep.json is minecraft:on_sheared
     if (eventId !== "minecraft:on_sheared") return;
 
-    // 2. Lấy màu sắc từ component Color ngay lập tức
+    // 2. Get the color from component Color immediately
     const colorComp = entity.getComponent("minecraft:color");
     const colorValue = colorComp ? colorComp.value : 0;
     const woolId = COLOR_ID_MAP[colorValue] || "minecraft:white_wool";
 
-    // 3. Thực hiện spawn item
+    // 3. spawn the item
     const count = Math.floor(Math.random() * 3) + 1;
     const loc = { x: entity.location.x, y: entity.location.y, z: entity.location.z };
     const dimension = entity.dimension;
 
-    // Sử dụng system.run để tránh lỗi Read-Only khi đang trong event
+    // Use system.run to to avoid the error Read-Only when currently in event
     system.run(() => {
         try {
             dimension.spawnItem(new ItemStack(woolId, count), {
@@ -38,10 +38,10 @@ world.afterEvents.dataDrivenEntityTrigger.subscribe((data) => {
                 z: loc.z
             });
 
-            // Âm thanh xác nhận
+            // Confirmation sound
             dimension.runCommand(`playsound mob.sheep.shear @a ${loc.x} ${loc.y} ${loc.z} 0.5 1`);
         } catch (e) {
-            // Thực thể có thể đã biến mất
+            // perform entity has entity may have disappeared
         }
     });
 }, {

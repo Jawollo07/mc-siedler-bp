@@ -1,6 +1,6 @@
 import { system, world, EquipmentSlot } from "@minecraft/server";
 
-// --- HÀM 1: LẤY EVENT AN TOÀN (SNAPSHOT) ---
+// --- function 1: GET event safe safe (SNAPSHOT) ---
 function getVillagerEventSafe(target) {
     try {
         if (!target.isValid) return "fv:plains";
@@ -11,14 +11,14 @@ function getVillagerEventSafe(target) {
     } catch (e) { return "fv:plains"; }
 }
 
-// --- HÀM 2: THỰC THI BIẾN ĐỔI ---
+// --- function 2: EXECUTE TRANSFORMATION ---
 function executeConversion(dimension, spawnPos, eventName, target, entityTypeId) {
     system.run(() => {
-        // Xóa dân làng cũ
+        // Remove old villager
         if (target.isValid) target.remove();
 
         try {
-            // Spawn entity mới theo đúng ID đã phân loại
+            // spawn entity new using the correct ID has classify type
             dimension.spawnEntity(entityTypeId, spawnPos, { spawnEvent: eventName });
         } catch (err) {
             console.warn(`[FV-ERROR] Lỗi spawn ${entityTypeId}: ${err}`);
@@ -30,36 +30,36 @@ function executeConversion(dimension, spawnPos, eventName, target, entityTypeId)
     });
 }
 
-// --- ĐỊNH NGHĨA CUSTOM COMPONENT ---
+// --- DEFINE custom component ---
 const FreehandHitComponent = {
     onHitEntity(event) {
         const { attackingEntity, hitEntity } = event;
 
-        // 1. Kiểm tra đối tượng
+        // 1. Check object
         if (!attackingEntity || !hitEntity) return;
         if (hitEntity.typeId !== "minecraft:villager_v2") return;
 
-        // 2. Chụp dữ liệu NGAY LẬP TỨC (Snapshot)
+        // 2. Capture data IMMEDIATELY (Snapshot)
         const eventName = getVillagerEventSafe(hitEntity);
         const spawnPos = { x: hitEntity.location.x, y: hitEntity.location.y, z: hitEntity.location.z };
         const dimension = hitEntity.dimension;
 
-        // 3. Logic lọc
+        // 3. Filtering logic
         if (hitEntity.hasComponent("minecraft:is_baby")) return;
 
-        // --- PHÂN LOẠI NGHỀ NGHIỆP (LOGIC MỚI) ---
-        let finalEntityId = "fv:villager_free_handle"; // Mặc định cho Nitwit, Unskilled, Farmer...
+        // --- JOB CLASSIFICATION (logic NEW) ---
+        let finalEntityId = "fv:villager_melee"; // Default soldier for Nitwit, Unskilled, Farmer...
 
         const fam = hitEntity.getComponent("minecraft:type_family");
         if (fam) {
             if (fam.hasTypeFamily("weaponsmith")) {
-                finalEntityId = "fv:villager_melee"; // Thợ rèn -> Tanker
+                finalEntityId = "fv:villager_melee"; // Blacksmith -> Tanker
             } else if (fam.hasTypeFamily("fletcher")) {
-                finalEntityId = "fv:villager_ranged"; // Thợ cung -> Ranged
+                finalEntityId = "fv:villager_ranged"; // Fletcher -> ranged
             }
         }
 
-        // 4. Trừ độ bền/số lượng item
+        // 4. Deduct durability/item count
         const eq = attackingEntity.getComponent("minecraft:equippable");
         if (eq) {
             const item = eq.getEquipment(EquipmentSlot.Mainhand);
@@ -73,13 +73,13 @@ const FreehandHitComponent = {
             }
         }
 
-        // 5. Thực thi biến đổi với ID đã phân loại
+        // 5. Execute transformation with ID has classify type
         executeConversion(dimension, spawnPos, eventName, hitEntity, finalEntityId);
     }
 };
 
-// --- ĐĂNG KÝ COMPONENT ---
+// --- REGISTER register component ---
 system.beforeEvents.startup.subscribe((event) => {
     event.itemComponentRegistry.registerCustomComponent("fv:freehand_hit_event", FreehandHitComponent);
-    console.warn("[FV-SYSTEM] Đã đăng ký Custom Component: fv:freehand_hit_event (Phân loại nghề)");
+    console.warn("[FV-SYSTEM] Registered Custom Component: fv:freehand_hit_event (Job classification)");
 });

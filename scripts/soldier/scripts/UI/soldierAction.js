@@ -1,28 +1,28 @@
 import { world, system, EquipmentSlot } from "@minecraft/server";
 import { ModalFormData } from "@minecraft/server-ui";
 
-// Hàm hiển thị modal form
+// Function to display the modal form
 function showInteractionForm(player, target) {
-    // Kiểm tra tính hợp lệ
+    // Check validity
     if (!player || !player.isValid || !target || !target.isValid) return;
 
-    // Lấy giá trị thô từ Property
+    // take raw value from Property
     const rawStay = target.getProperty("fv:stay_mode");
     const rawKill = target.getProperty("fv:kill_player_mode");
 
-    // Ép kiểu boolean an toàn
+    // Safely cast to boolean safe
     const stayMode = (typeof rawStay === 'boolean') ? rawStay : false;
     const killPlayerMode = (typeof rawKill === 'boolean') ? rawKill : false;
 
-    // Tạo Form
+    // Create form
     const modalForm = new ModalFormData()
         .title({ translate: 'title.interaction.soldier' })
 
-        // SỬA LỖI UI v2: Tham số thứ 2 phải là Object chứa defaultValue
+        // FIX UI v2 BUG: The second parameter must be an Object containing defaultValue
         .toggle({ translate: 'buttom.stay.name' }, { defaultValue: stayMode })
         .toggle({ translate: 'buttom.kill_player_mode.name' }, { defaultValue: killPlayerMode });
 
-    // Hiển thị Form
+    // Display form
     modalForm.show(player).then((formData) => {
         if (formData.canceled) {
             return;
@@ -30,30 +30,30 @@ function showInteractionForm(player, target) {
 
         const [stayModeSelected, killPlayerModeSelected] = formData.formValues;
 
-        // Kiểm tra target còn tồn tại không trước khi setProperty
+        // Check that the target still exists before calling setProperty
         if (target.isValid) {
             try {
-                // Cập nhật lại property
+                // Update the property
                 target.setProperty("fv:stay_mode", stayModeSelected);
                 target.setProperty("fv:kill_player_mode", killPlayerModeSelected);
 
-                // (Tùy chọn) Thông báo thành công
+                // (Optional) Success notification
                 // player.sendMessage({ translate: 'message.settings_saved' });
             } catch (e) {
-                console.warn("Lỗi setProperty. Hãy kiểm tra file JSON của entity đã khai báo property chưa.");
+                console.warn("setProperty error. Check whether the entity JSON file declares the property.");
             }
         }
     }).catch((error) => {
-        // Ignored (Lỗi khi player đóng form hoặc mất kết nối)
+        // Ignored (bug when player close form or disappear connection connect)
     });
 }
 
-// Đăng ký sự kiện playerInteractWithEntity
+// Register event playerInteractWithEntity
 world.afterEvents.playerInteractWithEntity.subscribe((event) => {
     const player = event.player;
     const target = event.target;
 
-    // Kiểm tra tính hợp lệ cơ bản
+    // Check basic validity
     if (!player || !player.isValid || !target || !target.isValid) return;
 
     try {
@@ -62,12 +62,12 @@ world.afterEvents.playerInteractWithEntity.subscribe((event) => {
 
         const mainHandItem = equippable.getEquipment(EquipmentSlot.Mainhand);
 
-        // Kiểm tra item kích hoạt
+        // Check the triggering item
         if (mainHandItem && mainHandItem.typeId === 'fv:command_flag') {
 
-            // Đẩy vào system.run để đảm bảo UI hiện lên ở tick tiếp theo
+            // Defer to system.run to ensure security UI appear on the next tick
             system.run(() => {
-                // Kiểm tra isValid lần nữa vì sau 1 tick mọi thứ có thể thay đổi
+                // Check isValid again because everything may change after 1 tick
                 if (player.isValid && target.isValid) {
                     showInteractionForm(player, target);
                 }

@@ -1,7 +1,7 @@
 // File: shootBigCannon.js
 import { system, world } from "@minecraft/server";
 
-// Kiểm tra inventory và set property (Giữ nguyên)
+// Check inventory and set the property (Keep unchanged)
 system.runInterval(() => {
     const entities = world.getDimension("overworld").getEntities({
         type: "fv:big_potato_cannon"
@@ -44,18 +44,18 @@ system.runInterval(() => {
     }
 }, 5);
 
-// Nhận scriptevent bigcannon:shoot
+// Receive scriptevent bigcannon:shoot
 system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (event.id !== "bigcannon:shoot") return;
 
     const shooter = event.sourceEntity;
-    // Kiểm tra tính hợp lệ của Entity nguồn
+    // Check whether the source entity is valid
     if (!shooter || !shooter.isValid) return;
 
     const potatoType = shooter.getProperty("fv:potato_type");
 
     if (potatoType === "empty") {
-        console.warn("Pháo chưa có đạn để bắn!");
+        console.warn("Cannon has no ammunition!");
         return;
     }
 
@@ -88,7 +88,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     try {
         const projComp = projectile.getComponent("minecraft:projectile");
         if (projComp) {
-            // FIX: Đặt owner là Entity kích hoạt (Cannon)
+            // FIX: Set owner to the triggering Entity (Cannon)
             projComp.owner = shooter;
 
             projComp.shoot(
@@ -101,7 +101,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
             );
         }
     } catch (e) {
-        console.warn("Lỗi khi gán owner hoặc bắn Projectile:", e);
+        console.warn("Error assigning owner or firing projectile:", e);
     }
 
 
@@ -109,7 +109,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         projectile.triggerEvent("potato_exp");
     }
 
-    // Trừ 1 gunpowder và 1 khoai đúng loại sau khi bắn (Giữ nguyên)
+    // Remove 1 gunpowder and 1 potato of the correct type after firing (Keep unchanged)
     const invComp = shooter.getComponent("inventory");
     if (invComp && invComp.container) {
         const container = invComp.container;
@@ -144,7 +144,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // Reset trạng thái sau khi bắn
+    // reset state after when shoot
     shooter.setProperty("fv:canshoot", false);
     shooter.setProperty("fv:potato_type", "empty");
 });

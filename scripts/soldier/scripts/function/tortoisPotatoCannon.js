@@ -1,8 +1,8 @@
 import { world, system } from "@minecraft/server";
 
-// --- CẤU HÌNH CHUẨN ---
+// --- CONFIGURATION normalized ---
 const ENTITY_ID = "fv:heavy_tortois";
-const AMMO_PROP = "fv:type_ammo"; // Đã thống nhất tên này
+const AMMO_PROP = "fv:type_ammo"; // This name has been standardized
 const ITEM_GP = "minecraft:gunpowder";
 const ITEM_POTATO = "minecraft:potato";
 const ITEM_POT_EX = "fv:potato_explode";
@@ -27,7 +27,7 @@ function updateTortoiseState(tortoise) {
     let potCount = 0;
     let potExCount = 0;
 
-    // Quét sạch 27 slot
+    // scan all 27 slots
     for (let i = 0; i < 27; i++) {
         const item = inv.getItem(i);
         if (!item) continue;
@@ -36,14 +36,14 @@ function updateTortoiseState(tortoise) {
         else if (item.typeId === ITEM_POTATO) potCount += item.amount;
     }
 
-    // Logic ưu tiên: Phải có thuốc súng mới tính tiếp
+    // logic priority priority: right has gunpowder before continuing
     let finalType = "none";
     if (gpCount > 0) {
         if (potExCount > 0) finalType = "potato_explode";
         else if (potCount > 0) finalType = "potato";
     }
 
-    // Kiểm tra và cập nhật Property + Event
+    // Check and update update Property + event
     const currentProp = tortoise.getProperty(AMMO_PROP);
     if (currentProp !== finalType) {
         tortoise.setProperty(AMMO_PROP, finalType);
@@ -71,7 +71,7 @@ function consumeOne(container, typeId) {
     return false;
 }
 
-// --- TÍNH NĂNG 1: TRỪ ĐẠN KHI NHẬN LỆNH BẮN (/scriptevent) ---
+// --- FEATURE 1: deduct ammunition when receiving the shoot command (/scriptevent) ---
 system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (event.id !== "fv:tortois_fire") return;
 
@@ -84,22 +84,22 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     const currentAmmo = tortoise.getProperty(AMMO_PROP);
     if (currentAmmo === "none") return;
 
-    // Tiến hành trừ 1 thuốc súng + 1 khoai tương ứng
+    // Deduct 1 gunpowder + 1 corresponding potato
     const hasGP = consumeOne(inventory.container, ITEM_GP);
     if (hasGP) {
         const ammoId = (currentAmmo === "potato_explode") ? ITEM_POT_EX : ITEM_POTATO;
         consumeOne(inventory.container, ammoId);
     }
 
-    // Cập nhật trạng thái ngay sau phát bắn để nạp viên tiếp theo
+    // Update state immediately after firing to load next round
     updateTortoiseState(tortoise);
 });
 
-// --- TÍNH NĂNG 2: QUÉT ĐỊNH KỲ (Passive) ---
+// --- FEATURE 2: PERIODIC SCAN (Passive) ---
 system.runInterval(() => {
     const dimension = world.getDimension("overworld");
     const tortoises = dimension.getEntities({ type: ENTITY_ID });
     for (const tortoise of tortoises) {
         updateTortoiseState(tortoise);
     }
-}, 20); // 1 giây quét 1 lần để tiết kiệm tài nguyên
+}, 20); // scan once per second to save resources

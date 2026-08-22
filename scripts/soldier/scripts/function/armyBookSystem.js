@@ -14,14 +14,14 @@ world.afterEvents.itemUse.subscribe((ev) => {
 
     const pName = getPlainName(player.name);
 
-    // 1. Dữ liệu cá nhân
+    // 1. Personal data
     const myScore = getDPData(`score:${pName}`);
 
-    // 2. Dữ liệu lính ở gần
+    // 2. data data nearby soldiers
     const nearbyEnts = player.dimension.getEntities({
         location: player.location,
         maxDistance: 32,
-        families: ["irongolem"] // Nhớ đổi thành family của lính ông
+        families: ["irongolem"] // Remember to change this to the soldier family
     });
 
     let nearbyCount = 0;
@@ -31,7 +31,7 @@ world.afterEvents.itemUse.subscribe((ev) => {
         }
     }
 
-    // 3. Quét điểm các đội (Chỉ nối chuỗi khi có điểm > 0)
+    // 3. scan scores teams (only connect string when has score > 0)
     let teamInfo = "";
     for (const tId of teams) {
         const tScore = getDPData(`teamScore:${tId}`);
@@ -40,7 +40,7 @@ world.afterEvents.itemUse.subscribe((ev) => {
         }
     }
 
-    // 4. Quét điểm người chơi khác (Chỉ lấy người > 0)
+    // 4. scan scores other players (only take player > 0)
     let otherPlayersInfo = "";
     const allKeys = world.getDynamicPropertyIds();
 
@@ -57,12 +57,12 @@ world.afterEvents.itemUse.subscribe((ev) => {
         }
     }
 
-    // --- TẠO GIAO DIỆN CHUẨN ĐA NGÔN NGỮ ---
+    // --- CREATE STANDARD MULTILINGUAL UI ---
     const form = new ActionFormData()
         .title({ translate: "title.army_book.name" })
         .body({
             translate: "des.army_book.name",
-            // Truyền 4 biến vào file .lang: [Lính của mình, Lính ở gần, Danh sách Team, Danh sách Người chơi]
+            // Pass 4 variables into file .lang: [My soldiers, Nearby soldiers, team list, player list]
             with: [
                 String(myScore),
                 String(nearbyCount),
@@ -70,7 +70,7 @@ world.afterEvents.itemUse.subscribe((ev) => {
                 otherPlayersInfo
             ]
         })
-        .button({ translate: "button.army_book.close" }); // Nút đóng sách
+        .button({ translate: "button.army_book.close" }); // Book close button
 
     system.run(() => {
         form.show(player);

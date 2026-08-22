@@ -34,7 +34,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- LẤY CẤP ĐỘ VÀ XP HIỆN TẠI ---
+    // --- GET LEVEL AND XP perform exist ---
     let level = 0;
     let xp = 0;
     try {
@@ -42,7 +42,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         xp = sourceEntity.getProperty("fv:xp") ?? 0;
     } catch (e) { level = 0; }
 
-    // --- CƠ CHẾ CỘNG XP VÀ LÊN CẤP (CỐ ĐỊNH) ---
+    // --- MECHANISM ADD XP AND LEVEL UP (FIXED) ---
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -59,10 +59,10 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- LOGIC TINH CHẾ ---
+    // --- REFINING logic ---
     const nuggetRatio = [9, 8, 7, 6, 5, 4][level];
     const fuelLimit = [32, 30, 28, 26, 24, 22][level];
-    let didRefine = false; // Cờ kiểm tra xem có thực hiện nung không
+    let didRefine = false; // Flag to check whether smelting is performed
 
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
@@ -72,7 +72,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         const amount = item.amount;
 
         switch (typeId) {
-            // Nhóm Nugget
+            // Nugget group
             case "fv:raw_iron_nugget":
             case "minecraft:iron_nugget":
             case "fv:raw_copper_nugget":
@@ -88,9 +88,9 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                     safeAddItems(container, ingotId, ingots);
                     if (remainder > 0) safeAddItems(container, typeId, remainder);
 
-                    didRefine = true; // Đánh dấu là có nung thỏi
+                    didRefine = true; // Flag marking that ingot smelting was performed
                 } else if (typeId.startsWith("fv:raw_")) {
-                    // Chuyển đổi nugget thô sang thường (Tính là Craft, không tốn than)
+                    // Convert raw nuggets to regular nuggets (counts as Crafting, does not consume coal)
                     const normalNugget = typeId.replace("fv:raw_", "minecraft:");
                     container.setItem(i, undefined);
                     safeAddItems(container, normalNugget, amount);
@@ -98,7 +98,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                 break;
             }
 
-            // Nhóm Raw Ore -> Ingot (1:1) - Tốn than
+            // Raw Ore -> Ingot group (1:1) - Consumes coal
             case "minecraft:raw_iron":
             case "minecraft:raw_copper":
             case "minecraft:raw_gold": {
@@ -109,7 +109,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
                 break;
             }
 
-            // Ancient Debris -> Netherite Scrap (1:1) - Tốn than
+            // Ancient Debris -> Netherite Scrap (1:1) - Consumes coal
             case "minecraft:ancient_debris":
                 container.setItem(i, undefined);
                 safeAddItems(container, "minecraft:netherite_scrap", amount);
@@ -118,9 +118,9 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- XỬ LÝ NHIÊN LIỆU (CHỈ KHI CÓ NUNG) ---
+    // --- PROCESSING fuel data (only when has smelting) ---
     if (didRefine) {
-        // Ưu tiên trừ than đá trước, sau đó mới đến than củi
+        // Prioritize deducting coal first, then charcoal
         let coalCount = 0;
         for (let j = 0; j < container.size; j++) {
             const f = container.getItem(j);
@@ -135,7 +135,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- NHẬN THAN CỦI THƯỞNG (Sau khi đã trừ xong than tiêu hao) ---
+    // --- RECEIVE BONUS CHARCOAL (after deducting consumed fuel) ---
     const charcoalRewards = [2, 4, 6, 8, 10, 12];
     safeAddItems(container, "minecraft:charcoal", charcoalRewards[level]);
 

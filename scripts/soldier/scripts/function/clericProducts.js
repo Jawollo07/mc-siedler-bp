@@ -1,6 +1,6 @@
 import { system, ItemStack } from "@minecraft/server";
 
-// Danh sách mã data cho thuốc có lợi và mũi tên tẩm thuốc có hại
+// List of data values for beneficial potions and harmful tipped arrows
 const POSITIVE_POOL = [22, 22, 22, 22, 29, 29, 29, 29, 2, 4, 6, 8, 10, 12, 25, 31, 35];
 const NEGATIVE_ARROW_POOL = [14, 16, 18, 20, 24, 27, 33, 36];
 
@@ -26,7 +26,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- LẤY CẤP ĐỘ VÀ XP HIỆN TẠI ---
+    // --- GET LEVEL AND XP perform exist ---
     let level = 0;
     let xp = 0;
     try {
@@ -36,21 +36,21 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         level = 0;
     }
 
-    // --- PHẦN 1: PHẦN THƯỞNG (QUÀ TẶNG) THEO CẤP ĐỘ ---
-    // Số lượng thuốc tặng = level + 1 (Level 0 tặng 1, Level 5 tặng 6)
+    // --- SECTION 1: REWARDS BY LEVEL ---
+    // Potion reward amount = level + 1 (Level 0 gives 1, Level 5 gives 6)
     const giftCount = level + 1;
     let giftsGiven = 0;
 
     for (let i = 0; i < container.size && giftsGiven < giftCount; i++) {
         if (!container.getItem(i)) {
             const giftData = POSITIVE_POOL[Math.floor(Math.random() * POSITIVE_POOL.length)];
-            // Sử dụng replaceitem để hỗ trợ data value của thuốc
+            // Use replaceitem to support potion data values
             sourceEntity.runCommand(`replaceitem entity @s slot.inventory ${i} potion 1 ${giftData}`);
             giftsGiven++;
         }
     }
 
-    // --- CƠ CHẾ CỘNG XP VÀ LÊN CẤP (CỐ ĐỊNH) ---
+    // --- MECHANISM ADD XP AND LEVEL UP (FIXED) ---
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -69,7 +69,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- PHẦN 2: XỬ LÝ MŨI TÊN (CHẾ TẠO) ---
+    // --- SECTION 2: PROCESSING arrow name (CRAFTING) ---
     let arrowSlots = [];
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
@@ -84,7 +84,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.runCommand(`replaceitem entity @s slot.inventory ${entry.slot} arrow ${entry.amount} ${data}`);
     }
 
-    // --- PHẦN 3: XỬ LÝ CHAI THỦY TINH (CHẾ TẠO) ---
+    // --- SECTION 3: PROCESSING GLASS BOTTLES (CRAFTING) ---
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
         if (item?.typeId === "minecraft:glass_bottle") {

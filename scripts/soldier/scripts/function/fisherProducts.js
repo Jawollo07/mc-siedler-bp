@@ -1,6 +1,6 @@
 import { system, ItemStack, EnchantmentTypes } from "@minecraft/server";
 
-// 1. Phân chia danh sách Loot
+// 1. Split the Loot list
 const FISHER_FISH = ["minecraft:cod", "minecraft:salmon", "minecraft:pufferfish", "minecraft:tropical_fish"];
 
 const FISHER_TREASURE = [
@@ -28,7 +28,7 @@ function applyRandomEnchant(itemStack, minLvl, maxLvl) {
 
         if (enchantType) {
             try {
-                // Tính toán level enchant dựa trên dải cho phép
+                // Calculate level enchant based on the allowed range
                 const finalMax = Math.min(maxLvl, enchantType.maxLevel);
                 const finalMin = Math.min(minLvl, finalMax);
                 const level = Math.floor(Math.random() * (finalMax - finalMin + 1)) + finalMin;
@@ -48,7 +48,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- LẤY CẤP ĐỘ VÀ XP HIỆN TẠI ---
+    // --- GET LEVEL AND XP perform exist ---
     let level = 0;
     let xp = 0;
     try {
@@ -58,38 +58,38 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         level = 0;
     }
 
-    // --- PHẦN 1: QUAY SỐ VẬT PHẨM THEO CẤP ĐỘ ---
-    // Tỷ lệ Nhóm: [Level 0, 1, 2, 3, 4, 5]
+    // --- SECTION 1: roll quantity item item BY LEVEL ---
+    // Group probabilities: [Level 0, 1, 2, 3, 4, 5]
     const fishChances = [0.8, 0.7, 0.6, 0.5, 0.4, 0.3];
-    const treasureChances = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7]; // Level 5 điều chỉnh thành 0.7 để tổng là 1.0
+    const treasureChances = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7]; // Level 5 is adjusted to 0.7 relative the total is 1.0
 
     const randGroup = Math.random();
     let selectedItem = null;
     let isFish = true;
 
     if (randGroup < fishChances[level]) {
-        // Nhóm Cá: Tỷ lệ các loại cá bằng nhau
+        // Fish group: rate valid all fish types equally likely
         const fishId = FISHER_FISH[Math.floor(Math.random() * FISHER_FISH.length)];
         selectedItem = { id: fishId, stackable: true };
     } else {
-        // Nhóm Kho báu: Tỷ lệ các món bằng nhau
+        // Treasure group: rate valid all items equally likely
         selectedItem = FISHER_TREASURE[Math.floor(Math.random() * FISHER_TREASURE.length)];
         isFish = false;
     }
 
-    // Tạo ItemStack
+    // Create ItemStack
     const itemStack = new ItemStack(selectedItem.id, 1);
 
-    // Xử lý Enchant nếu là đồ kho báu đặc biệt
+    // Handle enchantments if is special treasure items
     if (selectedItem.enchant) {
         let minL = 1, maxL = 2;
         if (level === 1) { minL = 1; maxL = 3; }
-        else if (level >= 2) { minL = 3; maxL = 5; } // Max level mặc định là 5
+        else if (level >= 2) { minL = 3; maxL = 5; } // Default max level is 5
 
         applyRandomEnchant(itemStack, minL, maxL);
     }
 
-    // Thêm vào kho đồ
+    // Add to inventory
     if (selectedItem.stackable === false) {
         let emptySlot = -1;
         for (let i = 0; i < container.size; i++) {
@@ -101,7 +101,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         container.addItem(itemStack);
     }
 
-    // --- CƠ CHẾ CỘNG XP VÀ LÊN CẤP (CỐ ĐỊNH) ---
+    // --- MECHANISM ADD XP AND LEVEL UP (FIXED) ---
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];

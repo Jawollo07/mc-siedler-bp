@@ -9,16 +9,16 @@ function handleSoldierRemoval(entity) {
     const ownerTag = tags.find(t => t.startsWith("owner_"));
     if (!ownerTag) return;
 
-    // Lấy tên chủ nhân từ Tag
+    // Get name owner from tag
     const playerName = ownerTag.replace("owner_", "");
 
     system.run(() => {
-        // 1. TRỪ DATA GỐC CỦA PLAYER
+        // 1. REMOVE ORIGINAL DATA of player
         const currentScore = getDPData(`score:${playerName}`);
         const newScore = Math.max(0, currentScore - 1);
         setDPData(`score:${playerName}`, newScore);
 
-        // Cập nhật nếu online
+        // Update if online
         let isOnline = false;
         const players = world.getAllPlayers();
         for (const p of players) {
@@ -29,13 +29,13 @@ function handleSoldierRemoval(entity) {
             }
         }
 
-        // Báo cáo nếu offline
+        // Report if offline
         if (!isOnline) {
             const propKey = `fv_loss:${playerName}`;
             setDPData(propKey, getDPData(propKey) + 1);
         }
 
-        // 2. TRỪ DATA GỐC CỦA TEAM (Đếm lại cho an toàn)
+        // 2. REMOVE ORIGINAL DATA of team (Recount for safety)
         const teams = Object.keys(teamDisplayNames);
         const soldierTeam = teams.find(t => tags.includes(t));
 

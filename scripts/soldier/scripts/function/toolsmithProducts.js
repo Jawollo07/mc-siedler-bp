@@ -32,7 +32,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (!inventory) return;
     const container = inventory.container;
 
-    // --- [MỚI] LẤY CẤP ĐỘ VÀ XP ---
+    // --- [NEW] GET LEVEL AND XP ---
     let level = 0;
     let xp = 0;
     try {
@@ -40,7 +40,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         xp = sourceEntity.getProperty("fv:xp") ?? 0;
     } catch (e) { level = 0; }
 
-    // --- PHẦN 1: PHẦN THƯỞNG THEO LEVEL ---
+    // --- SECTION 1: REWARDS BY LEVEL ---
     const TOOLS_TYPE = ["pickaxe", "shovel", "hoe"];
     const randomToolType = TOOLS_TYPE[Math.floor(Math.random() * TOOLS_TYPE.length)];
 
@@ -55,19 +55,19 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
 
     const currentReward = levelRewards[level];
 
-    // LOGIC THƯỞNG MỚI:
+    // NEW REWARD logic:
     if (level < 5) {
-        // Cấp 0-4: Random 50/50 giữa Tool hoặc Armor
+        // Levels 0-4: random 50/50 between Tool or Armor
         if (Math.random() < 0.5) {
             container.addItem(new ItemStack(currentReward.tool, 1));
         } else {
             container.addItem(new ItemStack(currentReward.armor, 1));
         }
     } else {
-        // Cấp 5: 100% nhận 1 bộ Giáp Kim Cương
+        // level 5: 100% receive 1 Diamond Armor set
         container.addItem(new ItemStack("fv:full_set_diamond_armor", 1));
 
-        // Vẫn cộng thêm 1 lượt random (giáp hoặc tool) như quy tắc chung
+        // Still add 1 random roll (Armor or Tool) according to the general rule
         if (Math.random() < 0.5) {
             container.addItem(new ItemStack(currentReward.tool, 1));
         } else {
@@ -75,7 +75,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // [MỚI] CƠ CHẾ CỘNG XP VÀ LÊN CẤP
+    // [NEW] MECHANISM ADD XP AND LEVEL UP
     if (level < 5) {
         const xpGains = [20, 18, 16, 14, 12];
         let newXp = xp + xpGains[level];
@@ -92,7 +92,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         sourceEntity.setProperty("fv:level", newLevel);
     }
 
-    // --- PHẦN 2: TÍNH NĂNG SỬA CHỮA (GIỮ NGUYÊN GỐC) ---
+    // --- SECTION 2: REPAIR FEATURE (KEEP ORIGINAL) ---
     for (let i = 0; i < container.size; i++) {
         const item = container.getItem(i);
         if (!item) continue;
@@ -112,7 +112,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- PHẦN 3: LOGIC CHẾ TẠO FULL SET & CÔNG CỤ (GIỮ NGUYÊN GỐC) ---
+    // --- SECTION 3: logic CRAFTING FULL SET & success tools (KEEP ORIGINAL) ---
     const materials = [
         { id: "minecraft:diamond", pick: "minecraft:diamond_pickaxe", shovel: "minecraft:diamond_shovel", hoe: "minecraft:diamond_hoe", fullSet: "fv:full_set_diamond_armor" },
         { id: "minecraft:iron_ingot", pick: "minecraft:iron_pickaxe", shovel: "minecraft:iron_shovel", hoe: "minecraft:iron_hoe", fullSet: "fv:full_set_iron_armor" },
@@ -137,7 +137,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // --- PHẦN 4: NÂNG CẤP NETHERITE (GIỮ NGUYÊN GỐC) ---
+    // --- SECTION 4: NETHERITE UPGRADE (KEEP ORIGINAL) ---
     let netherCount = getItemCount(container, "minecraft:netherite_ingot");
 
     for (let i = 0; i < container.size; i++) {

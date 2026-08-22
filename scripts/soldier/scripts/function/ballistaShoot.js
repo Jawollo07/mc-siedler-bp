@@ -1,14 +1,14 @@
 import { world, system } from "@minecraft/server";
 
-// --- CẤU HÌNH CHỈ SỐ (Bro có thể căn chỉnh tại đây) ---
+// --- STAT CONFIGURATION (Bro can be adjusted here) ---
 const BALLISTA_ID = "fv:ballista";
-const SHOOT_FORCE = 3.2; // Lực bắn theo yêu cầu
+const SHOOT_FORCE = 3.2; // Firing force as requested
 
-// Tọa độ xuất phát của mũi tên so với vị trí Ballista { x, y, z }
-// Căn chỉnh cho mũi tên bay ra từ đúng rãnh trượt của Ballista
+// spawn offset of arrow name relative to the position Ballista { x, y, z }
+// Adjust for arrow name flying ra from correct slide track of Ballista
 const PROJECTILE_OFFSET = { x: 0, y: 1.8, z: 0 };
 
-// Bảng ánh xạ Property -> Thực thể đạn tương ứng
+// Mapping table Property -> Projectile entity interact corresponding
 const ARROW_TYPE_MAP = {
     1: "fv:throw_copper_ballista_arrow",
     2: "fv:throw_iron_ballista_arrow",
@@ -17,28 +17,28 @@ const ARROW_TYPE_MAP = {
     5: "fv:throw_netherite_ballista_arrow"
 };
 
-// --- LOGIC XỬ LÝ BẮN ---
+// --- FIRING logic ---
 world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
     const { player, target: ballista } = event;
 
-    // 1. Kiểm tra có đúng là Ballista không
+    // 1. Check has is actually Ballista not
     if (ballista.typeId !== BALLISTA_ID) return;
 
-    // 2. Kiểm tra điều kiện bắn từ Property (Khớp với logic JSON của bro)
+    // 2. Check firing condition from Property (Matches the JSON logic of bro)
     const status = ballista.getProperty("fv:ballista_status");
     const arrowType = ballista.getProperty("fv:type_arrow");
 
-    // Chỉ thực hiện script khi Ballista ở trạng thái 'ready' và có đạn (arrowType > 0)
-    // Và quan trọng: Player phải đang cưỡi Ballista (Kiểm tra rider)
+    // only perform perform script when Ballista is in the state 'ready' and has ammunition (arrowType > 0)
+    // and important: player right is riding Ballista (Check rider)
     if (status === "ready" && arrowType > 0) {
 
-        // Kiểm tra xem player có phải là người đang ngồi trên Ballista không
+        // Check whether the player is the correct rider on the Ballista
         const rideable = ballista.getComponent("minecraft:rideable");
         const riders = rideable.getRiders();
         const isRider = riders.some(r => r.id === player.id);
 
         if (isRider) {
-            // Chạy logic bắn trong system.run để tránh lỗi đồng bộ (vì đây là beforeEvent)
+            // Run logic shoot in system.run to avoid synchronization errors (because this is a beforeEvent)
             system.run(() => {
                 shootBallista(ballista, player, arrowType);
             });
@@ -55,34 +55,34 @@ function shootBallista(ballista, shooter, type) {
 
     if (!projectileId) return;
 
-    // Tính toán hướng nhìn của Ballista
+    // Calculate look direction of Ballista
     const viewDir = ballista.getViewDirection();
 
-    // Tính toán vị trí xuất phát dựa trên Offset
+    // Calculate spawn position based on Offset
     const spawnLocation = {
         x: ballista.location.x + (viewDir.x * 0.5) + PROJECTILE_OFFSET.x,
         y: ballista.location.y + PROJECTILE_OFFSET.y,
         z: ballista.location.z + (viewDir.z * 0.5) + PROJECTILE_OFFSET.z
     };
 
-    // Triệu hồi mũi tên
+    // Summon arrow name
     const arrow = dimension.spawnEntity(projectileId, spawnLocation);
 
-    // Xử lý Component Projectile
+    // Handle Projectile component
     const projectileComp = arrow.getComponent("minecraft:projectile");
 
     if (projectileComp) {
-        // Thiết lập Owner là người bắn (Cực kỳ quan trọng)
+        // Set owner to the shooter (Extremely important)
         projectileComp.owner = shooter;
 
-        // Tính toán Velocity (Hướng nhìn * Lực bắn)
+        // Calculate Velocity (direction look * Firing force)
         const velocity = {
             x: viewDir.x * SHOOT_FORCE,
             y: viewDir.y * SHOOT_FORCE,
             z: viewDir.z * SHOOT_FORCE
         };
 
-        // Khai hỏa!
+        // Fire!
         projectileComp.shoot(velocity);
     }
 }

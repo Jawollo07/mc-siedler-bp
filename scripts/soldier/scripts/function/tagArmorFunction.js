@@ -1,6 +1,6 @@
 import { world, system, EquipmentSlot, EntityEquippableComponent } from "@minecraft/server";
 
-// Chạy kiểm tra mỗi tick (20 lần/giây)
+// Run check every tick (20 times/second)
 system.runInterval(() => {
     for (const player of world.getPlayers()) {
         const equip = player.getComponent(EntityEquippableComponent.componentId);
@@ -8,7 +8,7 @@ system.runInterval(() => {
 
         const item = equip.getEquipment(EquipmentSlot.Mainhand);
 
-        // Xoá tag cũ nếu có
+        // Remove old tag if has
         player.removeTag("hold_helmet");
         player.removeTag("hold_chestplate");
         player.removeTag("hold_leggings");
@@ -18,7 +18,7 @@ system.runInterval(() => {
 
         const itemId = item.typeId;
 
-        // Kiểm tra và gắn tag theo tên item
+        // Check and add tag based on item name
         if (itemId.includes("helmet")) {
             player.addTag("hold_helmet");
         }

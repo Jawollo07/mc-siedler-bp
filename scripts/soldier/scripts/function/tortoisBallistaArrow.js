@@ -1,10 +1,10 @@
 import { world, system } from "@minecraft/server";
 
-// --- CẤU HÌNH ---
+// --- CONFIGURATION ---
 const ENTITY_ID = "fv:heavy_tortois_ballista";
 const AMMO_PROP = "fv:type_arrow";
 
-// Bảng ánh xạ: Property Value <-> Item ID
+// Mapping table: Property Value <-> item ID
 const AMMO_MAP = {
     5: "fv:netherite_ballista_arrow",
     4: "fv:diamond_ballista_arrow",
@@ -13,7 +13,7 @@ const AMMO_MAP = {
     3: "fv:gold_ballista_arrow"
 };
 
-// Thứ tự ưu tiên quét từ cao xuống thấp (Đúng kịch bản của bạn)
+// Priority order scan from highest to lowest (according to your setup)
 const PRIORITY_ORDER = [5, 4, 2, 1, 3];
 
 /**
@@ -46,12 +46,12 @@ function updateBallistaAmmoState(entity) {
 
     let finalValue = 0;
 
-    // Quét theo thứ tự ưu tiên: Cái nào đứng trước trong PRIORITY_ORDER sẽ được xét trước
+    // scan in priority order: The one listed first in PRIORITY_ORDER will be checked first
     for (const val of PRIORITY_ORDER) {
         const itemId = AMMO_MAP[val];
         let hasItem = false;
 
-        // Quét 27 slot tìm item tương ứng
+        // scan all 27 slots find item interact corresponding
         for (let i = 0; i < 27; i++) {
             const item = inventory.getItem(i);
             if (item && item.typeId === itemId) {
@@ -62,26 +62,26 @@ function updateBallistaAmmoState(entity) {
 
         if (hasItem) {
             finalValue = val;
-            break; // Tìm thấy loại ưu tiên cao nhất rồi, không quét tiếp nữa
+            break; // Found type priority priority height most then, stop scanning
         }
     }
 
     const currentProp = entity.getProperty(AMMO_PROP);
 
-    // --- TRIGGER EVENT CAN/CANT SHOOT ---
+    // --- TRIGGER CAN/CANNOT SHOOT EVENTS ---
     if (currentProp === 0 && finalValue > 0) {
         entity.triggerEvent("fv:can_shoot");
     } else if (currentProp > 0 && finalValue === 0) {
         entity.triggerEvent("fv:cant_shoot");
     }
 
-    // --- CẬP NHẬT PROPERTY ---
+    // --- UPDATE PROPERTY ---
     if (currentProp !== finalValue) {
         entity.setProperty(AMMO_PROP, finalValue);
     }
 }
 
-// --- XỬ LÝ KHI NHẬN LỆNH BẮN (/scriptevent) ---
+// --- HANDLE SHOOT COMMAND (/scriptevent) ---
 system.afterEvents.scriptEventReceive.subscribe((event) => {
     if (event.id !== "fv:ballista_fire") return;
 
@@ -91,7 +91,7 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
     const inventory = tortoise.getComponent("minecraft:inventory")?.container;
     if (!inventory) return;
 
-    // Đọc Property hiện tại để biết đang bắn loại nào
+    // Read the current Property to determine which type is loaded
     const currentPropValue = tortoise.getProperty(AMMO_PROP);
 
     if (currentPropValue > 0) {
@@ -101,14 +101,14 @@ system.afterEvents.scriptEventReceive.subscribe((event) => {
         }
     }
 
-    // Sau khi trừ đồ, cập nhật lại Property ngay lập tức để nạp mũi tên tiếp theo
+    // After removing the item, immediately update the Property to load the next arrow
     updateBallistaAmmoState(tortoise);
 });
 
-// --- QUÉT ĐỊNH KỲ ĐỂ CẬP NHẬT TRẠNG THÁI KHI NẠP ĐỒ (Passive) ---
+// --- PERIODIC scan to update update state state when load item (Passive) ---
 system.runInterval(() => {
     const tortoises = world.getDimension("overworld").getEntities({ type: ENTITY_ID });
     for (const tortoise of tortoises) {
         updateBallistaAmmoState(tortoise);
     }
-}, 20); // 1 giây quét 1 lần
+}, 20); // scan once per second

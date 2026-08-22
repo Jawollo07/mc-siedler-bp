@@ -1,6 +1,6 @@
 import { world, system } from "@minecraft/server";
 
-// Biến theo dõi ngày để phát hiện ngày mới
+// Day-tracking variable to detect a new day
 let currentWorldDay = undefined;
 
 /**
@@ -35,9 +35,9 @@ function consumeOneBread(container) {
     return false;
 }
 
-// Vòng lặp 1: Xử lý ĂN và TRỪ NGÀY (Chu kỳ 10 giây)
+// Loop 1: Process EATING and DAY DEDUCTION (Cycle 10 second)
 system.runInterval(() => {
-    // Khởi tạo ngày lần đầu
+    // Initialize the day for the first time
     if (currentWorldDay === undefined) {
         try {
             currentWorldDay = world.getDay();
@@ -47,7 +47,7 @@ system.runInterval(() => {
 
     const dayNow = world.getDay();
 
-    // Phát hiện bước sang ngày mới
+    // Detect transition to a new day
     if (dayNow > currentWorldDay) {
         currentWorldDay = dayNow;
 
@@ -61,25 +61,25 @@ system.runInterval(() => {
             const inventory = villager.getComponent("minecraft:inventory");
             const container = inventory?.container;
 
-            // Kiểm tra Property bảo vệ dụng cụ
+            // Check the tool-protection Property
             const hasEquipment = villager.getProperty("fv:has_equipment");
 
-            // Tiến hành cho dân làng ăn
+            // Feed the villager
             const ateSuccessfully = consumeOneBread(container);
 
             if (ateSuccessfully) {
-                // Ăn thành công: Reset đình công
+                // Eating successful: reset strike
                 villager.setProperty("fv:dangdinhcong", false);
                 villager.setProperty("fv:demnguoc", 3);
 
-                // HIỆU ỨNG CẦM BÁNH MÌ:
-                // Chỉ replaceitem nếu dân làng KHÔNG cầm dụng cụ (fv:has_equipment == false)
+                // BREAD-HOLDING EFFECT:
+                // Only use replaceitem if villager villager is NOT holding a tool (fv:has_equipment == false)
                 if (hasEquipment === false) {
                     villager.runCommand("replaceitem entity @s slot.weapon.mainhand 0 bread 1");
                 }
-                // Nếu hasEquipment == true, dân làng vẫn ăn (trừ bánh mì) nhưng tay vẫn giữ nguyên dụng cụ.
+                // If hasEquipment == true, the villager still eats (deducts bread), but the tool remains in hand.
             } else {
-                // Không có gì ăn -> Bắt đầu/Tiếp tục đình công
+                // Nothing to eat -> Start/continue strike
                 villager.setProperty("fv:dangdinhcong", true);
 
                 const daysLeft = villager.getProperty("fv:demnguoc");
@@ -87,7 +87,7 @@ system.runInterval(() => {
                     villager.setProperty("fv:demnguoc", daysLeft - 1);
                 } else if (daysLeft === 1) {
                     villager.setProperty("fv:demnguoc", 0);
-                    // Hết nhẫn nại, nghỉ việc
+                    // Patience exhausted, stop working
                     villager.triggerEvent("become_villager");
                 }
             }
@@ -95,7 +95,7 @@ system.runInterval(() => {
     }
 }, 200);
 
-// Vòng lặp 2: Đồng bộ trạng thái đình công tức thời (Chu kỳ 5 giây)
+// Loop 2: Synchronize strike state immediately (Cycle 5 second)
 system.runInterval(() => {
     const villagers = world.getDimension("overworld").getEntities({
         type: "fv:villager_free_handle"
@@ -110,12 +110,12 @@ system.runInterval(() => {
         const isStrike = villager.getProperty("fv:dangdinhcong");
         const hasSalary = hasBread(container);
 
-        // Nếu người chơi ném thêm bánh mì vào lúc đang đình công -> Hết đình công ngay
+        // if player throws more bread into while currently strike success -> strike ends immediately
         if (isStrike && hasSalary) {
             villager.setProperty("fv:dangdinhcong", false);
             villager.setProperty("fv:demnguoc", 3);
         }
-        // Nếu bỗng dưng hết bánh mì trong kho -> Chuyển sang trạng thái chờ đình công
+        // if suddenly runs out of bread in storage -> switch to strike-pending state
         else if (!isStrike && !hasSalary) {
             villager.setProperty("fv:dangdinhcong", true);
         }
