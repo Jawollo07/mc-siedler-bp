@@ -1,0 +1,395 @@
+{
+	"format_version": "1.21.60",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:potato_cannon",
+			"is_summonable": true,
+			"is_spawnable": true,
+			"properties": {
+				"fv:reload": {
+					"type": "enum",
+					"values": [
+						"empty",
+						"gunpower",
+						"potato",
+						"potatoexp"
+					],
+					"default": "empty",
+					"client_sync": true
+				},
+				"fv:shooting": {
+					"type": "bool",
+					"default": false,
+					"client_sync": true
+				}
+			}
+		},
+		"component_groups": {
+			"timer": {
+				"minecraft:timer": {
+					"time": 2,
+					"time_down_event": {
+						"event": "shooted",
+						"target": "self"
+					}
+				}
+			},
+			"despawn": {
+				"minecraft:instant_despawn": {
+					"remove_child_entities": false
+				},
+				"minecraft:spawn_entity": {
+					"entities": [
+						{
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "fv:potato_cannon_spawn_egg"
+						},
+						{
+							"filters": {
+								"any_of": [
+									{
+										"test": "enum_property",
+										"subject": "self",
+										"domain": "fv:reload",
+										"value": "gunpower"
+									},
+									{
+										"test": "enum_property",
+										"subject": "self",
+										"domain": "fv:reload",
+										"value": "potato"
+									},
+									{
+										"test": "enum_property",
+										"subject": "self",
+										"domain": "fv:reload",
+										"value": "potatoexp"
+									}
+								]
+							},
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "gunpowder"
+						},
+						{
+							"filters": {
+								"all_of": [
+									{
+										"test": "enum_property",
+										"subject": "self",
+										"domain": "fv:reload",
+										"value": "potato"
+									}
+								]
+							},
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "potato"
+						},
+						{
+							"filters": {
+								"all_of": [
+									{
+										"test": "enum_property",
+										"subject": "self",
+										"domain": "fv:reload",
+										"value": "potatoexp"
+									}
+								]
+							},
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "fv:potato_explode"
+						}
+					]
+				}
+			}
+		},
+		"components": {
+			"minecraft:collision_box": {
+				"height": 0.7,
+				"width": 0.6
+			},
+			"minecraft:type_family": {
+				"family": [
+					"cannon",
+					"potatocannon"
+				]
+			},
+			"minecraft:health": {
+				"value": 60,
+				"max": 60
+			},
+			"minecraft:interact": {
+				"interactions": [
+					{
+						"use_item": true,
+						"interact_text": "action.interact.gunpower.load",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "enum_property",
+										"domain": "fv:reload",
+										"subject": "self",
+										"operator": "==",
+										"value": "empty"
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "gunpowder"
+									},
+									{
+										"test": "bool_property",
+										"domain": "fv:shooting",
+										"subject": "self",
+										"value": false
+									}
+								]
+							},
+							"event": "gunpower_reloaded",
+							"target": "self"
+						}
+					},
+					{
+						"use_item": true,
+						"interact_text": "action.interact.potato.load",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "enum_property",
+										"domain": "fv:reload",
+										"subject": "self",
+										"operator": "==",
+										"value": "gunpower"
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "potato"
+									},
+									{
+										"test": "bool_property",
+										"domain": "fv:shooting",
+										"subject": "self",
+										"value": false
+									}
+								]
+							},
+							"event": "potato_reloaded",
+							"target": "self"
+						}
+					},
+					{
+						"use_item": true,
+						"interact_text": "action.interact.potato.load",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "enum_property",
+										"domain": "fv:reload",
+										"subject": "self",
+										"operator": "==",
+										"value": "gunpower"
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:potato_explode"
+									},
+									{
+										"test": "bool_property",
+										"domain": "fv:shooting",
+										"subject": "self",
+										"value": false
+									}
+								]
+							},
+							"event": "potato_exp_reloaded",
+							"target": "self"
+						}
+					},
+					{
+						"hurt_item": 1,
+						"interact_text": "action.interact.potato.shoot",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"any_of": [
+											{
+												"test": "enum_property",
+												"domain": "fv:reload",
+												"subject": "self",
+												"operator": "==",
+												"value": "potato"
+											},
+											{
+												"test": "enum_property",
+												"domain": "fv:reload",
+												"subject": "self",
+												"operator": "==",
+												"value": "potatoexp"
+											}
+										]
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "flint_and_steel"
+									},
+									{
+										"test": "bool_property",
+										"domain": "fv:shooting",
+										"subject": "self",
+										"value": false
+									}
+								]
+							},
+							"event": "shooting",
+							"target": "self"
+						}
+					}
+				]
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:conditional_bandwidth_optimization": {},
+			"minecraft:damage_sensor": {
+				"triggers": [
+					{
+						"cause": "fall",
+						"deals_damage": "no"
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "irongolem"
+									},
+									{
+										"test": "has_component",
+										"subject": "self",
+										"operator": "!=",
+										"value": "minecraft:is_tamed"
+									}
+								]
+							}
+						},
+						"deals_damage": "no"
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "player"
+									},
+									{
+										"test": "has_equipment",
+										"subject": "other",
+										"operator": "==",
+										"value": "fv:get_back_hammer"
+									}
+								]
+							},
+							"event": "despawn",
+							"target": "self"
+						},
+						"deals_damage": "no"
+					}
+				]
+			},
+			"minecraft:knockback_resistance": {
+				"value": 1
+			}
+		},
+		"events": {
+			"gunpower_reloaded": {
+				"set_property": {
+					"fv:reload": "gunpower"
+				},
+				"queue_command": {
+					"command": "playsound block.bamboo.hit @a ~ ~ ~"
+				}
+			},
+			"potato_reloaded": {
+				"set_property": {
+					"fv:reload": "potato"
+				},
+				"queue_command": {
+					"command": "playsound block.bamboo.step @a ~ ~ ~"
+				}
+			},
+			"potato_exp_reloaded": {
+				"set_property": {
+					"fv:reload": "potatoexp"
+				},
+				"queue_command": {
+					"command": "playsound block.bamboo.step @a ~ ~ ~"
+				}
+			},
+			"shooting": {
+				"set_property": {
+					"fv:shooting": true
+				},
+				"add": {
+					"component_groups": [
+						"timer"
+					]
+				},
+				"queue_command": {
+					"command": [
+						"playsound potato.cannon.shoot @a ~ ~ ~ 2",
+						"scriptevent cannon:shoot"
+					]
+				}
+			},
+			"shooted": {
+				"set_property": {
+					"fv:shooting": false
+				},
+				"remove": {
+					"component_groups": [
+						"timer"
+					]
+				}
+			},
+			"despawn": {
+				"add": {
+					"component_groups": [
+						"despawn"
+					]
+				}
+			}
+		}
+	}
+}

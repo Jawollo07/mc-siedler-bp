@@ -1,0 +1,16 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:potato_cannon",
+			"menu_category": {
+				"category": "equipment"
+			}
+		},
+		"components": {
+			"minecraft:icon": "potato_cannon",
+			"minecraft:max_stack_size": 64,
+			"fv:lucky_chest_place": {}
+		}
+	}
+}

@@ -1,0 +1,16 @@
+{
+	"format_version": "1.21.60",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:discharge_letter",
+			"menu_category": {
+				"category": "items"
+			}
+		},
+		"components": {
+			"minecraft:icon": "fv_discharge_letter",
+			"minecraft:glint": true,
+			"minecraft:rarity": "rare"
+		}
+	}
+}

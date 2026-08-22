@@ -1,0 +1,25 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shapeless": {
+		"description": {
+			"identifier": "fv:team_stand_horn"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"ingredients": [
+			{
+				"item": "fv:team_call_horn",
+				"count": 1
+			},
+			{
+				"item": "green_dye",
+				"count": 1
+			}
+		],
+		"result": {
+			"item": "fv:team_stand_horn",
+			"count": 1
+		}
+	}
+}

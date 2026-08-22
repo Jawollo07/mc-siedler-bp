@@ -1,0 +1,268 @@
+{
+	"format_version": "1.21.70",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:big_tortois",
+			"spawn_category": "creature",
+			"is_spawnable": true,
+			"is_summonable": true,
+			"properties": {
+				"fv:tamed": {
+					"type": "bool",
+					"client_sync": true,
+					"default": false
+				},
+				"fv:dadinhdanh": {
+					"type": "bool",
+					"client_sync": true,
+					"default": false
+				}
+			}
+		},
+		"component_groups": {
+			"on_hurt": {
+				"minecraft:spell_effects": {
+					"add_effects": [
+						{
+							"effect": "resistance",
+							"amplifier": 1,
+							"duration": "infinite",
+							"visible": false
+						}
+					]
+				},
+				"minecraft:movement": {
+					"value": 0
+				},
+				"minecraft:is_stunned": {}
+			},
+			"become_carry_turret": {
+				"minecraft:transformation": {
+					"into": "fv:big_tortois_carry_turret"
+				}
+			},
+			"become_heavy_potato_cannon": {
+				"minecraft:transformation": {
+					"into": "fv:heavy_tortois"
+				}
+			},
+			"become_heavy_ballista": {
+				"minecraft:transformation": {
+					"into": "fv:heavy_tortois_ballista"
+				}
+			}
+		},
+		"components": {
+			"minecraft:home": {
+				"restriction_radius": 22,
+				"restriction_type": "all_movement"
+			},
+			"minecraft:is_hidden_when_invisible": {},
+			"minecraft:type_family": {
+				"family": [
+					"golem",
+					"stone",
+					"heartstone",
+					"irongolem",
+					"bigtortois"
+				]
+			},
+			"minecraft:breathable": {
+				"total_supply": 15,
+				"suffocate_time": 0
+			},
+			"minecraft:navigation.walk": {
+				"can_path_over_water": true,
+				"avoid_water": true,
+				"avoid_damage_blocks": true
+			},
+			"minecraft:movement.basic": {},
+			"minecraft:jump.static": {},
+			"minecraft:can_climb": {},
+			"minecraft:collision_box": {
+				"width": 1.8,
+				"height": 1.9
+			},
+			"minecraft:nameable": {},
+			"minecraft:health": {
+				"value": 80,
+				"max": 80
+			},
+			"minecraft:loot": {
+				"table": "loot_tables/entities/big_tortois.json"
+			},
+			"minecraft:hurt_on_condition": {
+				"damage_conditions": [
+					{
+						"filters": {
+							"test": "in_lava",
+							"subject": "self",
+							"operator": "==",
+							"value": true
+						},
+						"cause": "lava",
+						"damage_per_tick": 1
+					}
+				]
+			},
+			"minecraft:movement": {
+				"value": 0.25
+			},
+			"minecraft:despawn": {
+				"despawn_from_distance": {}
+			},
+			"minecraft:behavior.float": {
+				"priority": 0
+			},
+			"minecraft:behavior.panic": {
+				"priority": 1,
+				"speed_multiplier": 1.25
+			},
+			"minecraft:behavior.move_towards_home_restriction": {
+				"priority": 6,
+				"speed_multiplier": 0.8
+			},
+			"minecraft:behavior.breed": {
+				"priority": 3,
+				"speed_multiplier": 1
+			},
+			"minecraft:behavior.tempt": {
+				"priority": 4,
+				"speed_multiplier": 1.25,
+				"items": [
+					"cobblestone"
+				]
+			},
+			"minecraft:behavior.random_stroll": {
+				"priority": 6,
+				"speed_multiplier": 0.8
+			},
+			"minecraft:behavior.look_at_player": {
+				"priority": 7,
+				"look_distance": 6,
+				"probability": 0.02
+			},
+			"minecraft:behavior.random_look_around": {
+				"priority": 9
+			},
+			"minecraft:leashable": {
+				"soft_distance": 4,
+				"hard_distance": 6,
+				"max_distance": 10
+			},
+			"minecraft:balloonable": {},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": true,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:conditional_bandwidth_optimization": {},
+			"minecraft:knockback_resistance": {
+				"value": 1
+			},
+			"minecraft:healable": {
+				"items": [
+					{
+						"item": "cobblestone",
+						"heal_amount": 5
+					}
+				]
+			},
+			"minecraft:interact": {
+				"interactions": [
+					{
+						"use_item": true,
+						"swing": true,
+						"interact_text": "action.interact.armorstand.equip",
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:carriage_platform"
+									}
+								]
+							},
+							"event": "become_carry_turret",
+							"target": "self"
+						}
+					},
+					{
+						"use_item": true,
+						"swing": true,
+						"interact_text": "action.interact.armorstand.equip",
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:big_potato_cannon"
+									}
+								]
+							},
+							"event": "become_heavy_potato_cannon",
+							"target": "self"
+						}
+					},
+					{
+						"use_item": true,
+						"swing": true,
+						"interact_text": "action.interact.armorstand.equip",
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:ballista"
+									}
+								]
+							},
+							"event": "become_heavy_ballista",
+							"target": "self"
+						}
+					}
+				]
+			},
+			"minecraft:behavior.random_look_around_and_sit": {
+				"priority": 12,
+				"min_look_count": 2,
+				"max_look_count": 5,
+				"min_look_time": 80,
+				"max_look_time": 100,
+				"probability": 0.001
+			}
+		},
+		"events": {
+			"fv:home": {
+				"set_home_position": {}
+			},
+			"become_carry_turret": {
+				"add": {
+					"component_groups": [
+						"become_carry_turret"
+					]
+				}
+			},
+			"become_heavy_ballista": {
+				"add": {
+					"component_groups": [
+						"become_heavy_ballista"
+					]
+				}
+			},
+			"become_heavy_potato_cannon": {
+				"add": {
+					"component_groups": [
+						"become_heavy_potato_cannon"
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shapeless": {
+		"description": {
+			"identifier": "fv:team_call_horn"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"ingredients": [
+			{
+				"item": "minecraft:goat_horn",
+				"count": 1
+			},
+			{
+				"item": "fv:team_book_default",
+				"count": 1
+			}
+		],
+		"result": {
+			"item": "fv:team_call_horn",
+			"count": 1
+		}
+	}
+}

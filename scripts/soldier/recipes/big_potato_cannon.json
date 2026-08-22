@@ -1,0 +1,30 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "fv:big_potato_cannon"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"key": {
+			"b": {
+				"item": "minecraft:stripped_bamboo_block"
+			},
+			"o": {
+				"item": "planks"
+			},
+			"c": {
+				"item": "chest"
+			}
+		},
+		"pattern": [
+			"bb ",
+			"ooc"
+		],
+		"result": {
+			"count": 2,
+			"item": "fv:big_potato_cannon"
+		}
+	}
+}

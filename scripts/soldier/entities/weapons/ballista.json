@@ -1,0 +1,585 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:ballista",
+			"is_summonable": true,
+			"is_spawnable": true,
+			"properties": {
+				"fv:type_arrow": {
+					"type": "int",
+					"default": 0,
+					"range": [
+						0,
+						5
+					],
+					"client_sync": true
+				},
+				"fv:ballista_status": {
+					"type": "enum",
+					"values": [
+						"default",
+						"charging",
+						"reloaded",
+						"ready"
+					],
+					"client_sync": true,
+					"default": "default"
+				}
+			}
+		},
+		"component_groups": {
+			"timer_loaded": {
+				"minecraft:timer": {
+					"time": 2,
+					"time_down_event": {
+						"event": "ready",
+						"target": "self"
+					}
+				}
+			},
+			"despawn": {
+				"minecraft:instant_despawn": {
+					"remove_child_entities": false
+				},
+				"minecraft:spawn_entity": {
+					"entities": [
+						{
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "fv:ballista"
+						},
+						{
+							"filters": {
+								"any_of": [
+									{
+										"test": "int_property",
+										"subject": "self",
+										"domain": "fv:type_arrow",
+										"value": 1
+									}
+								]
+							},
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "fv:copper_ballista_arrow"
+						},
+						{
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"subject": "self",
+										"domain": "fv:type_arrow",
+										"value": 2
+									}
+								]
+							},
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "fv:iron_ballista_arrow"
+						},
+						{
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"subject": "self",
+										"domain": "fv:type_arrow",
+										"value": 3
+									}
+								]
+							},
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "fv:gold_ballista_arrow"
+						},
+						{
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"subject": "self",
+										"domain": "fv:type_arrow",
+										"value": 4
+									}
+								]
+							},
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "fv:diamond_ballista_arrow"
+						},
+						{
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"subject": "self",
+										"domain": "fv:type_arrow",
+										"value": 5
+									}
+								]
+							},
+							"min_wait_time": 0,
+							"max_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "fv:netherite_ballista_arrow"
+						}
+					]
+				}
+			},
+			"has_rider": {
+				"minecraft:collision_box": {
+					"width": 1.6,
+					"height": 2.6
+				}
+			}
+		},
+		"components": {
+			"minecraft:collision_box": {
+				"width": 1.6,
+				"height": 1.8
+			},
+			"minecraft:type_family": {
+				"family": [
+					"ballista"
+				]
+			},
+			"minecraft:health": {
+				"value": 50,
+				"max": 50
+			},
+			"minecraft:interact": {
+				"interactions": [
+					{
+						"use_item": true,
+						"interact_text": "action.interact.ballista.reload",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"domain": "fv:type_arrow",
+										"subject": "self",
+										"operator": "==",
+										"value": 0
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:copper_ballista_arrow"
+									},
+									{
+										"test": "enum_property",
+										"domain": "fv:ballista_status",
+										"subject": "self",
+										"value": "reloaded"
+									}
+								]
+							},
+							"event": "fv:copper_arrow_reload",
+							"target": "self"
+						}
+					},
+					{
+						"use_item": true,
+						"interact_text": "action.interact.ballista.reload",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"domain": "fv:type_arrow",
+										"subject": "self",
+										"operator": "==",
+										"value": 0
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:iron_ballista_arrow"
+									},
+									{
+										"test": "enum_property",
+										"domain": "fv:ballista_status",
+										"subject": "self",
+										"value": "reloaded"
+									}
+								]
+							},
+							"event": "fv:iron_arrow_reload",
+							"target": "self"
+						}
+					},
+					{
+						"use_item": true,
+						"interact_text": "action.interact.ballista.reload",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"domain": "fv:type_arrow",
+										"subject": "self",
+										"operator": "==",
+										"value": 0
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:gold_ballista_arrow"
+									},
+									{
+										"test": "enum_property",
+										"domain": "fv:ballista_status",
+										"subject": "self",
+										"value": "reloaded"
+									}
+								]
+							},
+							"event": "fv:gold_arrow_reload",
+							"target": "self"
+						}
+					},
+					{
+						"use_item": true,
+						"interact_text": "action.interact.ballista.reload",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"domain": "fv:type_arrow",
+										"subject": "self",
+										"operator": "==",
+										"value": 0
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:diamond_ballista_arrow"
+									},
+									{
+										"test": "enum_property",
+										"domain": "fv:ballista_status",
+										"subject": "self",
+										"value": "reloaded"
+									}
+								]
+							},
+							"event": "fv:diamond_arrow_reload",
+							"target": "self"
+						}
+					},
+					{
+						"use_item": true,
+						"interact_text": "action.interact.ballista.reload",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "int_property",
+										"domain": "fv:type_arrow",
+										"subject": "self",
+										"operator": "==",
+										"value": 0
+									},
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"operator": "==",
+										"value": "fv:netherite_ballista_arrow"
+									},
+									{
+										"test": "enum_property",
+										"domain": "fv:ballista_status",
+										"subject": "self",
+										"value": "reloaded"
+									}
+								]
+							},
+							"event": "fv:netherite_arrow_reload",
+							"target": "self"
+						}
+					},
+					{
+						"interact_text": "action.interact.ballita.charged",
+						"swing": true,
+						"cooldown": 2,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "enum_property",
+										"domain": "fv:ballista_status",
+										"subject": "self",
+										"value": "default"
+									}
+								]
+							},
+							"event": "timer_charging",
+							"target": "self"
+						}
+					},
+					{
+						"interact_text": "action.interact.ballista.shoot",
+						"swing": true,
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "enum_property",
+										"domain": "fv:ballista_status",
+										"subject": "self",
+										"value": "ready"
+									},
+									{
+										"test": "is_riding",
+										"subject": "other",
+										"operator": "==",
+										"value": true
+									},
+									{
+										"test": "is_family",
+										"subject": "other",
+										"operator": "==",
+										"value": "player"
+									}
+								]
+							},
+							"event": "shooted",
+							"target": "self"
+						}
+					}
+				]
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:conditional_bandwidth_optimization": {},
+			"minecraft:damage_sensor": {
+				"triggers": [
+					{
+						"cause": "fall",
+						"deals_damage": "no"
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "irongolem"
+									},
+									{
+										"test": "has_component",
+										"subject": "self",
+										"operator": "!=",
+										"value": "minecraft:is_tamed"
+									}
+								]
+							}
+						},
+						"deals_damage": "no"
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "player"
+									},
+									{
+										"test": "has_equipment",
+										"subject": "other",
+										"operator": "==",
+										"value": "fv:get_back_hammer"
+									}
+								]
+							},
+							"event": "despawn",
+							"target": "self"
+						},
+						"deals_damage": "no"
+					}
+				]
+			},
+			"minecraft:knockback_resistance": {
+				"value": 1
+			},
+			"minecraft:rideable": {
+				"family_types": [
+					"player"
+				],
+				"rider_can_interact": true,
+				"seat_count": 1,
+				"seats": {
+					"position": [
+						0,
+						1,
+						-1.2
+					]
+				}
+			},
+			"minecraft:input_ground_controlled": {},
+			"minecraft:behavior.controlled_by_player": {
+				"priority": 0,
+				"fractional_rotation": 1
+			},
+			"minecraft:movement": {
+				"value": 0
+			},
+			"minecraft:environment_sensor": {
+				"triggers": [
+					{
+						"filters": {
+							"test": "rider_count",
+							"subject": "self",
+							"operator": "==",
+							"value": 1
+						},
+						"event": "fv:has_rider",
+						"target": "self"
+					},
+					{
+						"filters": {
+							"test": "rider_count",
+							"subject": "self",
+							"operator": "==",
+							"value": 0
+						},
+						"event": "fv:no_rider",
+						"target": "self"
+					}
+				]
+			}
+		},
+		"events": {
+			"fv:copper_arrow_reload": {
+				"set_property": {
+					"fv:type_arrow": 1,
+					"fv:ballista_status": "ready"
+				},
+				"queue_command": {
+					"command": "playsound block.bamboo.hit @a ~ ~ ~"
+				}
+			},
+			"fv:iron_arrow_reload": {
+				"set_property": {
+					"fv:type_arrow": 2,
+					"fv:ballista_status": "ready"
+				},
+				"queue_command": {
+					"command": "playsound block.bamboo.step @a ~ ~ ~"
+				}
+			},
+			"fv:gold_arrow_reload": {
+				"set_property": {
+					"fv:type_arrow": 3,
+					"fv:ballista_status": "ready"
+				},
+				"queue_command": {
+					"command": "playsound block.bamboo.step @a ~ ~ ~"
+				}
+			},
+			"fv:diamond_arrow_reload": {
+				"set_property": {
+					"fv:type_arrow": 4,
+					"fv:ballista_status": "ready"
+				},
+				"queue_command": {
+					"command": "playsound block.bamboo.step @a ~ ~ ~"
+				}
+			},
+			"fv:netherite_arrow_reload": {
+				"set_property": {
+					"fv:type_arrow": 5,
+					"fv:ballista_status": "ready"
+				},
+				"queue_command": {
+					"command": "playsound block.bamboo.step @a ~ ~ ~"
+				}
+			},
+			"shooted": {
+				"set_property": {
+					"fv:type_arrow": 0,
+					"fv:ballista_status": "default"
+				},
+				"queue_command": {
+					"command": [
+						"playsound crossbow.shoot @a ~ ~ ~ 2"
+					]
+				}
+			},
+			"despawn": {
+				"add": {
+					"component_groups": [
+						"despawn"
+					]
+				}
+			},
+			"timer_charging": {
+				"set_property": {
+					"fv:ballista_status": "charging"
+				},
+				"queue_command": {
+					"command": "playsound catapult.release @a ~ ~ ~"
+				},
+				"add": {
+					"component_groups": [
+						"timer_loaded"
+					]
+				}
+			},
+			"ready": {
+				"set_property": {
+					"fv:ballista_status": "reloaded"
+				},
+				"remove": {
+					"component_groups": [
+						"timer_loaded"
+					]
+				}
+			},
+			"fv:has_rider": {
+				"add": {
+					"component_groups": [
+						"has_rider"
+					]
+				}
+			},
+			"fv:no_rider": {
+				"remove": {
+					"component_groups": [
+						"has_rider"
+					]
+				}
+			}
+		}
+	}
+}

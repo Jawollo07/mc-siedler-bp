@@ -1,0 +1,31 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "fv:bamboo_turret"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"key": {
+			"b": {
+				"item": "bamboo_block"
+			},
+			"s": {
+				"item": "bamboo"
+			},
+			"c": {
+				"item": "bamboo_mosaic"
+			}
+		},
+		"pattern": [
+			"sb",
+			" b",
+			" c"
+		],
+		"result": {
+			"item": "fv:bamboo_turret",
+			"count": 1
+		}
+	}
+}

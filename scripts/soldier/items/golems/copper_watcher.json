@@ -1,0 +1,16 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:copper_watcher",
+			"menu_category": {
+				"category": "equipment"
+			}
+		},
+		"components": {
+			"minecraft:icon": "copper_watcher",
+			"minecraft:max_stack_size": 16,
+			"fv:lucky_chest_place": {}
+		}
+	}
+}

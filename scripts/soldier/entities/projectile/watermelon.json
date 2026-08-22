@@ -1,0 +1,102 @@
+{
+	"format_version": "1.16.0",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:watermelon",
+			"is_spawnable": false,
+			"is_summonable": true,
+			"is_experimental": false,
+			"runtime_identifier": "arrow"
+		},
+		"component_groups": {
+			"despawn": {
+				"minecraft:instant_despawn": {
+					"remove_child_entities": false
+				}
+			},
+			"timer": {
+				"minecraft:timer": {
+					"time": [
+						1,
+						1
+					],
+					"time_down_event": {
+						"event": "despawn",
+						"target": "self"
+					}
+				}
+			}
+		},
+		"components": {
+			"minecraft:collision_box": {
+				"width": 1,
+				"height": 1
+			},
+			"minecraft:projectile": {
+				"on_hit": {
+					"impact_damage": {
+						"damage": [
+							15,
+							17
+						],
+						"knockback": true,
+						"semi_random_diff_damage": false,
+						"destroy_on_hit": true
+					},
+					"stick_in_ground": {
+						"shake_time": 0.35
+					},
+					"arrow_effect": {},
+					"definition_event": {
+						"affect_projectile": true,
+						"event_trigger": {
+							"event": "timer",
+							"target": "self"
+						}
+					}
+				},
+				"hit_sound": "ambient",
+				"power": 1.6,
+				"gravity": 0.05,
+				"uncertainty_base": 16,
+				"uncertainty_multiplier": 4,
+				"anchor": 0,
+				"should_bounce": true,
+				"offset": [
+					0,
+					2,
+					0
+				],
+				"angle_offset": -60
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": true,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:conditional_bandwidth_optimization": {
+				"default_values": {
+					"max_optimized_distance": 100,
+					"max_dropped_ticks": 7,
+					"use_motion_prediction_hints": true
+				}
+			}
+		},
+		"events": {
+			"despawn": {
+				"add": {
+					"component_groups": [
+						"despawn"
+					]
+				}
+			},
+			"timer": {
+				"add": {
+					"component_groups": [
+						"timer"
+					]
+				}
+			}
+		}
+	}
+}

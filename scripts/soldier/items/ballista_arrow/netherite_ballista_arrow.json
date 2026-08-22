@@ -1,0 +1,21 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:netherite_ballista_arrow",
+			"menu_category": {
+				"category": "equipment",
+				"group": "minecraft:itemGroup.name.arrow"
+			}
+		},
+		"components": {
+			"minecraft:icon": "fv_netherite_ballista_arrow",
+			"minecraft:max_stack_size": 32,
+			"minecraft:rarity": "rare",
+			"minecraft:projectile": {
+				"minimum_critical_power": 2,
+				"projectile_entity": "fv:throw_netherite_ballista_arrow"
+			}
+		}
+	}
+}

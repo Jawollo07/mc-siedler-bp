@@ -1,0 +1,542 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:shield_villager",
+			"is_summonable": true,
+			"is_spawnable": false
+		},
+		"component_groups": {
+			"despawn": {
+				"minecraft:instant_despawn": {
+					"remove_child_entities": true
+				}
+			}
+		},
+		"components": {
+			"minecraft:type_family": {
+				"family": [
+					"shield",
+					"irongolem"
+				]
+			},
+			"minecraft:area_attack": {
+				"cause": "entity_attack",
+				"damage_per_tick": 0,
+				"damage_range": 0,
+				"entity_filter": {
+					"any_of": [
+						{
+							"test": "is_family",
+							"subject": "other",
+							"value": "illager"
+						},
+						{
+							"test": "is_family",
+							"subject": "other",
+							"value": "monster"
+						},
+						{
+							"test": "is_family",
+							"subject": "other",
+							"value": "undead"
+						},
+						{
+							"test": "is_family",
+							"subject": "other",
+							"value": "wither"
+						},
+						{
+							"test": "is_family",
+							"subject": "other",
+							"value": "zombie"
+						}
+					]
+				}
+			},
+			"minecraft:health": {
+				"value": 500,
+				"max": 500
+			},
+			"minecraft:collision_box": {
+				"height": 1.9,
+				"width": 0.9
+			},
+			"minecraft:breathable": {
+				"total_supply": 15,
+				"suffocate_time": 0,
+				"breathes_air": true,
+				"breathes_water": true,
+				"breathes_lava": true,
+				"breathes_solids": true
+			},
+			"minecraft:environment_sensor": {
+				"triggers": [
+					{
+						"filters": {
+							"all_of": [
+								{
+									"test": "is_riding",
+									"subject": "self",
+									"value": false
+								}
+							]
+						},
+						"event": "despawn",
+						"target": "self"
+					}
+				]
+			},
+			"minecraft:damage_sensor": {
+				"triggers": [
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "irongolem"
+									}
+								]
+							}
+						},
+						"deals_damage": "no"
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"any_of": [
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "blue"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "blue"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "red"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "red"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "grey"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "grey"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "yellow"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "yellow"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "green"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "green"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "black"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "black"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "brown"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "brown"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "white"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "white"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "purple"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "purple"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "cyan"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "cyan"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "lime"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "lime"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "pink"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "pink"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "orange"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "orange"
+											}
+										]
+									},
+									{
+										"all_of": [
+											{
+												"test": "has_tag",
+												"subject": "self",
+												"operator": "==",
+												"value": "light_blue"
+											},
+											{
+												"test": "has_tag",
+												"subject": "other",
+												"operator": "==",
+												"value": "light_blue"
+											}
+										]
+									}
+								]
+							}
+						},
+						"deals_damage": "no"
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"test": "has_equipment_tag",
+								"subject": "other",
+								"operator": "==",
+								"value": "minecraft:is_axe"
+							}
+						},
+						"damage_multiplier": 999
+					},
+					{
+						"cause": "entity_attack",
+						"damage_multiplier": 0.1
+					},
+					{
+						"cause": "piston",
+						"deals_damage": "no"
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "has_damage",
+										"subject": "self",
+										"operator": "==",
+										"value": "fatal"
+									}
+								]
+							},
+							"event": "despawn",
+							"target": "self"
+						}
+					},
+					{
+						"cause": "drowning",
+						"deals_damage": "no"
+					},
+					{
+						"cause": "fire",
+						"deals_damage": "no"
+					}
+				]
+			}
+		},
+		"events": {
+			"fv:add_rider": {
+				"sequence": [
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "blue"
+						},
+						"queue_command": {
+							"command": "tag @s add blue"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "red"
+						},
+						"queue_command": {
+							"command": "tag @s add red"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "grey"
+						},
+						"queue_command": {
+							"command": "tag @s add grey"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "yellow"
+						},
+						"queue_command": {
+							"command": "tag @s add yellow"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "green"
+						},
+						"queue_command": {
+							"command": "tag @s add green"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "black"
+						},
+						"queue_command": {
+							"command": "tag @s add black"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "brown"
+						},
+						"queue_command": {
+							"command": "tag @s add brown"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "white"
+						},
+						"queue_command": {
+							"command": "tag @s add white"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "purple"
+						},
+						"queue_command": {
+							"command": "tag @s add purple"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "cyan"
+						},
+						"queue_command": {
+							"command": "tag @s add cyan"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "lime"
+						},
+						"queue_command": {
+							"command": "tag @s add lime"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "orange"
+						},
+						"queue_command": {
+							"command": "tag @s add orange"
+						}
+					},
+					{
+						"filters": {
+							"test": "has_tag",
+							"subject": "other",
+							"operator": "==",
+							"value": "light_blue"
+						},
+						"queue_command": {
+							"command": "tag @s add light_blue"
+						}
+					}
+				]
+			},
+			"despawn": {
+				"add": {
+					"component_groups": [
+						"despawn"
+					]
+				}
+			}
+		}
+	}
+}

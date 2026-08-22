@@ -1,0 +1,28 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "fv:get_back_hammer"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"key": {
+			"t": {
+				"item": "minecraft:stick"
+			},
+			"s": {
+				"item": "minecraft:cobblestone"
+			}
+		},
+		"pattern": [
+			"sss",
+			"sss",
+			" t "
+		],
+		"result": {
+			"item": "fv:get_back_hammer",
+			"count": 1
+		}
+	}
+}

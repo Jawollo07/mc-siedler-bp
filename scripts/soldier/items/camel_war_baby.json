@@ -1,0 +1,21 @@
+{
+	"format_version": "1.20.80",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:camel_war_baby",
+			"menu_category": {
+				"category": "nature"
+			}
+		},
+		"components": {
+			"minecraft:icon": "fv_camel_war_baby",
+			"minecraft:entity_placer": {
+				"entity": "fv:camel_war",
+				"dispense_on": [
+					"water",
+					"lava"
+				]
+			}
+		}
+	}
+}

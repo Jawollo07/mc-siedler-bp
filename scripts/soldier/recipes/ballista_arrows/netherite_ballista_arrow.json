@@ -1,0 +1,33 @@
+{
+	"format_version": "1.20.10",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "fv:netherite_ballista_arrow"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"key": {
+			"s": {
+				"item": "minecraft:netherite_ingot"
+			},
+			"m": {
+				"item": "minecraft:stick"
+			}
+		},
+		"pattern": [
+			"m",
+			"s",
+			"s"
+		],
+		"result": {
+			"item": "fv:netherite_ballista_arrow",
+			"count": 1
+		},
+		"unlock": [
+			{
+				"item": "minecraft:netherite_ingot"
+			}
+		]
+	}
+}

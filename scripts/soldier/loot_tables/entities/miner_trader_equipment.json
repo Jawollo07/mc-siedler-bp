@@ -1,0 +1,22 @@
+{
+	"pools": [
+		{
+			"rolls": 2,
+			"entries": [
+				{
+					"type": "item",
+					"name": "minecraft:iron_pickaxe",
+					"functions": [
+						{
+							"function": "enchant_with_levels",
+							"levels": {
+								"min": 10,
+								"max": 20
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

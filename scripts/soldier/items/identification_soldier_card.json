@@ -1,0 +1,16 @@
+{
+	"format_version": "1.21.60",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:identification_soldier_card",
+			"menu_category": {
+				"category": "items"
+			}
+		},
+		"components": {
+			"minecraft:icon": "fv_identification_soldier_card",
+			"minecraft:rarity": "common",
+			"minecraft:max_stack_size": 1
+		}
+	}
+}

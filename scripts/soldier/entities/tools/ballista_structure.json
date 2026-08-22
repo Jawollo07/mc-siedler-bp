@@ -1,0 +1,177 @@
+{
+	"format_version": "1.21.60",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:ballista_structure",
+			"is_summonable": true,
+			"is_spawnable": true,
+			"properties": {
+				"fv:step": {
+					"type": "int",
+					"range": [
+						0,
+						6
+					],
+					"default": 0,
+					"client_sync": true
+				}
+			},
+			"animations": {
+				"structure_ballista": "controller.animation.structure_ballista"
+			},
+			"scripts": {
+				"animate": [
+					"structure_ballista"
+				]
+			}
+		},
+		"component_groups": {
+			"hitbox_1": {
+				"minecraft:collision_box": {
+					"width": 3,
+					"height": 0.1
+				}
+			},
+			"hitbox_2": {
+				"minecraft:collision_box": {
+					"width": 3,
+					"height": 1
+				}
+			},
+			"hitbox_3": {
+				"minecraft:collision_box": {
+					"width": 3,
+					"height": 1.6
+				}
+			},
+			"hitbox_4": {
+				"minecraft:collision_box": {
+					"width": 3,
+					"height": 2.1
+				}
+			},
+			"become_ballista": {
+				"minecraft:transformation": {
+					"into": "fv:ballista"
+				}
+			}
+		},
+		"components": {
+			"minecraft:health": {
+				"value": 50,
+				"max": 50
+			},
+			"minecraft:type_family": {
+				"family": [
+					"structure_building"
+				]
+			},
+			"minecraft:knockback_resistance": {
+				"value": 100,
+				"max": 100
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:damage_sensor": {
+				"triggers": [
+					{
+						"on_damage": {
+							"filters": {
+								"test": "has_damage",
+								"subject": "self",
+								"operator": "==",
+								"value": "fatal"
+							},
+							"event": "become_ballista"
+						}
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "has_equipment",
+										"subject": "other",
+										"operator": "!=",
+										"value": "fv:get_back_hammer"
+									},
+									{
+										"test": "has_equipment",
+										"subject": "other",
+										"operator": "!=",
+										"value": "fv:copper_wrench"
+									}
+								]
+							}
+						},
+						"deals_damage": "no"
+					}
+				]
+			}
+		},
+		"events": {
+			"minecraft:entity_spawned": {
+				"add": {
+					"component_groups": [
+						"hitbox_1"
+					]
+				}
+			},
+			"step1": {
+				"set_property": {
+					"fv:step": 1
+				}
+			},
+			"step2": {
+				"set_property": {
+					"fv:step": 2
+				},
+				"add": {
+					"component_groups": [
+						"hitbox_2"
+					]
+				}
+			},
+			"step3": {
+				"set_property": {
+					"fv:step": 3
+				},
+				"add": {
+					"component_groups": [
+						"hitbox_3"
+					]
+				}
+			},
+			"step4": {
+				"set_property": {
+					"fv:step": 4
+				},
+				"add": {
+					"component_groups": [
+						"hitbox_4"
+					]
+				}
+			},
+			"step5": {
+				"set_property": {
+					"fv:step": 5
+				}
+			},
+			"step6": {
+				"set_property": {
+					"fv:step": 6
+				}
+			},
+			"become_ballista": {
+				"add": {
+					"component_groups": [
+						"become_ballista"
+					]
+				}
+			}
+		}
+	}
+}

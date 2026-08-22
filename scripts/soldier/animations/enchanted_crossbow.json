@@ -1,0 +1,16 @@
+{
+	"format_version": "1.10.0",
+	"animations": {
+		"animation.enchanted.crossbow": {
+			"timeline": {
+				"0.0": [
+					"/enchant @s quick_charge 4"
+				],
+				"0.5": [
+					"/enchant @s piercing 2"
+				]
+			},
+			"animation_length": 0.5
+		}
+	}
+}

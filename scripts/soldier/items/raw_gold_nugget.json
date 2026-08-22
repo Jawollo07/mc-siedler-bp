@@ -1,0 +1,12 @@
+{
+	"format_version": "1.21.60",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:raw_gold_nugget"
+		},
+		"components": {
+			"minecraft:icon": "fv_raw_gold_nugget",
+			"minecraft:max_stack_size": 64
+		}
+	}
+}

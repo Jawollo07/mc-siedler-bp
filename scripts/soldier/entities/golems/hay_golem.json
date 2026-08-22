@@ -1,0 +1,533 @@
+{
+	"format_version": "1.21.0",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:hay_golem",
+			"is_spawnable": true,
+			"is_summonable": true,
+			"is_experimental": false
+		},
+		"component_groups": {
+			"can_tame": {
+				"minecraft:tameable": {
+					"probability": 1,
+					"tame_items": "emerald",
+					"tame_event": {
+						"event": "minecraft:from_player",
+						"target": "self"
+					}
+				}
+			},
+			"minecraft:player_created": {
+				"minecraft:is_tamed": {},
+				"minecraft:is_dyeable": {
+					"interact_text": "action.interact.dye"
+				},
+				"minecraft:color": {
+					"value": 14
+				}
+			},
+			"no_follow": {
+				"minecraft:behavior.go_home": {
+					"priority": 6,
+					"calculate_new_path_radius": 2,
+					"goal_radius": 0.5,
+					"interval": 129,
+					"speed_multiplier": 0.9
+				}
+			},
+			"despawn": {
+				"minecraft:instant_despawn": {
+					"remove_child_entities": true
+				},
+				"minecraft:spawn_entity": {
+					"entities": [
+						{
+							"max_wait_time": 0,
+							"min_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "minecraft:hay_block"
+						},
+						{
+							"max_wait_time": 0,
+							"min_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "minecraft:carved_pumpkin"
+						},
+						{
+							"max_wait_time": 0,
+							"min_wait_time": 0,
+							"num_to_spawn": 1,
+							"single_use": true,
+							"spawn_item": "minecraft:emerald"
+						}
+					]
+				}
+			}
+		},
+		"components": {
+			"minecraft:home": {},
+			"minecraft:is_hidden_when_invisible": {},
+			"minecraft:type_family": {
+				"family": [
+					"irongolem",
+					"hay",
+					"mob"
+				]
+			},
+			"minecraft:variant": {
+				"value": 0
+			},
+			"minecraft:nameable": {},
+			"minecraft:collision_box": {
+				"width": 1,
+				"height": 1.7
+			},
+			"minecraft:loot": {
+				"table": "loot_tables/hay_golem.json"
+			},
+			"minecraft:health": {
+				"value": 20,
+				"max": 20
+			},
+			"minecraft:hurt_on_condition": {
+				"damage_conditions": [
+					{
+						"filters": {
+							"test": "in_lava",
+							"subject": "self",
+							"operator": "==",
+							"value": true
+						},
+						"cause": "lava",
+						"damage_per_tick": 10
+					}
+				]
+			},
+			"minecraft:movement": {
+				"value": 0.35
+			},
+			"minecraft:navigation.walk": {
+				"can_path_over_water": false,
+				"avoid_damage_blocks": true,
+				"can_pass_doors": true,
+				"can_open_doors": true
+			},
+			"minecraft:behavior.open_door": {
+				"priority": 0,
+				"close_door_after": true
+			},
+			"minecraft:movement.basic": {},
+			"minecraft:jump.static": {},
+			"minecraft:can_climb": {},
+			"minecraft:interact": {
+				"interactions": [
+					{
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "player"
+									},
+									{
+										"test": "is_sneaking",
+										"subject": "other",
+										"value": true
+									},
+									{
+										"test": "is_owner",
+										"subject": "other",
+										"value": true
+									},
+									{
+										"test": "has_component",
+										"subject": "self",
+										"operator": "==",
+										"value": "minecraft:is_tamed"
+									},
+									{
+										"test": "has_equipment_tag",
+										"subject": "player",
+										"operator": "==",
+										"value": "minecraft:is_hoe"
+									}
+								]
+							}
+						},
+						"give_item": true,
+						"interact_text": "action.interact.allay"
+					},
+					{
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "player"
+									},
+									{
+										"test": "is_sneaking",
+										"subject": "other",
+										"value": true
+									},
+									{
+										"test": "is_owner",
+										"subject": "other",
+										"value": true
+									},
+									{
+										"test": "has_component",
+										"subject": "self",
+										"operator": "==",
+										"value": "minecraft:is_tamed"
+									}
+								]
+							}
+						},
+						"take_item": true,
+						"interact_text": "action.interact.allay"
+					},
+					{
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "player"
+									},
+									{
+										"test": "has_equipment",
+										"domain": "hand",
+										"subject": "other",
+										"value": "wheat"
+									},
+									{
+										"test": "is_missing_health",
+										"value": true
+									}
+								]
+							}
+						},
+						"use_item": true,
+						"health_amount": 25,
+						"play_sounds": "repair",
+						"interact_text": "action.interact.repair"
+					},
+					{
+						"swing": true,
+						"interact_text": "action.interact.name",
+						"on_interact": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "has_equipment",
+										"subject": "player",
+										"domain": "hand",
+										"value": "fv:identification_soldier_card"
+									},
+									{
+										"test": "is_owner",
+										"subject": "player",
+										"value": true
+									},
+									{
+										"test": "has_component",
+										"subject": "self",
+										"operator": "==",
+										"value": "minecraft:is_tamed"
+									}
+								]
+							}
+						}
+					}
+				]
+			},
+			"minecraft:damage_sensor": {
+				"triggers": [
+					{
+						"cause": "fall",
+						"deals_damage": false
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "irongolem"
+									},
+									{
+										"test": "has_component",
+										"subject": "self",
+										"operator": "!=",
+										"value": "minecraft:is_tamed"
+									}
+								]
+							}
+						},
+						"deals_damage": false
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "player"
+									},
+									{
+										"test": "is_owner",
+										"subject": "other",
+										"value": true
+									},
+									{
+										"test": "has_component",
+										"subject": "self",
+										"operator": "==",
+										"value": "minecraft:is_tamed"
+									},
+									{
+										"test": "has_equipment",
+										"subject": "other",
+										"operator": "==",
+										"value": "fv:get_back_hammer"
+									}
+								]
+							},
+							"event": "despawn",
+							"target": "self"
+						},
+						"deals_damage": false
+					},
+					{
+						"on_damage": {
+							"filters": {
+								"all_of": [
+									{
+										"test": "is_family",
+										"subject": "other",
+										"value": "player"
+									},
+									{
+										"test": "is_owner",
+										"subject": "other",
+										"value": true
+									},
+									{
+										"test": "has_component",
+										"subject": "self",
+										"operator": "==",
+										"value": "minecraft:is_tamed"
+									}
+								]
+							}
+						},
+						"deals_damage": false
+					}
+				]
+			},
+			"minecraft:knockback_resistance": {
+				"value": 0.7
+			},
+			"minecraft:leashable": {
+				"soft_distance": 4,
+				"hard_distance": 6,
+				"max_distance": 10
+			},
+			"minecraft:balloonable": {
+				"mass": 2
+			},
+			"minecraft:behavior.random_stroll": {
+				"priority": 5,
+				"speed_multiplier": 0.4,
+				"xz_dist": 2
+			},
+			"minecraft:behavior.panic": {
+				"priority": 1,
+				"speed_multiplier": 1.2
+			},
+			"minecraft:persistent": {},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": true,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:follow_range": {
+				"value": 64
+			},
+			"minecraft:conditional_bandwidth_optimization": {},
+			"minecraft:behavior.harvest_farm_block": {
+				"priority": 2,
+				"speed_multiplier": 1.1,
+				"goal_radius": 3,
+				"search_range": 16
+			},
+			"minecraft:behavior.fertilize_farm_block": {
+				"priority": 3,
+				"goal_radius": 3,
+				"speed_multiplier": 1.1,
+				"search_height": 16
+			},
+			"minecraft:shareables": {
+				"items": [
+					{
+						"item": "minecraft:carrot",
+						"want_amount": 60,
+						"surplus_amount": 24,
+						"stored_in_inventory": true
+					},
+					{
+						"item": "minecraft:potato",
+						"want_amount": 60,
+						"surplus_amount": 24,
+						"stored_in_inventory": true
+					},
+					{
+						"item": "minecraft:beetroot",
+						"want_amount": 60,
+						"surplus_amount": 24,
+						"stored_in_inventory": true
+					},
+					{
+						"item": "minecraft:wheat_seeds",
+						"want_amount": 64,
+						"surplus_amount": 64,
+						"stored_in_inventory": true,
+						"pickup_only": true
+					},
+					{
+						"item": "minecraft:beetroot_seeds",
+						"want_amount": 64,
+						"surplus_amount": 64,
+						"stored_in_inventory": true,
+						"pickup_only": true
+					},
+					{
+						"item": "minecraft:torchflower_seeds",
+						"want_amount": 64,
+						"surplus_amount": 64,
+						"stored_in_inventory": true,
+						"pickup_only": true
+					},
+					{
+						"item": "minecraft:pitcher_pod",
+						"want_amount": 64,
+						"surplus_amount": 64,
+						"stored_in_inventory": true,
+						"pickup_only": true
+					},
+					{
+						"item": "minecraft:bone_meal",
+						"want_amount": 64,
+						"surplus_amount": 64,
+						"stored_in_inventory": true
+					},
+					{
+						"item": "minecraft:wheat",
+						"want_amount": 45,
+						"surplus_amount": 18,
+						"stored_in_inventory": true
+					},
+					{
+						"item": "minecraft:pumpkin",
+						"want_amount": 45,
+						"surplus_amount": 18,
+						"stored_in_inventory": true
+					},
+					{
+						"item": "minecraft:melon_block",
+						"want_amount": 45,
+						"surplus_amount": 18,
+						"stored_in_inventory": true
+					},
+					{
+						"item": "minecraft:melon_slice",
+						"want_amount": 45,
+						"surplus_amount": 18,
+						"stored_in_inventory": true
+					}
+				]
+			},
+			"minecraft:behavior.pickup_items": {
+				"priority": 4,
+				"max_dist": 4,
+				"goal_radius": 2,
+				"speed_multiplier": 1.1,
+				"can_pickup_to_hand_or_equipment": false
+			},
+			"minecraft:inventory": {
+				"container_type": "inventory",
+				"inventory_size": 16
+			},
+			"minecraft:behavior.float": {
+				"priority": 0
+			},
+			"minecraft:break_blocks": {
+				"breakable_blocks": [
+					"pumpkin",
+					"melon_block"
+				]
+			},
+			"minecraft:behavior.move_to_block": {
+				"priority": 2,
+				"goal_radius": 0.5,
+				"speed_multiplier": 1.2,
+				"target_blocks": [
+					"pumpkin",
+					"melon_block"
+				],
+				"search_range": 16,
+				"search_height": 10
+			},
+			"minecraft:spawn_entity": {
+				"entities": [
+					{
+						"min_wait_time": 500,
+						"max_wait_time": 600,
+						"num_to_spawn": 2,
+						"spawn_item": "minecraft:bone_meal",
+						"spawn_sound": "plop"
+					}
+				]
+			}
+		},
+		"events": {
+			"minecraft:entity_spawned": {
+				"add": {
+					"component_groups": [
+						"can_tame",
+						"no_follow"
+					]
+				}
+			},
+			"minecraft:from_player": {
+				"add": {
+					"component_groups": [
+						"minecraft:player_created",
+						"no_follow"
+					]
+				},
+				"remove": {
+					"component_groups": [
+						"can_tame"
+					]
+				}
+			},
+			"despawn": {
+				"add": {
+					"component_groups": [
+						"despawn"
+					]
+				}
+			}
+		}
+	}
+}

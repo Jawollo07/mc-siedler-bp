@@ -1,0 +1,21 @@
+{
+	"format_version": "1.20.80",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:steed_saddled",
+			"menu_category": {
+				"category": "nature"
+			}
+		},
+		"components": {
+			"minecraft:icon": "fv_steed_saddled",
+			"minecraft:entity_placer": {
+				"entity": "fv:steed",
+				"dispense_on": [
+					"water",
+					"lava"
+				]
+			}
+		}
+	}
+}

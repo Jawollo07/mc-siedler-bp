@@ -1,0 +1,28 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shaped": {
+		"description": {
+			"identifier": "fv:copper_shield"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"key": {
+			"c": {
+				"item": "minecraft:copper_ingot"
+			},
+			"w": {
+				"item": "planks"
+			}
+		},
+		"pattern": [
+			"wcw",
+			"www",
+			" w "
+		],
+		"result": {
+			"item": "fv:copper_shield",
+			"count": 1
+		}
+	}
+}

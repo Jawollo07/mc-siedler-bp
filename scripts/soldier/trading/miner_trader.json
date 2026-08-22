@@ -1,0 +1,234 @@
+{
+	"tiers": [
+		{
+			"trades": [
+				{
+					"wants": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 4,
+								"max": 6
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "fv:team_book_default",
+							"quantity": 1
+						}
+					],
+					"max_uses": 1,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 1,
+								"max": 2
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "minecraft:torch",
+							"quantity": {
+								"min": 16,
+								"max": 22
+							}
+						}
+					],
+					"max_uses": 30,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 1,
+								"max": 2
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "minecraft:coal",
+							"quantity": {
+								"min": 6,
+								"max": 8
+							}
+						}
+					],
+					"max_uses": 20,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 4,
+								"max": 6
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "minecraft:obsidian",
+							"quantity": {
+								"min": 2,
+								"max": 3
+							}
+						}
+					],
+					"max_uses": 10,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 3,
+								"max": 4
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "minecraft:amethyst_shard",
+							"quantity": {
+								"min": 5,
+								"max": 6
+							}
+						}
+					],
+					"max_uses": 20,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:iron_ingot",
+							"quantity": {
+								"min": 22,
+								"max": 24
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "fv:heart_of_stone",
+							"quantity": 1
+						}
+					],
+					"max_uses": 1,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:bread",
+							"quantity": {
+								"min": 16,
+								"max": 32
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 1,
+								"max": 2
+							}
+						}
+					],
+					"max_uses": 22,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:log",
+							"quantity": {
+								"min": 16,
+								"max": 32
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 1,
+								"max": 2
+							}
+						}
+					],
+					"max_uses": 22,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 2,
+								"max": 3
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "minecraft:iron_pickaxe",
+							"quantity": 1,
+							"functions": [
+								{
+									"function": "enchant_with_levels",
+									"levels": {
+										"min": 20,
+										"max": 30
+									}
+								}
+							]
+						}
+					],
+					"max_uses": 1,
+					"reward_exp": true
+				},
+				{
+					"wants": [
+						{
+							"item": "minecraft:emerald",
+							"quantity": {
+								"min": 4,
+								"max": 5
+							}
+						}
+					],
+					"gives": [
+						{
+							"item": "minecraft:diamond_pickaxe",
+							"quantity": 1,
+							"functions": [
+								{
+									"function": "enchant_with_levels",
+									"levels": {
+										"min": 30,
+										"max": 40
+									}
+								}
+							]
+						}
+					],
+					"max_uses": 1,
+					"reward_exp": true
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,211 @@
+{
+	"format_version": "1.13.0",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:potato_fly",
+			"is_spawnable": false,
+			"is_summonable": true,
+			"is_experimental": false,
+			"runtime_identifier": "snowball"
+		},
+		"component_groups": {
+			"explode": {
+				"minecraft:explode": {
+					"power": 1,
+					"fuse_lit": true,
+					"fuse_length": {
+						"range_min": 0,
+						"range_max": 0
+					},
+					"breaks_blocks": false,
+					"causes_fire": false
+				}
+			},
+			"despawn": {
+				"minecraft:instant_despawn": {
+					"remove_child_entities": false
+				}
+			},
+			"timer": {
+				"minecraft:timer": {
+					"time": [
+						1,
+						1
+					],
+					"time_down_event": {
+						"event": "despawn",
+						"target": "self"
+					}
+				}
+			},
+			"potato_exp": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": 3,
+							"knockback": true
+						},
+						"particle_on_hit": {
+							"particle_type": "crit",
+							"num_particles": 6,
+							"on_entity_hit": true,
+							"on_other_hit": true
+						},
+						"stick_in_ground": {
+							"shake_time": 1
+						},
+						"definition_event": {
+							"affect_target": true,
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "boom",
+								"target": "self"
+							}
+						}
+					},
+					"anchor": 1,
+					"power": 1,
+					"gravity": 0.08,
+					"uncertainty_base": 2,
+					"uncertainty_multiplier": 2,
+					"angle_offset": 0,
+					"offset": [
+						0,
+						0,
+						0
+					]
+				}
+			}
+		},
+		"components": {
+			"minecraft:collision_box": {
+				"width": 0.25,
+				"height": 0.25
+			},
+			"minecraft:hurt_on_condition": {
+				"damage_conditions": [
+					{
+						"filters": {
+							"test": "in_lava",
+							"subject": "self",
+							"operator": "==",
+							"value": true
+						},
+						"cause": "lava",
+						"damage_per_tick": 4
+					}
+				]
+			},
+			"minecraft:projectile": {
+				"on_hit": {
+					"impact_damage": {
+						"damage": 3,
+						"knockback": true
+					},
+					"particle_on_hit": {
+						"particle_type": "crit",
+						"num_particles": 6,
+						"on_entity_hit": true,
+						"on_other_hit": true
+					},
+					"stick_in_ground": {
+						"shake_time": 1
+					},
+					"definition_event": {
+						"affect_target": true,
+						"affect_projectile": true,
+						"event_trigger": {
+							"event": "timer",
+							"target": "self"
+						}
+					}
+				},
+				"anchor": 1,
+				"power": 1,
+				"gravity": 0.08,
+				"uncertainty_base": 2,
+				"uncertainty_multiplier": 2,
+				"angle_offset": 0,
+				"offset": [
+					0,
+					0,
+					0
+				]
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:conditional_bandwidth_optimization": {
+				"default_values": {
+					"max_optimized_distance": 80,
+					"max_dropped_ticks": 7,
+					"use_motion_prediction_hints": true
+				}
+			}
+		},
+		"events": {
+			"minecraft:entity_spawned": {
+				"sequence": [
+					{
+						"filters": {
+							"test": "enum_property",
+							"subject": "other",
+							"domain": "fv:reload",
+							"operator": "==",
+							"value": "potatoexp"
+						},
+						"add": {
+							"component_groups": [
+								"potato_exp"
+							]
+						}
+					},
+					{
+						"filters": {
+							"test": "enum_property",
+							"subject": "other",
+							"domain": "fv:type_ammo",
+							"operator": "==",
+							"value": "potato_explode"
+						},
+						"add": {
+							"component_groups": [
+								"potato_exp"
+							]
+						}
+					}
+				]
+			},
+			"despawn": {
+				"add": {
+					"component_groups": [
+						"despawn"
+					]
+				}
+			},
+			"timer": {
+				"add": {
+					"component_groups": [
+						"timer"
+					]
+				}
+			},
+			"boom": {
+				"add": {
+					"component_groups": [
+						"explode"
+					]
+				}
+			},
+			"potato_exp": {
+				"add": {
+					"component_groups": [
+						"potato_exp"
+					]
+				}
+			}
+		}
+	}
+}

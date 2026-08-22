@@ -1,0 +1,523 @@
+{
+	"format_version": "1.10.0",
+	"animation_controllers": {
+		"controller.animation.change.mode": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"on_entry": [
+						"/event entity @s no_weapon"
+					],
+					"transitions": [
+						{
+							"bow": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:bow')"
+						},
+						{
+							"crossbow": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:crossbow')"
+						},
+						{
+							"copper_boom": "query.is_item_name_any('slot.weapon.mainhand',0,'fv:copper_boom')"
+						},
+						{
+							"wingcharge_ball": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:wind_charge')"
+						}
+					]
+				},
+				"bow": {
+					"on_entry": [
+						"/event entity @s bow"
+					],
+					"transitions": [
+						{
+							"crossbow": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:crossbow')"
+						},
+						{
+							"copper_boom": "query.is_item_name_any('slot.weapon.mainhand',0,'fv:copper_boom')"
+						},
+						{
+							"wingcharge_ball": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:wind_charge')"
+						},
+						{
+							"default": "!query.is_item_equipped"
+						}
+					]
+				},
+				"crossbow": {
+					"on_entry": [
+						"/event entity @s crossbow"
+					],
+					"transitions": [
+						{
+							"bow": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:bow')"
+						},
+						{
+							"copper_boom": "query.is_item_name_any('slot.weapon.mainhand',0,'fv:copper_boom')"
+						},
+						{
+							"wingcharge_ball": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:wind_charge')"
+						},
+						{
+							"default": "!query.is_item_equipped"
+						}
+					]
+				},
+				"copper_boom": {
+					"on_entry": [
+						"/event entity @s copper_boom"
+					],
+					"transitions": [
+						{
+							"bow": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:bow')"
+						},
+						{
+							"crossbow": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:crossbow')"
+						},
+						{
+							"wingcharge_ball": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:wind_charge')"
+						},
+						{
+							"default": "!query.is_item_equipped"
+						}
+					]
+				},
+				"wingcharge_ball": {
+					"on_entry": [
+						"/event entity @s wingcharge_ball"
+					],
+					"transitions": [
+						{
+							"bow": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:bow')"
+						},
+						{
+							"crossbow": "query.is_item_name_any('slot.weapon.mainhand',0,'minecraft:crossbow')"
+						},
+						{
+							"copper_boom": "query.is_item_name_any('slot.weapon.mainhand',0,'fv:copper_boom')"
+						},
+						{
+							"default": "!query.is_item_equipped"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.change.melee.mode": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"sword": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_sword')"
+						},
+						{
+							"axe": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_axe')"
+						},
+						{
+							"spear": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_spear')"
+						}
+					]
+				},
+				"sword": {
+					"on_entry": [
+						"/event entity @s sword"
+					],
+					"transitions": [
+						{
+							"axe": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_axe')"
+						},
+						{
+							"spear": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_spear')"
+						}
+					]
+				},
+				"axe": {
+					"on_entry": [
+						"/event entity @s axe"
+					],
+					"transitions": [
+						{
+							"sword": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_sword')"
+						},
+						{
+							"spear": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_spear')"
+						}
+					]
+				},
+				"spear": {
+					"on_entry": [
+						"/event entity @s spear"
+					],
+					"transitions": [
+						{
+							"sword": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_sword')"
+						},
+						{
+							"axe": "query.equipped_item_any_tag('slot.weapon.mainhand','minecraft:is_axe')"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.stay_and_move": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"stay": "query.property('fv:stay_mode')==true"
+						}
+					]
+				},
+				"stay": {
+					"on_entry": [
+						"/effect @s slowness infinite 255 true"
+					],
+					"on_exit": [
+						"/effect @s clear slowness"
+					],
+					"transitions": [
+						{
+							"default": "query.property('fv:stay_mode')==false"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.structure_catapult": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"step1": "query.health<=83"
+						},
+						{
+							"step2": "query.health<=66"
+						},
+						{
+							"step3": "query.health<=49"
+						},
+						{
+							"step4": "query.health<=32"
+						},
+						{
+							"step5": "query.health<=16"
+						}
+					]
+				},
+				"step1": {
+					"on_entry": [
+						"/event entity @s step1"
+					],
+					"transitions": [
+						{
+							"step2": "query.health<=66"
+						}
+					]
+				},
+				"step2": {
+					"on_entry": [
+						"/event entity @s step2"
+					],
+					"transitions": [
+						{
+							"step3": "query.health<=49"
+						}
+					]
+				},
+				"step3": {
+					"on_entry": [
+						"/event entity @s step3"
+					],
+					"transitions": [
+						{
+							"step4": "query.health<=32"
+						}
+					]
+				},
+				"step4": {
+					"on_entry": [
+						"/event entity @s step4"
+					],
+					"transitions": [
+						{
+							"step5": "query.health<=16"
+						}
+					]
+				},
+				"step5": {
+					"on_entry": [
+						"/event entity @s step5"
+					]
+				}
+			}
+		},
+		"controller.animation.structure_ballista": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"step1": "query.health<=49"
+						},
+						{
+							"step2": "query.health<=40"
+						},
+						{
+							"step3": "query.health<=30"
+						},
+						{
+							"step4": "query.health<=20"
+						},
+						{
+							"step5": "query.health<=10"
+						},
+						{
+							"step6": "query.health<=8"
+						}
+					]
+				},
+				"step1": {
+					"on_entry": [
+						"/event entity @s step1"
+					],
+					"transitions": [
+						{
+							"step2": "query.health<=40"
+						}
+					]
+				},
+				"step2": {
+					"on_entry": [
+						"/event entity @s step2"
+					],
+					"transitions": [
+						{
+							"step3": "query.health<=30"
+						}
+					]
+				},
+				"step3": {
+					"on_entry": [
+						"/event entity @s step3"
+					],
+					"transitions": [
+						{
+							"step4": "query.health<=20"
+						}
+					]
+				},
+				"step4": {
+					"on_entry": [
+						"/event entity @s step4"
+					],
+					"transitions": [
+						{
+							"step5": "query.health<=10"
+						}
+					]
+				},
+				"step5": {
+					"on_entry": [
+						"/event entity @s step5"
+					],
+					"transitions": [
+						{
+							"step6": "query.health<=8"
+						}
+					]
+				},
+				"step6": {
+					"on_entry": [
+						"/event entity @s step6"
+					]
+				}
+			}
+		},
+		"controller.animation.eatfull": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"full": "query.property('fv:can_eat')>=100"
+						}
+					]
+				},
+				"full": {
+					"on_entry": [
+						"/event entity @s full"
+					],
+					"transitions": [
+						{
+							"default": "query.property('fv:can_eat')<=0"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.scared": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"scared": "query.property('fv:scared')==true"
+						}
+					]
+				},
+				"scared": {
+					"on_entry": [
+						"/effect @s resistance infinite 2 true",
+						"/effect @s slowness infinite 100 true"
+					],
+					"on_exit": [
+						"/effect @s clear resistance",
+						"/effect @s clear slowness"
+					],
+					"transitions": [
+						{
+							"default": "query.property('fv:scared')==false"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.standingby": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"on_entry": [
+						"/event entity @s fv:follow"
+					],
+					"transitions": [
+						{
+							"standby": "query.property('fv:stay_mode')==true"
+						}
+					]
+				},
+				"standby": {
+					"on_entry": [
+						"/event entity @s fv:standby"
+					],
+					"transitions": [
+						{
+							"default": "query.property('fv:stay_mode')==false"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.tortois.shoot": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"firer": "variable.attack_time>0"
+						}
+					]
+				},
+				"firer": {
+					"on_entry": [
+						"/scriptevent fv:tortois_fire @s"
+					],
+					"transitions": [
+						{
+							"default": "variable.attack_time==0"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.tortois.ballista.crossbow": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"normal": "query.property('fv:type_arrow')>0&&query.property('fv:type_arrow')<=3"
+						},
+						{
+							"diamond": "query.property('fv:type_arrow')==4"
+						},
+						{
+							"netherite": "query.property('fv:type_arrow')==5"
+						}
+					]
+				},
+				"normal": {
+					"on_entry": [
+						"/replaceitem entity @s slot.weapon.mainhand 0 minecraft:crossbow"
+					],
+					"transitions": [
+						{
+							"default": "query.property('fv:type_arrow')==0"
+						},
+						{
+							"diamond": "query.property('fv:type_arrow')==4"
+						},
+						{
+							"netherite": "query.property('fv:type_arrow')==5"
+						}
+					]
+				},
+				"diamond": {
+					"on_entry": [
+						"/replaceitem entity @s slot.weapon.mainhand 0 minecraft:crossbow",
+						"/enchant @s piercing 4"
+					],
+					"transitions": [
+						{
+							"default": "query.property('fv:type_arrow')==0"
+						},
+						{
+							"netherite": "query.property('fv:type_arrow')==5"
+						},
+						{
+							"normal": "query.property('fv:type_arrow')>0&&query.property('fv:type_arrow')<=3"
+						}
+					]
+				},
+				"netherite": {
+					"on_entry": [
+						"/replaceitem entity @s slot.weapon.mainhand 0 minecraft:crossbow"
+					],
+					"transitions": [
+						{
+							"default": "query.property('fv:type_arrow')==0"
+						},
+						{
+							"normal": "query.property('fv:type_arrow')>0&&query.property('fv:type_arrow')<=3"
+						},
+						{
+							"diamond": "query.property('fv:type_arrow')==4"
+						}
+					]
+				}
+			}
+		},
+		"controller.animation.tortois.ballista.shoot": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"transitions": [
+						{
+							"firer": "variable.attack_time>0"
+						}
+					]
+				},
+				"firer": {
+					"on_entry": [
+						"/scriptevent fv:ballista_fire @s"
+					],
+					"transitions": [
+						{
+							"default": "variable.attack_time==0"
+						}
+					]
+				}
+			}
+		}
+	}
+}

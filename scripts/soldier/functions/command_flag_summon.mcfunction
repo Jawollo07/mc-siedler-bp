@@ -1,0 +1,1 @@
+tp @e[family=can_tp, has_property={fv:tamed=false},r=64] ~ ~ ~

@@ -1,0 +1,25 @@
+{
+	"format_version": "1.10.0",
+	"animations": {
+		"animation.bow.sound": {
+			"timeline": {
+				"0.0": [
+					"/playsound random.bow @a ~ ~ ~ 3"
+				],
+				"0.1": []
+			},
+			"animation_length": 0.1,
+			"loop": false
+		},
+		"animation.crossbow.sound": {
+			"timeline": {
+				"0.0": [
+					"/playsound crossbow.shoot @a ~ ~ ~ 3"
+				],
+				"0.1": []
+			},
+			"animation_length": 0.1,
+			"loop": false
+		}
+	}
+}

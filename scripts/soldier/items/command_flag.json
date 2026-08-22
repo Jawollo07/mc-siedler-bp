@@ -1,0 +1,16 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:command_flag",
+			"menu_category": {
+				"category": "equipment"
+			}
+		},
+		"components": {
+			"minecraft:icon": "fv_command_flag",
+			"minecraft:max_stack_size": 1,
+			"fv:command_flag_logic": {}
+		}
+	}
+}

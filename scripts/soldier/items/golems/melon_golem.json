@@ -1,0 +1,16 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:melon_golem",
+			"menu_category": {
+				"category": "equipment"
+			}
+		},
+		"components": {
+			"minecraft:icon": "melon_golem",
+			"minecraft:max_stack_size": 32,
+			"fv:lucky_chest_place": {}
+		}
+	}
+}

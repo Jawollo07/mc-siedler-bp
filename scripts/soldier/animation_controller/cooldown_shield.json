@@ -1,0 +1,46 @@
+{
+	"format_version": "1.10.0",
+	"animation_controllers": {
+		"controller.animation.cooldown.shield": {
+			"initial_state": "default",
+			"states": {
+				"default": {
+					"on_entry": [
+						"/event entity @s calm"
+					],
+					"transitions": [
+						{
+							"cooldown": "variable.attack_time"
+						}
+					]
+				},
+				"cooldown": {
+					"on_entry": [
+						"/event entity @s become_cooldown"
+					],
+					"transitions": [
+						{
+							"finish_cooldown": "!variable.attack_time"
+						},
+						{
+							"default": "!query.has_target||q.get_equipped_item_name('off_hand')!='shield'"
+						}
+					]
+				},
+				"finish_cooldown": {
+					"on_entry": [
+						"/event entity @s finish_cooldown"
+					],
+					"transitions": [
+						{
+							"cooldown": "variable.attack_time"
+						},
+						{
+							"default": "!query.has_target||q.get_equipped_item_name('off_hand')!='shield'"
+						}
+					]
+				}
+			}
+		}
+	}
+}

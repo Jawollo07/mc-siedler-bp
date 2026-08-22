@@ -1,0 +1,25 @@
+{
+	"format_version": "1.12",
+	"minecraft:recipe_shapeless": {
+		"description": {
+			"identifier": "fv:team_attack_horn"
+		},
+		"tags": [
+			"crafting_table"
+		],
+		"ingredients": [
+			{
+				"item": "fv:team_call_horn",
+				"count": 1
+			},
+			{
+				"item": "red_dye",
+				"count": 1
+			}
+		],
+		"result": {
+			"item": "fv:team_attack_horn",
+			"count": 1
+		}
+	}
+}

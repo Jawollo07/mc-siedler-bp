@@ -1,0 +1,351 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:ballista_arrow",
+			"is_spawnable": false,
+			"is_summonable": true,
+			"is_experimental": false,
+			"runtime_identifier": "arrow"
+		},
+		"component_groups": {
+			"despawn": {
+				"minecraft:instant_despawn": {
+					"remove_child_entities": false
+				}
+			},
+			"timer": {
+				"minecraft:timer": {
+					"time": [
+						1,
+						1
+					],
+					"time_down_event": {
+						"event": "despawn",
+						"target": "self"
+					}
+				}
+			},
+			"iron": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								20,
+								22
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false,
+							"destroy_on_hit": true
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"hit_sound": "bow.hit",
+					"power": 1.6,
+					"gravity": 0.09,
+					"uncertainty_base": 8,
+					"uncertainty_multiplier": 4,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						-0.1,
+						0
+					]
+				},
+				"minecraft:variant": {
+					"value": 1
+				}
+			},
+			"gold": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								17,
+								18
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false,
+							"destroy_on_hit": true
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"hit_sound": "bow.hit",
+					"power": 1.6,
+					"gravity": 0.1,
+					"uncertainty_base": 2,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						-0.1,
+						0
+					]
+				},
+				"minecraft:variant": {
+					"value": 2
+				}
+			},
+			"diamond": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								23,
+								25
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false,
+							"destroy_on_hit": true
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"hit_sound": "bow.hit",
+					"power": 1.6,
+					"gravity": 0.05,
+					"uncertainty_base": 4,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						-0.1,
+						0
+					]
+				},
+				"minecraft:variant": {
+					"value": 3
+				}
+			},
+			"netherite": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								24,
+								26
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"hit_sound": "bow.hit",
+					"power": 1.6,
+					"gravity": 0.07,
+					"uncertainty_base": 2,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						-0.1,
+						0
+					],
+					"multiple_targets": true
+				},
+				"minecraft:variant": {
+					"value": 4
+				}
+			}
+		},
+		"components": {
+			"minecraft:collision_box": {
+				"width": 0.25,
+				"height": 0.25
+			},
+			"minecraft:hurt_on_condition": {
+				"damage_conditions": [
+					{
+						"filters": {
+							"test": "in_lava",
+							"subject": "self",
+							"operator": "==",
+							"value": true
+						},
+						"cause": "lava",
+						"damage_per_tick": 4
+					}
+				]
+			},
+			"minecraft:projectile": {
+				"on_hit": {
+					"impact_damage": {
+						"damage": [
+							18,
+							20
+						],
+						"knockback": true,
+						"semi_random_diff_damage": false,
+						"destroy_on_hit": true
+					},
+					"stick_in_ground": {
+						"shake_time": 0.35
+					},
+					"arrow_effect": {},
+					"definition_event": {
+						"affect_projectile": true,
+						"event_trigger": {
+							"event": "timer",
+							"target": "self"
+						}
+					}
+				},
+				"hit_sound": "bow.hit",
+				"power": 1.6,
+				"gravity": 0.08,
+				"uncertainty_base": 16,
+				"uncertainty_multiplier": 4,
+				"anchor": 1,
+				"should_bounce": true,
+				"offset": [
+					0,
+					-0.3,
+					0
+				]
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": false,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:conditional_bandwidth_optimization": {
+				"default_values": {
+					"max_optimized_distance": 80,
+					"max_dropped_ticks": 7,
+					"use_motion_prediction_hints": true
+				}
+			},
+			"minecraft:variant": {
+				"value": 0
+			}
+		},
+		"events": {
+			"minecraft:entity_spawned": {
+				"sequence": [
+					{
+						"filters": {
+							"test": "int_property",
+							"subject": "other",
+							"domain": "fv:type_arrow",
+							"operator": "==",
+							"value": 1
+						}
+					},
+					{
+						"filters": {
+							"test": "int_property",
+							"subject": "other",
+							"domain": "fv:type_arrow",
+							"operator": "==",
+							"value": 2
+						},
+						"add": {
+							"component_groups": [
+								"iron"
+							]
+						}
+					},
+					{
+						"filters": {
+							"test": "int_property",
+							"subject": "other",
+							"domain": "fv:type_arrow",
+							"operator": "==",
+							"value": 3
+						},
+						"add": {
+							"component_groups": [
+								"gold"
+							]
+						}
+					},
+					{
+						"filters": {
+							"test": "int_property",
+							"subject": "other",
+							"domain": "fv:type_arrow",
+							"operator": "==",
+							"value": 4
+						},
+						"add": {
+							"component_groups": [
+								"diamond"
+							]
+						}
+					},
+					{
+						"filters": {
+							"test": "int_property",
+							"subject": "other",
+							"domain": "fv:type_arrow",
+							"operator": "==",
+							"value": 5
+						},
+						"add": {
+							"component_groups": [
+								"netherite"
+							]
+						}
+					}
+				]
+			},
+			"despawn": {
+				"add": {
+					"component_groups": [
+						"despawn"
+					]
+				}
+			},
+			"timer": {
+				"add": {
+					"component_groups": [
+						"timer"
+					]
+				}
+			}
+		}
+	}
+}

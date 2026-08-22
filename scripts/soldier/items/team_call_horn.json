@@ -1,0 +1,26 @@
+{
+	"format_version": "1.21.130",
+	"minecraft:item": {
+		"description": {
+			"identifier": "fv:team_call_horn",
+			"menu_category": {
+				"category": "equipment"
+			}
+		},
+		"components": {
+			"minecraft:icon": "fv_team_call_horn",
+			"minecraft:rarity": "rare",
+			"minecraft:max_stack_size": 1,
+			"minecraft:use_modifiers": {
+				"use_duration": 1,
+				"movement_modifier": 0.5
+			},
+			"minecraft:use_animation": "spyglass",
+			"minecraft:cooldown": {
+				"category": "fv_team_call_horn",
+				"duration": 3
+			},
+			"fv:team_call_horn": {}
+		}
+	}
+}

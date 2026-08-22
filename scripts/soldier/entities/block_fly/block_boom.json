@@ -1,0 +1,105 @@
+{
+	"format_version": "1.16.0",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:block_boom",
+			"is_spawnable": false,
+			"is_summonable": true,
+			"is_experimental": false
+		},
+		"component_groups": {
+			"tnt": {
+				"minecraft:explode": {
+					"power": 2,
+					"fuse_lit": true,
+					"fuse_length": {
+						"range_min": 0,
+						"range_max": 0
+					},
+					"breaks_blocks": true,
+					"causes_fire": false
+				}
+			},
+			"obsidian": {
+				"minecraft:explode": {
+					"power": 6,
+					"fuse_lit": true,
+					"fuse_length": {
+						"range_min": 0,
+						"range_max": 0
+					},
+					"breaks_blocks": true,
+					"causes_fire": false
+				}
+			},
+			"magma": {
+				"minecraft:explode": {
+					"power": 1,
+					"fuse_lit": true,
+					"fuse_length": {
+						"range_min": 0,
+						"range_max": 0
+					},
+					"breaks_blocks": true,
+					"causes_fire": true,
+					"fire_affected_by_griefing": true,
+					"destroy_affected_by_griefing": true,
+					"max_resistance": 1
+				}
+			}
+		},
+		"components": {
+			"minecraft:explode": {
+				"power": 1,
+				"fuse_lit": true,
+				"fuse_length": {
+					"range_min": 0,
+					"range_max": 0
+				},
+				"breaks_blocks": false,
+				"causes_fire": false
+			},
+			"minecraft:damage_sensor": {
+				"triggers": {
+					"cause": "all",
+					"deals_damage": false
+				}
+			},
+			"minecraft:type_family": {
+				"family": [
+					"irongolem"
+				]
+			},
+			"minecraft:conditional_bandwidth_optimization": {
+				"default_values": {
+					"max_optimized_distance": 80,
+					"max_dropped_ticks": 5,
+					"use_motion_prediction_hints": true
+				}
+			}
+		},
+		"events": {
+			"tnt": {
+				"add": {
+					"component_groups": [
+						"tnt"
+					]
+				}
+			},
+			"obsidian": {
+				"add": {
+					"component_groups": [
+						"obsidian"
+					]
+				}
+			},
+			"magma": {
+				"add": {
+					"component_groups": [
+						"magma"
+					]
+				}
+			}
+		}
+	}
+}

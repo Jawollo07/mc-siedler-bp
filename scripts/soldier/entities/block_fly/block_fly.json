@@ -1,0 +1,479 @@
+{
+	"format_version": "1.21.60",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:block_fly",
+			"is_spawnable": false,
+			"is_summonable": true,
+			"is_experimental": false,
+			"runtime_identifier": "arrow",
+			"animations": {
+				"boom": "controller.animation.boom.block"
+			},
+			"scripts": {
+				"animate": [
+					"boom"
+				]
+			}
+		},
+		"component_groups": {
+			"despawn": {
+				"minecraft:instant_despawn": {
+					"remove_child_entities": false
+				}
+			},
+			"timer": {
+				"minecraft:timer": {
+					"time": [
+						1,
+						1
+					],
+					"time_down_event": {
+						"event": "despawn",
+						"target": "self"
+					}
+				}
+			},
+			"from_explosion": {
+				"minecraft:explode": {
+					"fuse_length": {
+						"range_min": 0.5,
+						"range_max": 2
+					},
+					"fuse_lit": true,
+					"power": 4,
+					"causes_fire": false
+				}
+			},
+			"tnt": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								2,
+								4
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "explode",
+								"target": "self"
+							}
+						}
+					},
+					"power": 2,
+					"gravity": 0.05,
+					"uncertainty_base": 8,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						0,
+						0
+					],
+					"liquid_inertia": 0.8,
+					"multiple_targets": true
+				},
+				"minecraft:mark_variant": {
+					"value": 3
+				}
+			},
+			"stone": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								19,
+								20
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"power": 2,
+					"gravity": 0.05,
+					"multiple_targets": true,
+					"uncertainty_base": 8,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						0,
+						0
+					],
+					"liquid_inertia": 0.8
+				},
+				"minecraft:variant": {
+					"value": 1
+				}
+			},
+			"watermelon": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								16,
+								18
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"power": 2,
+					"gravity": 0.05,
+					"multiple_targets": true,
+					"uncertainty_base": 8,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						0,
+						0
+					],
+					"liquid_inertia": 0.8
+				},
+				"minecraft:mark_variant": {
+					"value": 1
+				}
+			},
+			"pumpkin": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								13,
+								15
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"power": 2,
+					"gravity": 0.05,
+					"multiple_targets": true,
+					"uncertainty_base": 8,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						0,
+						0
+					],
+					"liquid_inertia": 0.8
+				},
+				"minecraft:mark_variant": {
+					"value": 2
+				}
+			},
+			"obsidian": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								24,
+								26
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"power": 2,
+					"gravity": 0.05,
+					"multiple_targets": true,
+					"uncertainty_base": 8,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						0,
+						0
+					],
+					"liquid_inertia": 0.8
+				},
+				"minecraft:variant": {
+					"value": 2
+				},
+				"minecraft:mark_variant": {
+					"value": 4
+				}
+			},
+			"magma": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								21,
+								22
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						}
+					},
+					"power": 2,
+					"gravity": 0.05,
+					"multiple_targets": true,
+					"uncertainty_base": 8,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						0,
+						0
+					],
+					"liquid_inertia": 0.8
+				},
+				"minecraft:variant": {
+					"value": 3
+				},
+				"minecraft:mark_variant": {
+					"value": 5
+				}
+			},
+			"brick": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"damage": [
+								19,
+								21
+							],
+							"knockback": true,
+							"semi_random_diff_damage": false
+						},
+						"stick_in_ground": {
+							"shake_time": 0.35
+						},
+						"arrow_effect": {},
+						"definition_event": {
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "timer",
+								"target": "self"
+							}
+						},
+						"catch_fire": {
+							"fire_affected_by_griefing": true,
+							"on_fire_time": 10
+						}
+					},
+					"catch_fire": true,
+					"power": 2,
+					"gravity": 0.05,
+					"multiple_targets": true,
+					"uncertainty_base": 8,
+					"uncertainty_multiplier": 2,
+					"anchor": 1,
+					"should_bounce": true,
+					"offset": [
+						0,
+						0,
+						0
+					],
+					"liquid_inertia": 0.8
+				},
+				"minecraft:mark_variant": {
+					"value": 6
+				}
+			}
+		},
+		"components": {
+			"minecraft:collision_box": {
+				"width": 1,
+				"height": 1
+			},
+			"minecraft:variant": {
+				"value": 0
+			},
+			"minecraft:mark_variant": {
+				"value": 0
+			},
+			"minecraft:projectile": {
+				"on_hit": {
+					"impact_damage": {
+						"damage": [
+							10,
+							12
+						],
+						"knockback": true,
+						"semi_random_diff_damage": false,
+						"destroy_on_hit": false
+					},
+					"stick_in_ground": {
+						"shake_time": 0.35
+					},
+					"arrow_effect": {},
+					"definition_event": {
+						"affect_projectile": true,
+						"event_trigger": {
+							"event": "timer",
+							"target": "self"
+						}
+					}
+				},
+				"power": 2,
+				"gravity": 0.05,
+				"multiple_targets": true,
+				"uncertainty_base": 8,
+				"uncertainty_multiplier": 2,
+				"anchor": 1,
+				"should_bounce": true,
+				"offset": [
+					0,
+					0,
+					0
+				],
+				"liquid_inertia": 0.8
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": true,
+				"is_pushable_by_piston": true
+			}
+		},
+		"events": {
+			"despawn": {
+				"add": {
+					"component_groups": [
+						"despawn"
+					]
+				}
+			},
+			"timer": {
+				"add": {
+					"component_groups": [
+						"timer"
+					]
+				}
+			},
+			"stone": {
+				"add": {
+					"component_groups": [
+						"stone"
+					]
+				}
+			},
+			"watermelon": {
+				"add": {
+					"component_groups": [
+						"watermelon"
+					]
+				}
+			},
+			"pumpkin": {
+				"add": {
+					"component_groups": [
+						"pumpkin"
+					]
+				}
+			},
+			"tnt": {
+				"add": {
+					"component_groups": [
+						"tnt"
+					]
+				}
+			},
+			"obsidian": {
+				"add": {
+					"component_groups": [
+						"obsidian"
+					]
+				}
+			},
+			"magma": {
+				"add": {
+					"component_groups": [
+						"magma"
+					]
+				}
+			},
+			"brick": {
+				"add": {
+					"component_groups": [
+						"brick"
+					]
+				}
+			},
+			"explode": {
+				"add": {
+					"component_groups": [
+						"from_explosion"
+					]
+				},
+				"queue_command": {
+					"command": [
+						"playsound random.fizz @a ~ ~ ~ 2"
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,152 @@
+{
+	"format_version": "1.16.0",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "fv:copper_boom",
+			"is_spawnable": false,
+			"is_summonable": true,
+			"is_experimental": false,
+			"runtime_identifier": "snowball"
+		},
+		"component_groups": {
+			"explode": {
+				"minecraft:explode": {
+					"power": 1.5,
+					"fuse_lit": true,
+					"fuse_length": {
+						"range_min": 0,
+						"range_max": 0
+					},
+					"breaks_blocks": false,
+					"causes_fire": false
+				}
+			},
+			"not_player": {
+				"minecraft:projectile": {
+					"on_hit": {
+						"impact_damage": {
+							"filter": "blaze",
+							"damage": 3,
+							"knockback": true
+						},
+						"particle_on_hit": {
+							"particle_type": "crit",
+							"num_particles": 6,
+							"on_entity_hit": true,
+							"on_other_hit": true
+						},
+						"stick_in_ground": {
+							"shake_time": 1
+						},
+						"definition_event": {
+							"affect_target": true,
+							"affect_projectile": true,
+							"event_trigger": {
+								"event": "boom",
+								"target": "self"
+							}
+						}
+					},
+					"anchor": 1,
+					"power": 1.5,
+					"gravity": 0.05,
+					"angle_offset": -35,
+					"offset": [
+						0,
+						-0.2,
+						0
+					]
+				}
+			}
+		},
+		"components": {
+			"minecraft:collision_box": {
+				"width": 0.25,
+				"height": 0.25
+			},
+			"minecraft:projectile": {
+				"on_hit": {
+					"impact_damage": {
+						"filter": "blaze",
+						"damage": 3,
+						"knockback": true
+					},
+					"particle_on_hit": {
+						"particle_type": "crit",
+						"num_particles": 6,
+						"on_entity_hit": true,
+						"on_other_hit": true
+					},
+					"stick_in_ground": {
+						"shake_time": 1
+					},
+					"definition_event": {
+						"affect_target": true,
+						"affect_projectile": true,
+						"event_trigger": {
+							"event": "boom",
+							"target": "self"
+						}
+					}
+				},
+				"anchor": 1,
+				"power": 1.5,
+				"gravity": 0.05,
+				"angle_offset": 0,
+				"offset": [
+					0,
+					-0.2,
+					0
+				]
+			},
+			"minecraft:physics": {},
+			"minecraft:pushable": {
+				"is_pushable": true,
+				"is_pushable_by_piston": true
+			},
+			"minecraft:conditional_bandwidth_optimization": {
+				"default_values": {
+					"max_optimized_distance": 100,
+					"max_dropped_ticks": 7,
+					"use_motion_prediction_hints": true
+				}
+			},
+			"minecraft:explode": {
+				"power": 1.5,
+				"fuse_lit": true,
+				"fuse_length": {
+					"range_min": 2,
+					"range_max": 3
+				},
+				"breaks_blocks": false,
+				"causes_fire": false
+			}
+		},
+		"events": {
+			"boom": {
+				"add": {
+					"component_groups": [
+						"explode"
+					]
+				}
+			},
+			"minecraft:entity_spawned": {
+				"sequence": [
+					{
+						"filters": {
+							"test": "is_family",
+							"subject": "other",
+							"operator": "!=",
+							"value": "player"
+						},
+						"add": {
+							"component_groups": [
+								"not_player"
+							]
+						}
+					}
+				]
+			}
+		}
+	}
+}
