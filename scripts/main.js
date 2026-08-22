@@ -21,6 +21,8 @@ import "./monster/token.js";
 import "./essentials/index.js";
 import "./essentials/player_stats.js";
 
+import "./soldier/scripts/main.js";
+
 console.info("§8----------------------------------------");
 console.info("§6[Siedler Logic] §aAlle Module geladen!");
 console.info("§7Module: Teams · Steuern · Claims · Monster · Pillager · Außenposten · Essentials · Spieler-Stats");
