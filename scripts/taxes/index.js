@@ -32,6 +32,9 @@ system.runInterval(() => {
                 console.log("Day started")
             }
             payAllTeamTaxes();
+            if (debug) {
+                console.log("Taxes paid")
+            }
         }
     } else {
         dayStarted = false;
@@ -49,8 +52,7 @@ function payAllTeamTaxes() {
         if (!data?.taxChest) continue;
 
         const villagerCount = countVillagersInTeamClaims(teamName, "villager");
-        const configuredAmount = Number.isFinite(Number(data.taxAmount)) ? Number(data.taxAmount) : villagerCount;
-        const amount = Math.max(0, Math.floor(configuredAmount));
+        const amount = Math.max(0, Math.floor(villagerCount));
 
         if (amount <= 0) continue;
 

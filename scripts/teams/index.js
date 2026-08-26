@@ -76,7 +76,7 @@ function registerTeamCommands(registry) {
                 player.sendMessage(`§cDas Team "${teamName}" existiert bereits!`);
                 return;
             }
-            teams[teamName] = { color, players: [], taxChest: null, taxAmount: null };
+            teams[teamName] = { color, players: [], taxChest: null };
             player.sendMessage(saveTeams(teams)
                 ? `§aTeam "${color}${teamName}§a" wurde erstellt.`
                 : "§cDas Team konnte nicht gespeichert werden.");
