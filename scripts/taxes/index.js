@@ -37,7 +37,10 @@ system.runInterval(() => {
         dayStarted = false;
     }
 }, 20);
-
+function playerOnly(origin) {
+    const player = origin?.sourceEntity;
+    return player?.typeId === "minecraft:player" ? player : null;
+}
 function payAllTeamTaxes() {
     const teams = getTeams();
     let paidCount = 0;
