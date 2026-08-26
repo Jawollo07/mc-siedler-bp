@@ -184,7 +184,7 @@ export function countTeamClaims(teamName, claims) {
     return Object.values(claims).filter((claim) => claim?.team === teamName).length;
 }
 
-/** Zählt Entities innerhalb der Claims eines Teams anhand eines Entity-Tags. */
+/** Zählt Villager innerhalb der Claims eines Teams anhand von Typ oder Entity-Tag. */
 export function countVillagersInTeamClaims(teamName, tag = "villager") {
     const claims = getClaims();
     const dimension = world.getDimension("overworld");
@@ -210,10 +210,10 @@ export function countVillagersInTeamClaims(teamName, tag = "villager") {
     // Ein einzelner Tag wird akzeptiert, inklusive Teilzeichenfolge.
     // Beispiel: "vil" passt auf "villager".
     const requiredTag = typeof tag === "string" ? tag.trim() : "";
-    const matchesTag = (entity) => {
-        if (!requiredTag) return false;
-
+    const isVillager = (entity) => {
         try {
+            if (getEntityType(entity) === "minecraft:villager") return true;
+            if (!requiredTag) return false;
             const entityTags = entity.getTags();
             return entityTags.some((entityTag) => typeof entityTag === "string" && entityTag.includes(requiredTag));
         } catch (err) {
@@ -236,7 +236,7 @@ export function countVillagersInTeamClaims(teamName, tag = "villager") {
     let count = 0;
     for (const ent of entities) {
         try {
-            if (!matchesTag(ent)) continue;
+            if (!isVillager(ent)) continue;
 
             const chunk = getChunkCoords(ent.location);
             if (claimedKeys.has(getChunkKey(chunk.x, chunk.z))) count++;

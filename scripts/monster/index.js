@@ -95,7 +95,7 @@ if (entitySpawn && typeof entitySpawn.subscribe === "function") {
         if (!MONSTER_CONFIG.enabled) return;
 
         if (isAllTokenDied()) {
-            try {
+            try { 
                 disableAllMonsterSpawns();
             } catch (error) {
                 if (MONSTER_CONFIG.debug) {
