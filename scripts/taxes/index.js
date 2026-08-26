@@ -81,6 +81,27 @@ function notifyTeamMembers(teamName, teamData, amount, villagerCount) {
 }
 function registerTaxCommands(registry) {
     registry.registerCommand({
+        name: "siedler:countvillagers",
+        description: "Zählt Dorfbewohner in den Claims eines Teams",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false,
+        mandatoryParameters: [
+            { type: CustomCommandParamType.String, name: "team" }
+        ],
+    }, (origin, team) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+        const teamName = String(team ?? "").trim();
+        system.run(() => {
+            const teams = getTeams();
+            const teamData = teams[teamName];
+            if (!teamData) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
+            const villagerCount = countVillagersInTeamClaims(teamName, "villager");
+            player.sendMessage(`§a[Steuern] Team ${teamData.color || "§f"}${teamName}§a hat §e${villagerCount}§a Dorfbewohner in seinen Claims.`);
+        });
+        return { status: CustomCommandStatus.Success };
+    });
+    registry.registerCommand({
         name: "siedler:settax",
         description: "Setzt Steuerkiste",
         permissionLevel: OP_PERMISSION,
