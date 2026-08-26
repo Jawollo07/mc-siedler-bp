@@ -35,11 +35,7 @@ function buildOverview(player) {
     const villagers = team ? countVillagersInTeamClaims(team.name) : 0;
     const members = team?.data?.players?.length ?? 0;
     const taxAmount = team ? villagers : 0;
-    if (taxAmount < 0) {
-        em = "Emerald"
-    } else {
-        em = "Emeralds"
-    }
+    let em = taxAmount === 1 ? "Emerald" : "Emeralds";
     return [
         `§f${player.name}`,
         `§7Position: §f${formatPosition(player.location)}`,
