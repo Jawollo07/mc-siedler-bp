@@ -69,6 +69,18 @@ function isAllTokenDied() {
  * the next writable callback. This keeps the Monster module from aborting the
  * whole pack when the old before-event API is absent.
  */
+function disableAllMonsterSpawns() {
+    const dimension = world.getDimension("overworld");
+    for (const entity of dimension.getEntities({ type: "minecraft:monster" })) {
+        try {
+            entity.remove();
+        } catch (error) {
+            if (MONSTER_CONFIG.debug) {
+                console.warn(`[Monster] Spawn blockiert, Entity konnte nicht entfernt werden: ${error}`);
+            }
+        }
+    }
+}
 const entitySpawn = world.afterEvents?.entitySpawn;
 if (entitySpawn && typeof entitySpawn.subscribe === "function") {
     entitySpawn.subscribe((event) => {
@@ -76,7 +88,7 @@ if (entitySpawn && typeof entitySpawn.subscribe === "function") {
 
         if (isAllTokenDied()) {
             try {
-                event?.entity?.remove?.();
+                disableAllMonsterSpawns();
             } catch (error) {
                 if (MONSTER_CONFIG.debug) {
                     console.warn(`[Monster] Spawn blockiert, Entity konnte nicht entfernt werden: ${error}`);
@@ -94,6 +106,9 @@ if (entitySpawn && typeof entitySpawn.subscribe === "function") {
 
         let shouldRemove = disabled;
 
+        if (entity.typeId === "minecraft:villager") {
+            entity.addTag("villager");
+        }
         if (!shouldRemove) {
             try {
                 const claim = getClaimAt(entity.location);

@@ -34,9 +34,7 @@ function buildOverview(player) {
     const claims = team ? getTeamClaimCount(team.name) : 0;
     const villagers = team ? countVillagersInTeamClaims(team.name) : 0;
     const members = team?.data?.players?.length ?? 0;
-    const taxAmount = team && Number.isFinite(Number(team.data.taxAmount))
-        ? Math.max(0, Math.floor(Number(team.data.taxAmount)))
-        : villagers;
+    const taxAmount = team ? villagers : 0;
 
     return [
         `§f${player.name}`,
@@ -142,13 +140,12 @@ function showTaxes(player) {
         return;
     }
     const villagers = countVillagersInTeamClaims(team.name);
-    const configured = Number(team.data.taxAmount);
-    const amount = Number.isFinite(configured) ? Math.max(0, Math.floor(configured)) : villagers;
+    const amount = villagers;
     const body = [
         `§7Team: §f${team.name}`,
         `§7Dorfbewohner: §f${villagers}`,
         `§7Tägliche Steuer: §e${amount} Emeralds`,
-        `§7Berechnung: §f${Number.isFinite(configured) ? "festgelegter Betrag" : "1 Emerald pro Dorfbewohner"}`,
+        "§7Berechnung: §f1 Emerald pro Dorfbewohner",
         `§7Steuerkiste: ${team.data.taxChest ? "§aEingerichtet" : "§cNicht eingerichtet"}`,
         "",
         "§8Die Steuer wird automatisch am Tagesbeginn ausgezahlt."
