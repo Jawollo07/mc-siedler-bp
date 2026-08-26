@@ -1,80 +1,131 @@
 import { system } from "@minecraft/server";
 
 /**
- * Siedler Logic – Main Module Loader
+ * Siedler Logic – Main Loader
  *
- * Keep initialization in one place and load modules in dependency order.
- * Dynamic properties must be registered before modules that use them.
+ * Important:
+ * - Keep imports static for Bedrock module compatibility.
+ * - Keep the import order deterministic.
+ * - Never let a non-critical startup task prevent the loader from finishing.
+ * - Dynamic properties must be registered before modules that use them.
  */
 
-const MODULES = [
-    // Core
-    "./dynamic_properties.js",
+// -----------------------------------------------------------------------------
+// Core
+// -----------------------------------------------------------------------------
+import "./dynamic_properties.js";
 
-    // Teams
-    "./teams/index.js",
-    "./teams/chat.js",
+// -----------------------------------------------------------------------------
+// Teams
+// -----------------------------------------------------------------------------
+import "./teams/index.js";
+import "./teams/chat.js";
 
-    // Economy
-    "./taxes/index.js",
+// -----------------------------------------------------------------------------
+// Economy
+// -----------------------------------------------------------------------------
+import "./taxes/index.js";
 
-    // Claims
-    "./claims/index.js",
-    "./claims/protection.js",
-    "./claims/display.js",
+// -----------------------------------------------------------------------------
+// Claims
+// -----------------------------------------------------------------------------
+import "./claims/index.js";
+import "./claims/protection.js";
+import "./claims/display.js";
 
-    // Monster system
-    "./monster/index.js",
-    "./monster/pillager_squads.js",
-    "./monster/outpost_raids.js",
-    "./monster/commands.js",
-    "./monster/token.js",
+// -----------------------------------------------------------------------------
+// Monster system
+// -----------------------------------------------------------------------------
+import "./monster/index.js";
+import "./monster/pillager_squads.js";
+import "./monster/outpost_raids.js";
+import "./monster/commands.js";
+import "./monster/token.js";
 
-    // Essentials
-    "./essentials/index.js",
-    "./essentials/player_stats.js",
+// -----------------------------------------------------------------------------
+// Essentials
+// -----------------------------------------------------------------------------
+import "./essentials/index.js";
+import "./essentials/player_stats.js";
 
-    // Soldier system
-    "./soldier/scripts/main.js",
-];
+// -----------------------------------------------------------------------------
+// Soldier system
+// -----------------------------------------------------------------------------
+import "./soldier/scripts/main.js";
 
-const MODULE_NAMES = [
-    "Dynamic Properties",
-    "Teams",
-    "Team Chat",
-    "Taxes",
-    "Claims",
-    "Claim Protection",
-    "Claim Display",
-    "Monster",
-    "Pillager Squads",
-    "Outpost Raids",
-    "Monster Commands",
-    "Monster Token",
-    "Essentials",
-    "Player Stats",
-    "Soldier",
-];
+const VERSION = "1.1.4";
+const MODULE_COUNT = 15;
+const STARTUP_DELAY = 20;
+const WATCHDOG_INTERVAL = 200;
+
+let startupCompleted = false;
+let watchdogHandle;
 
 function log(message) {
-    console.info(`[Siedler Logic] ${message}`);
+    console.info(`§6[Siedler Logic ${VERSION}] §7${message}`);
 }
 
-function loadModules() {
-    log(`Loading ${MODULES.length} modules...`);
-
-    // Static imports are intentionally used below so Minecraft can resolve
-    // and initialize every module before the main runtime starts.
-    return MODULES.length;
+function logSuccess(message) {
+    console.info(`§6[Siedler Logic ${VERSION}] §a${message}`);
 }
 
-loadModules();
+function logWarning(message) {
+    console.warn(`§6[Siedler Logic ${VERSION}] §e${message}`);
+}
 
-console.info("§8----------------------------------------");
-console.info("§6[Siedler Logic] §aAll modules loaded!");
-console.info(`§7Modules: ${MODULE_NAMES.join(" · ")}`);
-console.info("§8----------------------------------------");
+function safeRun(label, callback) {
+    try {
+        callback();
+    } catch (error) {
+        console.error(`§6[Siedler Logic ${VERSION}] §c${label} failed:`);
+        console.error(error);
+    }
+}
 
-system.runTimeout(() => {
-    log(`Successfully started (${MODULES.length} modules).`);
-}, 20);
+function startWatchdog() {
+    if (watchdogHandle !== undefined) {
+        return;
+    }
+
+    watchdogHandle = system.runInterval(() => {
+        if (startupCompleted) {
+            system.clearRun(watchdogHandle);
+            watchdogHandle = undefined;
+            return;
+        }
+
+        logWarning("Startup is taking longer than expected. Continuing without blocking the server.");
+    }, WATCHDOG_INTERVAL);
+}
+
+function finishStartup() {
+    if (startupCompleted) {
+        return;
+    }
+
+    startupCompleted = true;
+
+    safeRun("Startup status", () => {
+        console.info("§8----------------------------------------");
+        logSuccess("All modules initialized.");
+        log(`Loaded ${MODULE_COUNT} modules.`);
+        console.info("§7Teams · Taxes · Claims · Monster · Pillager · Outposts · Essentials · Soldier");
+        console.info("§8----------------------------------------");
+    });
+}
+
+function startLoader() {
+    safeRun("Loader initialization", () => {
+        log(`Starting ${MODULE_COUNT} modules...`);
+        startWatchdog();
+    });
+
+    system.runTimeout(() => {
+        safeRun("Startup completion", finishStartup);
+    }, STARTUP_DELAY);
+}
+
+// All module imports above are evaluated before this code executes.
+// Keeping the final startup sequence guarded prevents logging/watchdog errors
+// from becoming a second failure after the actual modules have loaded.
+startLoader();
