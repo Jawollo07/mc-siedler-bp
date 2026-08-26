@@ -42,6 +42,17 @@ function runPlayerCommand(player, command) {
 
 function registerTeamCommands(registry) {
     registry.registerCommand({
+        name: "siedler:team",
+        description: "Öffnet das Team-Management UI.",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false
+    }, (origin) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+        system.run(() => showTeamMenu(player));
+        return { status: CustomCommandStatus.Success };
+    });
+    registry.registerCommand({
         name: "siedler:team_create",
         description: "Erstellt ein neues Team.",
         permissionLevel: OP_PERMISSION,
@@ -288,15 +299,4 @@ world.afterEvents.playerSpawn?.subscribe?.((event) => {
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
     registerTeamCommands(registry);
-    registry.registerCommand({
-        name: "siedler:team",
-        description: "Öffnet das Team-Management UI.",
-        permissionLevel: OP_PERMISSION,
-        cheatsRequired: false
-    }, (origin) => {
-        const player = playerOnly(origin);
-        if (!player) return { status: CustomCommandStatus.Failure };
-        system.run(() => showTeamMenu(player));
-        return { status: CustomCommandStatus.Success };
-    });
 });

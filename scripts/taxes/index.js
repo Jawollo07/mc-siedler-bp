@@ -12,6 +12,13 @@ let debug = true;
 if (debug) {
     console.log("Started Taxes System")
 }
+system.beforeEvents.startup.subscribe((event) => {
+    const registry = event.customCommandRegistry;
+    registerTaxCommands(registry);
+    if (debug) {
+        console.log("Registered Tax Commands")
+    }
+});
 system.runInterval(() => {
     const timeNow = world.getTimeOfDay();
     const currentDay = Math.floor(world.getAbsoluteTime() / 24000);
@@ -68,37 +75,35 @@ function notifyTeamMembers(teamName, teamData, amount, villagerCount) {
         }
     }
 }
-system.beforeEvents.startup.subscribe((event) => {
+function registerTaxCommands(registry) {
     registry.registerCommand({
-            name: "siedler:settax",
-            description: "Setzt Steuerkiste und optional Steuerbetrag.",
-            permissionLevel: OP_PERMISSION,
-            cheatsRequired: false,
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "team" },
-                // Float accepts negative coordinates as well as positive ones.
-                // The values are converted back to block coordinates below.
-                { type: CustomCommandParamType.Float, name: "x" },
-                { type: CustomCommandParamType.Float, name: "y" },
-                { type: CustomCommandParamType.Float, name: "z" }
-            ],
-            optionalParameters: [{ type: CustomCommandParamType.Integer, name: "amount" }]
-        }, (origin, team, x, y, z, amount) => {
-            const player = playerOnly(origin);
-            if (!player) return { status: CustomCommandStatus.Failure };
-            const teamName = String(team ?? "").trim();
-            system.run(() => {
-                const teams = getTeams();
-                const teamData = teams[teamName];
-                if (!teamData) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
-                teamData.taxChest = {
-                    x: Math.floor(Number(x)),
-                    y: Math.floor(Number(y)),
-                    z: Math.floor(Number(z))
-                };
-                if (amount !== undefined) teamData.taxAmount = Math.max(0, Number(amount));
-                player.sendMessage(saveTeams(teams) ? `§aSteuerkiste für Team "${teamData.color || "§f"}${teamName}§a" gesetzt.` : "§cDie Steuerkonfiguration konnte nicht gespeichert werden.");
-            });
-            return { status: CustomCommandStatus.Success };
+        name: "siedler:settax",
+        description: "Setzt Steuerkiste und optional Steuerbetrag.",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false,
+        mandatoryParameters: [
+           { type: CustomCommandParamType.String, name: "team" },
+            { type: CustomCommandParamType.Float, name: "x" },
+            { type: CustomCommandParamType.Float, name: "y" },
+            { type: CustomCommandParamType.Float, name: "z" }
+        ],
+        optionalParameters: [{ type: CustomCommandParamType.Integer, name: "amount" }]
+    }, (origin, team, x, y, z, amount) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+        const teamName = String(team ?? "").trim();
+        system.run(() => {
+            const teams = getTeams();
+            const teamData = teams[teamName];
+            if (!teamData) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
+            teamData.taxChest = {
+                x: Math.floor(Number(x)),
+                y: Math.floor(Number(y)),
+                z: Math.floor(Number(z))
+            };
+            if (amount !== undefined) teamData.taxAmount = Math.max(0, Number(amount));
+            player.sendMessage(saveTeams(teams) ? `§aSteuerkiste für Team "${teamData.color || "§f"}${teamName}§a" gesetzt.` : "§cDie Steuerkonfiguration konnte nicht gespeichert werden.");
         });
-});
+        return { status: CustomCommandStatus.Success };
+    });
+};
