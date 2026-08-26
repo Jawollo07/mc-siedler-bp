@@ -1,6 +1,6 @@
 import { world, system, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus} from "@minecraft/server";
 import { addTaxes } from "./taxes.js";
-import { getTeams } from "../teams/index.js";
+import { getTeams, saveTeams } from "../teams/index.js";
 import { countVillagersInTeamClaims } from "../claims/utils.js";
 
 const MORNING_START = 0;
@@ -82,17 +82,16 @@ function notifyTeamMembers(teamName, teamData, amount, villagerCount) {
 function registerTaxCommands(registry) {
     registry.registerCommand({
         name: "siedler:settax",
-        description: "Setzt Steuerkiste und optional Steuerbetrag.",
+        description: "Setzt Steuerkiste",
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
         mandatoryParameters: [
-           { type: CustomCommandParamType.String, name: "team" },
+            { type: CustomCommandParamType.String, name: "team" },
             { type: CustomCommandParamType.Float, name: "x" },
             { type: CustomCommandParamType.Float, name: "y" },
             { type: CustomCommandParamType.Float, name: "z" }
         ],
-        optionalParameters: [{ type: CustomCommandParamType.Integer, name: "amount" }]
-    }, (origin, team, x, y, z, amount) => {
+    }, (origin, team, x, y, z) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
         const teamName = String(team ?? "").trim();
@@ -105,7 +104,6 @@ function registerTaxCommands(registry) {
                 y: Math.floor(Number(y)),
                 z: Math.floor(Number(z))
             };
-            if (amount !== undefined) teamData.taxAmount = Math.max(0, Number(amount));
             player.sendMessage(saveTeams(teams) ? `§aSteuerkiste für Team "${teamData.color || "§f"}${teamName}§a" gesetzt.` : "§cDie Steuerkonfiguration konnte nicht gespeichert werden.");
         });
         return { status: CustomCommandStatus.Success };

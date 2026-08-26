@@ -15,7 +15,7 @@ export function getTeams() {
     }
 }
 
-function saveTeams(teams) {
+export function saveTeams(teams) {
     try {
         world.setDynamicProperty("teams", JSON.stringify(teams));
         return true;
