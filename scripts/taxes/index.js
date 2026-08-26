@@ -1,4 +1,4 @@
-import { world, system } from "@minecraft/server";
+import { world, system, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus} from "@minecraft/server";
 import { addTaxes } from "./taxes.js";
 import { getTeams } from "../teams/index.js";
 import { countVillagersInTeamClaims } from "../claims/utils.js";
