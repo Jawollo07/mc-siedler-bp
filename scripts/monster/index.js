@@ -177,4 +177,4 @@ system.runInterval(() => {
     }
 }, Math.max(1, Number(MONSTER_CONFIG.weakness?.interval) || 100));
 
-console.info("§a[Monster] Modul geladen – zentrale Config + Spawn-Filter aktiv");
+console.info("§a[Monster] Modul geladen");

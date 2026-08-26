@@ -220,7 +220,6 @@ function handleAllTokenMobsDefeated(killer = null) {
     console.info(
         "[Token] Alle Token-Mobs wurden von Spielern besiegt!"
     );
-
     if (killer) {
         killer.sendMessage(
             "§6§lAlle Token-Mobs wurden besiegt!"
@@ -283,10 +282,6 @@ system.beforeEvents.startup.subscribe((event) => {
                 status: CustomCommandStatus.Success
             };
         }
-    );
-
-    console.info(
-        `§a[Token] Command /${CONFIG.command.name} registriert.`
     );
 });
 

@@ -239,5 +239,3 @@ system.runInterval(() => {
 
 system.runInterval(() => { for (const squad of squads.values()) runSquadAI(squad); }, CONFIG.ai.thinkInterval);
 system.runInterval(cleanupSquads, 200);
-
-console.info("§a[Pillager] Trupp-KI verwendet jetzt ausschließlich monster/config.js.");

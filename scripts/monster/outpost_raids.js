@@ -106,4 +106,4 @@ system.runInterval(() => {
     }
 }, 200);
 
-console.info("§a[Pillager-Outpost] Verwendet zentrale Monster-Config.");
+console.info("§a[Pillager-Outpost] Modul geladen");
