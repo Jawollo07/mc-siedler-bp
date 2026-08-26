@@ -103,16 +103,16 @@ function setClaimForPlayer(player, teamName) {
             return;
         }
         const claims = getClaims();
-            const MAX_CHUNKS = 25; // 5x5
+            const MAX_CHUNKS = 16; // 4x4
             if (countTeamClaims(teamName, claims) >= MAX_CHUNKS) {
                 player.sendMessage(`§cTeam "${teamName}" hat bereits die maximalen ${MAX_CHUNKS} Chunks.`);
                 return;
             }
-            // Use the player's current CHUNK as the center of the 5x5 claim
+            // Use the player's current CHUNK as the center of the 4x4 claim
             const centerChunk = getChunkCoords(player.location);
-            const chunks = get5x5ChunksFromChunk(centerChunk.x, centerChunk.z);
+            const chunks = get4x4ChunksFromChunk(centerChunk.x, centerChunk.z);
             if (!areChunksFree(chunks, claims)) {
-                player.sendMessage("§cEiner oder mehrere der 25 Chunks sind bereits geclaimt.");
+                player.sendMessage("§cEiner oder mehrere der 16 Chunks sind bereits geclaimt.");
                 return;
         }
         const claimedAt = Date.now();
@@ -120,7 +120,7 @@ function setClaimForPlayer(player, teamName) {
             claims[getChunkKey(chunk.x, chunk.z)] = { team: teamName, claimedAt };
         }
             player.sendMessage(saveClaims(claims)
-                ? `§a5×5-Grundstück für Team ${teams[teamName].color || "§f"}${teamName}§a gesetzt.`
+                ? `§a4×4-Grundstück für Team ${teams[teamName].color || "§f"}${teamName}§a gesetzt.`
                 : "§cDas Grundstück konnte nicht gespeichert werden.");
     });
 }

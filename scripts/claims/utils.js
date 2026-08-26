@@ -104,14 +104,14 @@ export function get2x2Chunks(chunkX, chunkZ) {
  * Die Funktion nimmt Block-Koordinaten (x, z) und bestimmt die 5×5 Chunks,
  * sodass der Chunk, in dem sich der Block befindet, das Zentrum der 5×5-Matrix ist.
  */
-export function get5x5ChunksCentered(blockX, blockZ) {
+export function get4x4ChunksCentered(blockX, blockZ) {
     const centerChunkX = Math.floor(blockX / 16);
     const centerChunkZ = Math.floor(blockZ / 16);
-    return get5x5ChunksFromChunk(centerChunkX, centerChunkZ);
+    return get4x4ChunksFromChunk(centerChunkX, centerChunkZ);
 }
 
-export function get5x5ChunksFromChunk(centerChunkX, centerChunkZ) {
-    const half = 2; // 5x5 -> radius 2
+export function get4x4ChunksFromChunk(centerChunkX, centerChunkZ) {
+    const half = 2; // 4x4 -> radius 2
     const startX = centerChunkX - half;
     const startZ = centerChunkZ - half;
 
@@ -126,7 +126,7 @@ export function get5x5ChunksFromChunk(centerChunkX, centerChunkZ) {
 }
 
 /**
- * Returns a 5x5 chunk grid using the provided chunk coordinates as center.
+ * Returns a 4x4 chunk grid using the provided chunk coordinates as center.
  * centerChunkX/centerChunkZ are chunk coordinates (not block coords).
  */
 
