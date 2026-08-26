@@ -5,6 +5,7 @@ import { countVillagersInTeamClaims } from "../claims/utils.js";
 
 const MORNING_START = 0;
 const MORNING_WINDOW = 200;
+const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
 let dayStarted = false;
 let lastPaidDay = -1;
