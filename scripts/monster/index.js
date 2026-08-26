@@ -84,6 +84,14 @@ function disableAllMonsterSpawns() {
 const entitySpawn = world.afterEvents?.entitySpawn;
 if (entitySpawn && typeof entitySpawn.subscribe === "function") {
     entitySpawn.subscribe((event) => {
+        const entity = event?.entity;
+        if (!entity) return;
+
+        const typeId = entity.typeId;
+        if (typeId === "minecraft:villager") {
+            entity.addTag("villager");
+        }
+
         if (!MONSTER_CONFIG.enabled) return;
 
         if (isAllTokenDied()) {
@@ -97,18 +105,10 @@ if (entitySpawn && typeof entitySpawn.subscribe === "function") {
             return;
         }
 
-        const entity = event?.entity;
-        if (!entity) return;
-
-        const typeId = entity.typeId;
         const disabled = MONSTER_CONFIG.disabledMobs?.[typeId];
         if (disabled === undefined) return;
 
         let shouldRemove = disabled;
-
-        if (entity.typeId === "minecraft:villager") {
-            entity.addTag("villager");
-        }
         if (!shouldRemove) {
             try {
                 const claim = getClaimAt(entity.location);
