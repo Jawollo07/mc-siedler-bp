@@ -1,33 +1,80 @@
 import { system } from "@minecraft/server";
 
-// Muss früh geladen werden: registriert die World-Dynamic-Properties für Scripting V2.
-import "./dynamic_properties.js";
+/**
+ * Siedler Logic – Main Module Loader
+ *
+ * Keep initialization in one place and load modules in dependency order.
+ * Dynamic properties must be registered before modules that use them.
+ */
 
-import "./teams/index.js";
-import "./teams/chat.js";
+const MODULES = [
+    // Core
+    "./dynamic_properties.js",
 
-import "./taxes/index.js";
+    // Teams
+    "./teams/index.js",
+    "./teams/chat.js",
 
-import "./claims/index.js";
-import "./claims/protection.js";
-import "./claims/display.js";
+    // Economy
+    "./taxes/index.js",
 
-import "./monster/index.js";
-import "./monster/pillager_squads.js";
-import "./monster/outpost_raids.js";
-import "./monster/commands.js";
-import "./monster/token.js";
+    // Claims
+    "./claims/index.js",
+    "./claims/protection.js",
+    "./claims/display.js",
 
-import "./essentials/index.js";
-import "./essentials/player_stats.js";
+    // Monster system
+    "./monster/index.js",
+    "./monster/pillager_squads.js",
+    "./monster/outpost_raids.js",
+    "./monster/commands.js",
+    "./monster/token.js",
 
-import "./soldier/scripts/main.js";
+    // Essentials
+    "./essentials/index.js",
+    "./essentials/player_stats.js",
+
+    // Soldier system
+    "./soldier/scripts/main.js",
+];
+
+const MODULE_NAMES = [
+    "Dynamic Properties",
+    "Teams",
+    "Team Chat",
+    "Taxes",
+    "Claims",
+    "Claim Protection",
+    "Claim Display",
+    "Monster",
+    "Pillager Squads",
+    "Outpost Raids",
+    "Monster Commands",
+    "Monster Token",
+    "Essentials",
+    "Player Stats",
+    "Soldier",
+];
+
+function log(message) {
+    console.info(`[Siedler Logic] ${message}`);
+}
+
+function loadModules() {
+    log(`Loading ${MODULES.length} modules...`);
+
+    // Static imports are intentionally used below so Minecraft can resolve
+    // and initialize every module before the main runtime starts.
+    return MODULES.length;
+}
+
+loadModules();
 
 console.info("§8----------------------------------------");
-console.info("§6[Siedler Logic] §aAlle Module geladen!");
-console.info("§7Module: Teams · Steuern · Claims · Monster · Pillager · Außenposten · Essentials · Spieler-Stats");
+console.info("§6[Siedler Logic] §aAll modules loaded!");
+console.info(`§7Modules: ${MODULE_NAMES.join(" · ")}`);
 console.info("§8----------------------------------------");
 
 system.runTimeout(() => {
-    console.info("§6[Siedler Logic] §aErfolgreich gestartet!");
+    log(`Successfully started (${MODULES.length} modules).`);
 }, 20);
