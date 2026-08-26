@@ -212,7 +212,8 @@ export function countVillagersInTeamClaims(teamName, tag = "villager") {
     const requiredTag = typeof tag === "string" ? tag.trim() : "";
     const isVillager = (entity) => {
         try {
-            if (getEntityType(entity) === "minecraft:villager") return true;
+            const type = getEntityType(entity);
+            if (type === "minecraft:villager" || type === "minecraft:villager_v2") return true;
             if (!requiredTag) return false;
             const entityTags = entity.getTags();
             return entityTags.some((entityTag) => typeof entityTag === "string" && entityTag.includes(requiredTag));

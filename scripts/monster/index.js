@@ -88,8 +88,14 @@ if (entitySpawn && typeof entitySpawn.subscribe === "function") {
         if (!entity) return;
 
         const typeId = entity.typeId;
-        if (typeId === "minecraft:villager") {
-            entity.addTag("villager");
+        if (typeId === "minecraft:villager" || typeId === "minecraft:villager_v2") {
+            try {
+                entity.addTag("villager");
+            } catch (error) {
+                if (MONSTER_CONFIG.debug) {
+                    console.warn(`[Monster] Villager-Tag konnte nicht gesetzt werden: ${error}`);
+                }
+            }
         }
 
         if (!MONSTER_CONFIG.enabled) return;
