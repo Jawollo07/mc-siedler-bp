@@ -184,14 +184,8 @@ export function countTeamClaims(teamName, claims) {
     return Object.values(claims).filter((claim) => claim?.team === teamName).length;
 }
 
-/**
- * Zählt Entities innerhalb der Claims eines Teams, gefiltert per Typ-Prefix.
- *
- * Wenn `typePrefix` z.B. "fv:villager" ist, werden alle Entity-Typen gezählt,
- * deren Typ mit diesem Prefix beginnt (Wildcard-ähnlich). Standard ist
- * "minecraft:villager" (bestehendes Verhalten).
- */
-export function countVillagersInTeamClaims(teamName, typePattern = "minecraft:villager") {
+/** Zählt Entities innerhalb der Claims eines Teams anhand eines Entity-Tags. */
+export function countVillagersInTeamClaims(teamName, tag = "villager") {
     const claims = getClaims();
     const dimension = world.getDimension("overworld");
     const teamChunks = [];
@@ -213,21 +207,18 @@ export function countVillagersInTeamClaims(teamName, typePattern = "minecraft:vi
 
     const claimedKeys = new Set(teamChunks.map((chunk) => getChunkKey(chunk.x, chunk.z)));
 
-    // Hol alle Entities und filter nach Pattern.
-    // Unterstützte Pattern-Formen:
-    // - exakter Typ: "minecraft:villager"
-    // - trailing wildcard: "fv:villager*" (matcht alle mit diesem Prefix)
-    // - oder ein Array von solchen Patterns.
-    const matchesPattern = (type, pattern) => {
-        if (Array.isArray(pattern)) {
-            return pattern.some((p) => matchesPattern(type, p));
+    // Ein einzelner Tag wird akzeptiert, inklusive Teilzeichenfolge.
+    // Beispiel: "vil" passt auf "villager".
+    const requiredTag = typeof tag === "string" ? tag.trim() : "";
+    const matchesTag = (entity) => {
+        if (!requiredTag) return false;
+
+        try {
+            const entityTags = entity.getTags();
+            return entityTags.some((entityTag) => typeof entityTag === "string" && entityTag.includes(requiredTag));
+        } catch (err) {
+            return false;
         }
-        if (typeof pattern !== "string") return false;
-        if (pattern.endsWith("*")) {
-            const prefix = pattern.slice(0, -1);
-            return type.startsWith(prefix);
-        }
-        return type === pattern;
     };
     let entities;
     try {
@@ -245,9 +236,7 @@ export function countVillagersInTeamClaims(teamName, typePattern = "minecraft:vi
     let count = 0;
     for (const ent of entities) {
         try {
-            const type = getEntityType(ent);
-            if (!type) continue;
-            if (!matchesPattern(type, typePattern)) continue;
+            if (!matchesTag(ent)) continue;
 
             const chunk = getChunkCoords(ent.location);
             if (claimedKeys.has(getChunkKey(chunk.x, chunk.z))) count++;
