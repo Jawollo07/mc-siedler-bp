@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@minecraft/server": "^2.9.0"
+  }
+}

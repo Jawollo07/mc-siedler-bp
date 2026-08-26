@@ -170,33 +170,6 @@ function registerTeamCommands(registry) {
         });
         return { status: CustomCommandStatus.Success };
     });
-
-    registry.registerCommand({
-        name: "siedler:team_settax",
-        description: "Setzt Steuerkiste und optional Steuerbetrag.",
-        permissionLevel: OP_PERMISSION,
-        cheatsRequired: false,
-        mandatoryParameters: [
-            { type: CustomCommandParamType.String, name: "team" },
-            { type: CustomCommandParamType.Integer, name: "x" },
-            { type: CustomCommandParamType.Integer, name: "y" },
-            { type: CustomCommandParamType.Integer, name: "z" }
-        ],
-        optionalParameters: [{ type: CustomCommandParamType.Integer, name: "amount" }]
-    }, (origin, team, x, y, z, amount) => {
-        const player = playerOnly(origin);
-        if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(team ?? "").trim();
-        system.run(() => {
-            const teams = getTeams();
-            const teamData = teams[teamName];
-            if (!teamData) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
-            teamData.taxChest = { x, y, z };
-            if (amount !== undefined) teamData.taxAmount = Math.max(0, Number(amount));
-            player.sendMessage(saveTeams(teams) ? `§aSteuerkiste für Team "${teamData.color || "§f"}${teamName}§a" gesetzt.` : "§cDie Steuerkonfiguration konnte nicht gespeichert werden.");
-        });
-        return { status: CustomCommandStatus.Success };
-    });
 }
 
 async function showCreateTeamForm(player) {
