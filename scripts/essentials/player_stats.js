@@ -35,7 +35,11 @@ function buildOverview(player) {
     const villagers = team ? countVillagersInTeamClaims(team.name) : 0;
     const members = team?.data?.players?.length ?? 0;
     const taxAmount = team ? villagers : 0;
-
+    if (taxAmount < 0) {
+        em = "Emerald"
+    } else {
+        em = "Emeralds"
+    }
     return [
         `§f${player.name}`,
         `§7Position: §f${formatPosition(player.location)}`,
@@ -47,7 +51,7 @@ function buildOverview(player) {
         `§7Teammitglieder: §f${members}`,
         `§7Eigene Claims: §f${claims} Chunks`,
         `§7Dorfbewohner: §f${villagers}`,
-        `§7Tägliche Steuer: §e${taxAmount} Emeralds`
+        `§7Tägliche Steuer: §e${taxAmount} ${em}`
     ].join("\n");
 }
 
