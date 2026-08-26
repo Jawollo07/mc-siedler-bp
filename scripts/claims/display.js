@@ -4,7 +4,7 @@ import { getTeams } from "../teams/index.js";
 
 const lastShown = new Map();
 const BORDER_DISTANCE = 6;
-const BORDER_PARTICLE = "minecraft:crop_growth_emitter";
+const BORDER_PARTICLE = "minecraft:totem_particle";
 
 function showNearbyClaimBorders(player) {
     const location = player.location;
@@ -41,12 +41,14 @@ function showNearbyClaimBorders(player) {
 
                 for (let offset = -4; offset <= 4; offset += 2) {
                     const particleAlong = Math.max(minAlong, Math.min(maxAlong, along + offset));
-                    const particleLocation = boundary.horizontal
-                        ? { x: particleAlong, y: location.y + 0.2, z: boundary.fixed }
-                        : { x: boundary.fixed, y: location.y + 0.2, z: particleAlong };
-                    try {
-                        player.dimension.spawnParticle(BORDER_PARTICLE, particleLocation);
-                    } catch (error) {
+                    for (const height of [0.2, 0.9]) {
+                        const particleLocation = boundary.horizontal
+                            ? { x: particleAlong, y: location.y + height, z: boundary.fixed }
+                            : { x: boundary.fixed, y: location.y + height, z: particleAlong };
+                        try {
+                            player.dimension.spawnParticle(BORDER_PARTICLE, particleLocation);
+                        } catch (error) {
+                        }
                     }
                 }
             }
