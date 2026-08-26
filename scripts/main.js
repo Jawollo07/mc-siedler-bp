@@ -6,7 +6,7 @@ import "./dynamic_properties.js";
 import "./teams/index.js";
 import "./teams/chat.js";
 
-import "./taxes/time_watcher.js";
+import "./taxes/index.js";
 
 import "./claims/index.js";
 import "./claims/protection.js";
