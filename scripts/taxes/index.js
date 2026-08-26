@@ -8,7 +8,11 @@ const MORNING_WINDOW = 200;
 
 let dayStarted = false;
 let lastPaidDay = -1;
+let debug = true;
 
+if (debug) {
+    console.log("Started Taxes System")
+}
 system.runInterval(() => {
     const timeNow = world.getTimeOfDay();
     const currentDay = Math.floor(world.getAbsoluteTime() / 24000);
@@ -17,6 +21,9 @@ system.runInterval(() => {
         if (!dayStarted && lastPaidDay !== currentDay) {
             dayStarted = true;
             lastPaidDay = currentDay;
+            if (debug) {
+                console.log("Day started")
+            }
             payAllTeamTaxes();
         }
     } else {
@@ -41,6 +48,9 @@ function payAllTeamTaxes() {
         if (success) {
             paidCount++;
             notifyTeamMembers(teamName, data, amount, villagerCount);
+            if (debug) {
+                console.log("Paid taxes")
+            }
         }
     }
 
