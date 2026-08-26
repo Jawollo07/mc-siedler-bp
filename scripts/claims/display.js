@@ -4,35 +4,51 @@ import { getTeams } from "../teams/index.js";
 
 const lastShown = new Map();
 const BORDER_DISTANCE = 6;
-const BORDER_PARTICLE = "minecraft:endrod";
+const BORDER_PARTICLE = "minecraft:crop_growth_emitter";
 
-function showNearbyClaimBorder(player, claim) {
+function showNearbyClaimBorders(player) {
     const location = player.location;
     const chunk = getChunkCoords(location);
     const claims = getClaims();
-    const isSameTeamClaim = (chunkX, chunkZ) => claims[getChunkKey(chunkX, chunkZ)]?.team === claim.team;
-    const boundaries = [
-        { distance: location.x - chunk.x * 16, near: location.x, fixed: chunk.z * 16, horizontal: true, neighbour: [chunk.x - 1, chunk.z] },
-        { distance: (chunk.x + 1) * 16 - location.x, near: location.x, fixed: (chunk.z + 1) * 16, horizontal: true, neighbour: [chunk.x + 1, chunk.z] },
-        { distance: location.z - chunk.z * 16, near: location.z, fixed: chunk.x * 16, horizontal: false, neighbour: [chunk.x, chunk.z - 1] },
-        { distance: (chunk.z + 1) * 16 - location.z, near: location.z, fixed: (chunk.x + 1) * 16, horizontal: false, neighbour: [chunk.x, chunk.z + 1] }
-    ];
+    const shown = new Set();
 
-    for (const boundary of boundaries) {
-        if (boundary.distance > BORDER_DISTANCE || isSameTeamClaim(...boundary.neighbour)) continue;
+    for (let chunkX = chunk.x - 1; chunkX <= chunk.x + 1; chunkX++) {
+        for (let chunkZ = chunk.z - 1; chunkZ <= chunk.z + 1; chunkZ++) {
+            const claim = claims[getChunkKey(chunkX, chunkZ)];
+            if (!claim?.team) continue;
 
-        const minAlong = boundary.horizontal ? chunk.x * 16 : chunk.z * 16;
-        const maxAlong = boundary.horizontal ? (chunk.x + 1) * 16 : (chunk.z + 1) * 16;
-        for (let offset = -6; offset <= 6; offset += 2) {
-            const along = boundary.near + offset;
-            if (along < minAlong || along > maxAlong) continue;
+            const isSameTeamClaim = (neighbourX, neighbourZ) =>
+                claims[getChunkKey(neighbourX, neighbourZ)]?.team === claim.team;
+            const boundaries = [
+                { distance: Math.abs(location.x - chunkX * 16), near: location.z, fixed: chunkX * 16, horizontal: false, neighbour: [chunkX - 1, chunkZ] },
+                { distance: Math.abs(location.x - (chunkX + 1) * 16), near: location.z, fixed: (chunkX + 1) * 16, horizontal: false, neighbour: [chunkX + 1, chunkZ] },
+                { distance: Math.abs(location.z - chunkZ * 16), near: location.x, fixed: chunkZ * 16, horizontal: true, neighbour: [chunkX, chunkZ - 1] },
+                { distance: Math.abs(location.z - (chunkZ + 1) * 16), near: location.x, fixed: (chunkZ + 1) * 16, horizontal: true, neighbour: [chunkX, chunkZ + 1] }
+            ];
 
-            const particleLocation = boundary.horizontal
-                ? { x: along, y: location.y + 0.2, z: boundary.fixed }
-                : { x: boundary.fixed, y: location.y + 0.2, z: along };
-            try {
-                player.dimension.spawnParticle(BORDER_PARTICLE, particleLocation);
-            } catch (error) {
+            for (const boundary of boundaries) {
+                if (isSameTeamClaim(...boundary.neighbour)) continue;
+
+                const minAlong = boundary.horizontal ? chunkX * 16 : chunkZ * 16;
+                const maxAlong = boundary.horizontal ? (chunkX + 1) * 16 : (chunkZ + 1) * 16;
+                const along = Math.max(minAlong, Math.min(maxAlong, boundary.near));
+                const distance = Math.sqrt(boundary.distance ** 2 + (boundary.near - along) ** 2);
+                if (distance > BORDER_DISTANCE) continue;
+
+                const boundaryKey = `${boundary.fixed}:${boundary.horizontal ? "z" : "x"}`;
+                if (shown.has(boundaryKey)) continue;
+                shown.add(boundaryKey);
+
+                for (let offset = -4; offset <= 4; offset += 2) {
+                    const particleAlong = Math.max(minAlong, Math.min(maxAlong, along + offset));
+                    const particleLocation = boundary.horizontal
+                        ? { x: particleAlong, y: location.y + 0.2, z: boundary.fixed }
+                        : { x: boundary.fixed, y: location.y + 0.2, z: particleAlong };
+                    try {
+                        player.dimension.spawnParticle(BORDER_PARTICLE, particleLocation);
+                    } catch (error) {
+                    }
+                }
             }
         }
     }
@@ -47,6 +63,8 @@ system.runInterval(() => {
         const claim = getClaimAt(player.location);
         const key = player.id;
 
+        showNearbyClaimBorders(player);
+
         if (!claim) {
             if (lastShown.get(key) !== null) {
                 player.onScreenDisplay.setActionBar("");
@@ -54,8 +72,6 @@ system.runInterval(() => {
             }
             continue;
         }
-
-        showNearbyClaimBorder(player, claim);
 
         if (lastShown.get(key) === claim.team) continue;
 
