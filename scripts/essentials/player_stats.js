@@ -144,7 +144,7 @@ function showTaxes(player) {
     const body = [
         `§7Team: §f${team.name}`,
         `§7Dorfbewohner: §f${villagers}`,
-        `§7Tägliche Steuer: §e${amount} Emeralds`,
+        `§7Tägliche Steuer: §e${amount} ${amount === 1 ? "Emerald" : "Emeralds"}`,
         "§7Berechnung: §f1 Emerald pro Dorfbewohner",
         `§7Steuerkiste: ${team.data.taxChest ? "§aEingerichtet" : "§cNicht eingerichtet"}`,
         "",
