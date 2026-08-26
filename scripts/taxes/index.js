@@ -9,10 +9,6 @@ const MORNING_WINDOW = 200;
 let dayStarted = false;
 let lastPaidDay = -1;
 let debug = true;
-system.beforeEvents.startup.subscribe((event) => {
-    const registry = event.customCommandRegistry;
-    registerEcoCommands(registry);
-});
 if (debug) {
     console.log("Started Taxes System")
 }
@@ -72,9 +68,9 @@ function notifyTeamMembers(teamName, teamData, amount, villagerCount) {
         }
     }
 }
-function registerEcoCommands(registry) {
+system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand({
-            name: "siedler:team_settax",
+            name: "siedler:settax",
             description: "Setzt Steuerkiste und optional Steuerbetrag.",
             permissionLevel: OP_PERMISSION,
             cheatsRequired: false,
@@ -105,4 +101,4 @@ function registerEcoCommands(registry) {
             });
             return { status: CustomCommandStatus.Success };
         });
-}
+});
