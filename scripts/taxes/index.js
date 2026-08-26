@@ -9,16 +9,10 @@ const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
 let dayStarted = false;
 let lastPaidDay = -1;
-let debug = true;
-if (debug) {
-    console.log("Started Taxes System")
-}
+
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
     registerTaxCommands(registry);
-    if (debug) {
-        console.log("Registered Tax Commands")
-    }
 });
 system.runInterval(() => {
     const timeNow = world.getTimeOfDay();
@@ -28,13 +22,7 @@ system.runInterval(() => {
         if (!dayStarted && lastPaidDay !== currentDay) {
             dayStarted = true;
             lastPaidDay = currentDay;
-            if (debug) {
-                console.log("Day started")
-            }
             payAllTeamTaxes();
-            if (debug) {
-                console.log("Taxes paid")
-            }
         }
     } else {
         dayStarted = false;
@@ -60,9 +48,6 @@ function payAllTeamTaxes() {
         if (success) {
             paidCount++;
             notifyTeamMembers(teamName, data, amount, villagerCount);
-            if (debug) {
-                console.log("Paid taxes")
-            }
         }
     }
 
