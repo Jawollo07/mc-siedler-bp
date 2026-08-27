@@ -10,9 +10,8 @@ import { system, world } from "@minecraft/server";
  * @param {Player | null} owner - optionaler Besitzer
  * @returns {Entity | null}
  */
-export function spawnSoldier(location, type = "infantry", level = 1, owner = null) {
+export function spawnSoldier( dimension,location, type = "infantry", level = 1, owner = null) {
   if (!SOLDIER_CONFIG.enabled) return null;
-  const dimension = "overworld";
   const typeData = SOLDIER_TYPES[type];
   if (!typeData) {
     console.warn(`[Soldier] Unbekannter Typ: ${type}`);
@@ -28,7 +27,7 @@ export function spawnSoldier(location, type = "infantry", level = 1, owner = nul
   let entity;
   try {
     // Aktuell Vindicator (gute AI-Basis). Später einfach auf Custom Entity umstellen.
-    entity = dimension.spawnEntity("minecraft:villager", location, {
+    entity = dimension.spawnEntity("minecraft:vindicator", location, {
       initialPersistence: true
     });
   } catch (e) {
@@ -37,7 +36,7 @@ export function spawnSoldier(location, type = "infantry", level = 1, owner = nul
   }
 
   // === Optik & Identifikation ===
-  entity.nameTag = `§e\( {typeData.displayName} §7Lv. \){level}`;
+  entity.nameTag = `§e${typeData.displayName} §7Lv. ${level}`;
   entity.addTag("soldier");
   entity.addTag("villager");
   entity.addTag(`soldier_type:${type}`);

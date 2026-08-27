@@ -1,1 +1,2 @@
-import { SOLDIER_MONSTER } from ".config.js";
+import "./commands.js";
+console.log("[SOLDIER] Loaded")
