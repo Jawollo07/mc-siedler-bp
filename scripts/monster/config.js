@@ -1,6 +1,6 @@
 // Zentrale Konfiguration für ALLE Monster-Systeme.
 // Änderungen hier benötigen keinen Umbau der eigentlichen Logik.
-
+ 
 export const DEFAULT_CONFIG = {
     enabled: true,
     debug: true,

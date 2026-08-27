@@ -1,1 +1,0 @@
-tp @e[family=clumper,r=64] ~ ~ ~

@@ -1,1 +1,0 @@
-ride @e[family=irongolem,family=ranged,r=10,c=1] start_riding @e[type=fv:villager_camel,c=1] teleport_rider

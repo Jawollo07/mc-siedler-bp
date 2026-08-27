@@ -1,0 +1,1 @@
+import { SOLDIER_MONSTER } from ".config.js";
