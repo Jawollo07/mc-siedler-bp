@@ -23,7 +23,7 @@ Bestehende Systeme wie Teams, Claims, Steuern, Monster/Pillager und das Soldier-
 - [ ] Fehlergrenzen zwischen Modulen verbessern
 - [ ] Debug-/Development-Modus zentral steuerbar machen
 - [ ] Performance-Telemetrie für wiederkehrende Tasks
-- [ ] Cleanup-System für nicht mehr gültige Soldier-/Entity-Einträge
+- [x] Cleanup-System für nicht mehr gültige Soldier-/Entity-Einträge
 - [ ] Dokumentation der verwendeten Dynamic Properties
 - [ ] API-Kompatibilität mit der verwendeten `@minecraft/server`-Version prüfen
 
@@ -35,7 +35,7 @@ Bestehende Systeme wie Teams, Claims, Steuern, Monster/Pillager und das Soldier-
 
 **Priorität: 🔴 sehr hoch**
 
-Das Soldier-System besitzt bereits eigene AI-, Spawn-, Config- und Command-Strukturen. fileciteturn4file0 fileciteturn4file1 fileciteturn4file2 fileciteturn4file3
+Das Soldier-System besitzt bereits eigene AI-, Spawn-, Config- und Command-Strukturen. Die aktuelle Implementierung enthält allerdings erst die Grundlage; insbesondere fehlen noch belastbare Team-/Feinderkennung, vollständige Befehlslogik und die tatsächliche Ability-Ausführung.
 
 ## 2.1 Einheiten
 
@@ -87,7 +87,7 @@ Das Soldier-System besitzt bereits eigene AI-, Spawn-, Config- und Command-Struk
 Das vorhandene Claims-System soll stärker mit dem Siedler-Gameplay verbunden werden.
 
 - [ ] Siedlungsgebiet
-- [ ] Grenzmarker
+- [x] Grenzmarker
 - [ ] Grenzstatus
 - [ ] Schutz abhängig von Team-/Diplomatiestatus
 
@@ -105,13 +105,15 @@ Die vorhandenen Teams werden zu politischen Fraktionen erweitert.
 
 - [ ] Bündnisse
 - [ ] Kriegserklärungen
-- [ ] Neutralität
+- [x] Neutralität
 - [ ] Nichtangriffspakte
 - [ ] Handelsabkommen
-- [ ] Beziehungen zwischen Teams
-- [ ] Diplomatiestatus speichern
+- [x] Beziehungen zwischen Teams
+- [x] Diplomatiestatus speichern
 - [ ] Kriegsstatus sichtbar machen
 - [ ] Bündnis-/Kriegsregeln mit Claims und Soldiers verbinden
+
+> Aktuell existiert bereits eine persistente Relationsebene mit `friendly`, `neutral` und `hostile`. Eine vollständige Diplomatie-UI und die Gameplay-Verknüpfung fehlen noch.
 
 ---
 
@@ -127,16 +129,15 @@ Die vorhandenen Teams werden zu politischen Fraktionen erweitert.
 - [ ] Angebot/Nachfrage
 - [ ] Handelsgebühren
 
-
 ---
 
 # Punkt 6 - Spieler-UI und Verwaltung
 
 **Priorität: 🟡 mittel**
 
-- [ ] Siedlungs-Dashboard
-- [ ] Wirtschaftsübersicht
-- [ ] Steuerübersicht
+- [x] Siedlungs-Dashboard
+- [x] Wirtschaftsübersicht
+- [x] Steuerübersicht
 - [ ] Lagerübersicht
 - [ ] Militärübersicht
 - [ ] Claims-Karte/Übersicht
@@ -146,7 +147,7 @@ Die vorhandenen Teams werden zu politischen Fraktionen erweitert.
 - [ ] Warnungen bei Ressourcenmangel
 - [ ] Warnungen bei Angriffen
 
-Die UI sollte möglichst einheitlich aufgebaut sein und nicht für jedes Modul ein eigenes Bedienkonzept verwenden.
+Die vorhandene `/siedler:stats`-UI bildet bereits ein zentrales Siedler-Spielermenü mit Profil, Team, Claims, Steuern/Wirtschaft und Server-Statistiken. Die übrigen Verwaltungsbereiche müssen noch integriert werden.
 
 ---
 
@@ -155,7 +156,7 @@ Die UI sollte möglichst einheitlich aufgebaut sein und nicht für jedes Modul e
 **Priorität: 🟢 mittel**
 
 - [ ] `/siedler debug`
-- [ ] `/siedler stats`
+- [x] `/siedler stats`
 - [ ] `/siedler reload`
 - [ ] Soldier-Debug
 - [ ] Claim-Debug
@@ -166,7 +167,6 @@ Die UI sollte möglichst einheitlich aufgebaut sein und nicht für jedes Modul e
 - [ ] sichere Admin-Rechte
 
 ---
-
 
 # Wichtigste Gameplay-Verknüpfungen
 
