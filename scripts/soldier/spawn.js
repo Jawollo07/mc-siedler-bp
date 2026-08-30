@@ -1,4 +1,4 @@
-import { system, world } from "@minecraft/server";
+import { system, world, ItemStack, EquipmentSlot } from "@minecraft/server";
 import { SOLDIER_TYPES, SOLDIER_CONFIG, SOLDIERS } from "./config.js";
 
 /**
@@ -232,110 +232,53 @@ function setSoldierHealth(entity, value) {
  * @param {Object} equipment
  */
 function applyEquipment(entity, equipment) {
-    if (!entity?.isValid || !equipment) {
+    if (!entity?.isValid || !equipment) return;
+
+    const equippable = entity.getComponent("minecraft:equippable");
+
+    if (!equippable) {
+        console.warn("[Soldier] Entity has no equippable component.");
         return;
     }
 
-    try {
-        const equippable = entity.getComponent(
-            "minecraft:equippable"
-        );
+    const slotMap = {
+        mainhand: EquipmentSlot.Mainhand,
+        offhand: EquipmentSlot.Offhand,
+        helmet: EquipmentSlot.Head,
+        chestplate: EquipmentSlot.Chest,
+        leggings: EquipmentSlot.Legs,
+        boots: EquipmentSlot.Feet
+    };
 
-        if (!equippable) {
+    for (const [slotName, data] of Object.entries(equipment)) {
+        if (!data?.item) continue;
+
+        const slot = slotMap[slotName];
+
+        if (!slot) {
             console.warn(
-                "[Soldier] Entity has no equippable component."
+                `[Soldier] Unknown equipment slot: ${slotName}`
             );
-            return;
+            continue;
         }
 
-        const slotMap = {
-            mainhand: "Mainhand",
-            offhand: "Offhand",
-            helmet: "Head",
-            chestplate: "Chest",
-            leggings: "Legs",
-            boots: "Feet"
-        };
+        try {
+            const itemStack = new ItemStack(
+                data.item,
+                data.amount ?? 1
+            );
 
-        for (const [slotName, data] of Object.entries(equipment)) {
-            if (!data?.item) continue;
+            equippable.setEquipment(slot, itemStack);
 
-            const slotNameApi = slotMap[slotName];
+            console.log(
+                `[Soldier] Equipped ${data.item} on ${slotName}`
+            );
 
-            if (!slotNameApi) {
-                console.warn(
-                    `[Soldier] Unknown equipment slot: ${slotName}`
-                );
-                continue;
-            }
-
-            try {
-                const EquipmentSlot =
-                    globalThis.EntityEquippableComponent?.[`EquipmentSlot`];
-
-                /*
-                 * Bedrock exposes EquipmentSlot through the
-                 * @minecraft/server API. To avoid depending on
-                 * enum names being globally available, use the
-                 * numeric slots as a fallback.
-                 */
-                let slot;
-
-                switch (slotName) {
-                    case "mainhand":
-                        slot = 0;
-                        break;
-
-                    case "offhand":
-                        slot = 1;
-                        break;
-
-                    case "helmet":
-                        slot = 2;
-                        break;
-
-                    case "chestplate":
-                        slot = 3;
-                        break;
-
-                    case "leggings":
-                        slot = 4;
-                        break;
-
-                    case "boots":
-                        slot = 5;
-                        break;
-
-                    default:
-                        continue;
-                }
-
-                /*
-                 * EntityEquippableComponent.setEquipment()
-                 * expects an EquipmentSlot enum.
-                 *
-                 * The exact enum should be imported from
-                 * @minecraft/server on supported API versions.
-                 */
-                if (typeof equippable.setEquipment !== "function") {
-                    console.warn(
-                        "[Soldier] setEquipment() is unavailable."
-                    );
-                    continue;
-                }
-
-                console.warn(
-                    `[Soldier] Equipment API requires EquipmentSlot for ${slotName}.`
-                );
-            } catch (error) {
-                console.warn(
-                    `[Soldier] Failed to equip ${slotName}: ${error}`
-                );
-            }
+            // Enchantments können wir danach separat behandeln.
+        } catch (error) {
+            console.warn(
+                `[Soldier] Failed to equip ${slotName}: ${error}`
+            );
         }
-    } catch (error) {
-        console.warn(
-            `[Soldier] Failed to initialize equipment: ${error}`
-        );
     }
 }

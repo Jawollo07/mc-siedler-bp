@@ -15,6 +15,28 @@
           "mob"
         ]
       },
+      "minecraft:equippable": {
+        "slots": [
+          {
+            "slot": 0
+          },
+          {
+            "slot": 1
+          },
+          {
+            "slot": 2
+          },
+          {
+            "slot": 3
+          },
+          {
+            "slot": 4
+          },
+          {
+            "slot": 5
+          }
+        ]
+      },
 
       "minecraft:health": {
         "value": 30,
