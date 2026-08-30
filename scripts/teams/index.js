@@ -173,7 +173,9 @@ function registerTeamCommands(registry) {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
 
-        system.run(() => showTeamMenu();
+        system.run(() => showTeamMenu(player));
+
+        return { status: CustomCommandStatus.Success };
     });
 
     registry.registerCommand({
@@ -445,7 +447,7 @@ function registerTeamCommands(registry) {
 
         return { status: CustomCommandStatus.Success };
     });
-};
+}
 
 /**
  * Migrates an old name-based team membership to the player's ID.
