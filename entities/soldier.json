@@ -21,12 +21,35 @@
         "max": 55
       },
 
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.8
+      },
+
+      "minecraft:physics": {
+        "has_gravity": true,
+        "has_collision": true
+      },
+
+      "minecraft:movement": {
+        "value": 0.25
+      },
+
+      "minecraft:movement.basic": {},
+
+      "minecraft:inventory": {
+        "inventory_size": 6,
+        "container_type": "inventory",
+        "private": true
+      },
+
       "minecraft:equippable": {
         "slots": [
           {
             "slot": 0,
             "accepted_items": [
-              "minecraft:iron_sword"
+              "minecraft:iron_sword",
+              "minecraft:diamond_sword"
             ]
           },
           {
@@ -38,37 +61,46 @@
           {
             "slot": 2,
             "accepted_items": [
-              "minecraft:chainmail_helmet"
+              "minecraft:chainmail_helmet",
+              "minecraft:iron_helmet",
+              "minecraft:diamond_helmet"
             ]
           },
           {
             "slot": 3,
             "accepted_items": [
-              "minecraft:chainmail_chestplate"
+              "minecraft:chainmail_chestplate",
+              "minecraft:iron_chestplate",
+              "minecraft:diamond_chestplate"
             ]
           },
           {
             "slot": 4,
             "accepted_items": [
-              "minecraft:chainmail_leggings"
+              "minecraft:chainmail_leggings",
+              "minecraft:iron_leggings",
+              "minecraft:diamond_leggings"
             ]
           },
           {
             "slot": 5,
             "accepted_items": [
-              "minecraft:chainmail_boots"
+              "minecraft:chainmail_boots",
+              "minecraft:iron_boots",
+              "minecraft:diamond_boots"
             ]
           }
         ]
       },
 
-      "minecraft:physics": {},
-
-      "minecraft:movement": {
-        "value": 0.25
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "all",
+          "deals_damage": true
+        }
       },
 
-      "minecraft:movement.basic": {}
+      "minecraft:persistent": {}
     }
   }
 }
