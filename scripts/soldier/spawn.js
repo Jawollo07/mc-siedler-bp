@@ -10,7 +10,7 @@ import {
     SOLDIER_CONFIG,
     SOLDIERS
 } from "./config.js";
-
+const DEBUG = true;
 /**
  * Spawns a soldier and registers it for the script AI.
  *
@@ -182,7 +182,9 @@ export function spawnSoldier(
             nextTargetSearch: 0,
             nextMovement: 0
         });
-
+        if (DEBUG) {
+            console.warn( `[Soldier] Components: ${entity.getComponents().map(c => c.typeId).join(", ")}`);
+        };
         return entity;
     } catch (error) {
         console.warn(
