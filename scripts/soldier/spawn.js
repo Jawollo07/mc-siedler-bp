@@ -1,109 +1,126 @@
 import { system, world } from "@minecraft/server";
-  import { SOLDIER_TYPES, SOLDIER_CONFIG, SOLDIERS } from "./config.js";
+import { SOLDIER_TYPES, SOLDIER_CONFIG, SOLDIERS } from "./config.js";
 
 /**
- * Spawnt einen Soldaten und registriert ihn für die Script-AI
+ * Spawns a soldier and registers it for the script AI.
  * @param {Dimension} dimension
  * @param {Vector3} location
- * @param {string} type - z.B. "infantry"
- * @param {number} level - 1 | 2 | 3
- * @param {Player | null} owner - optionaler Besitzer
+ * @param {string} type
+ * @param {number} level
+ * @param {Player | null} owner
  * @returns {Entity | null}
  */
-export function spawnSoldier( dimension,location, type = "infantry", level = 1, owner = null) {
-  if (!SOLDIER_CONFIG.enabled) return null;
-  const typeData = SOLDIER_TYPES[type];
-  if (!typeData) {
-    console.warn(`[Soldier] Unbekannter Typ: ${type}`);
-    return null;
-  }
+export function spawnSoldier(
+    dimension,
+    location,
+    type = "infantry",
+    level = 1,
+    owner = null
+) {
+    if (!SOLDIER_CONFIG.enabled) return null;
 
-  const levelData = typeData.levels?.[level];
-  if (!levelData) {
-    console.warn(`[Soldier] Level ${level} existiert nicht für ${type}`);
-    return null;
-  }
+    const typeData = SOLDIER_TYPES[type];
+    if (!typeData) {
+        console.warn(`[Soldier] Unknown type: ${type}`);
+        return null;
+    }
 
-  let entity;
-  try {
-    // Aktuell Vindicator (gute AI-Basis). Später einfach auf Custom Entity umstellen.
-    entity = dimension.spawnEntity("minecraft:vindicator", location, {
-      initialPersistence: true
+    const levelData = typeData.levels?.[level];
+    if (!levelData) {
+        console.warn(`[Soldier] Level ${level} does not exist for ${type}`);
+        return null;
+    }
+
+    let entity;
+
+    try {
+        // Vindicator is currently used as the AI base.
+        entity = dimension.spawnEntity("minecraft:vindicator", location, {
+            initialPersistence: true
+        });
+    } catch (error) {
+        console.warn(`[Soldier] Spawn failed: ${error}`);
+        return null;
+    }
+
+    entity.nameTag = `§e${typeData.displayName} §7Lv. ${level}`;
+    entity.addTag("soldier");
+    entity.addTag("villager");
+    entity.addTag(`soldier_type:${type}`);
+    entity.addTag(`soldier_level:${level}`);
+
+    if (owner) {
+        entity.addTag(`owner:${owner.name}`);
+        entity.setDynamicProperty("soldier:ownerId", owner.id);
+    }
+
+    entity.setDynamicProperty("soldier:type", type);
+    entity.setDynamicProperty("soldier:level", level);
+    entity.setDynamicProperty("soldier:damage", levelData.damage ?? 4);
+    entity.setDynamicProperty(
+        "soldier:attackRange",
+        levelData.attackRange ?? 1.5
+    );
+    entity.setDynamicProperty("soldier:speed", levelData.speed ?? 0.25);
+
+    system.runTimeout(() => {
+        applyEquipment(entity, levelData.equipment);
+    }, 2);
+
+    SOLDIERS.set(entity.id, {
+        entity,
+        type,
+        level,
+        ownerId: owner?.id ?? null,
+        phase: "idle",
+        targetId: null,
+        abilities: levelData.abilities ?? [],
+        abilityCooldowns: {},
+        spawnLocation: { ...location },
+        createdAt: world.getAbsoluteTime(),
+        nextAttack: 0,
+        nextTargetSearch: 0,
+        nextMovement: 0
     });
-  } catch (e) {
-    console.warn(`[Soldier] Spawn fehlgeschlagen: ${e}`);
-    return null;
-  }
 
-  // === Optik & Identifikation ===
-  entity.nameTag = `§e${typeData.displayName} §7Lv. ${level}`;
-  entity.addTag("soldier");
-  entity.addTag("villager");
-  entity.addTag(`soldier_type:${type}`);
-  entity.addTag(`soldier_level:${level}`);
-  if (owner) {
-    entity.addTag(`owner:${owner.name}`);
-    entity.setDynamicProperty("soldier:ownerId", owner.id);
-  }
-
-  // === Stats speichern ===
-  entity.setDynamicProperty("soldier:type", type);
-  entity.setDynamicProperty("soldier:level", level);
-  entity.setDynamicProperty("soldier:damage", levelData.damage ?? 4);
-  entity.setDynamicProperty("soldier:attackRange", levelData.attackRange ?? 1.5);
-
-  // === Equipment setzen ===
-  system.runTimeout(() => {
-    applyEquipment(entity, levelData.equipment);
-  }, 2);
-
-  // === In AI-System registrieren ===
-  SOLDIERS.set(entity.id, {
-    entity,
-    type,
-    level,
-    ownerId: owner?.id ?? null,
-    phase: "idle",                 // idle | follow | attack | retreat
-    targetId: null,
-    abilities: levelData.abilities ?? [],
-    abilityCooldowns: {},          // abilityId → nextUsableTime
-    spawnLocation: { ...location },
-    createdAt: world.getAbsoluteTime(),
-    nextAttack: 0
-  });
-
-  return entity;
+    return entity;
 }
 
 /**
- * Equipment + Verzauberungen setzen (über Commands – am zuverlässigsten)
+ * Applies equipment and enchantments using commands.
  */
 function applyEquipment(entity, equipment) {
-  if (!entity?.isValid || !equipment) return;
+    if (!entity?.isValid || !equipment) return;
 
-  const slotMap = {
-    mainhand: "slot.weapon.mainhand",
-    offhand:  "slot.weapon.offhand",
-    helmet:   "slot.armor.head",
-    chestplate: "slot.armor.chest",
-    leggings: "slot.armor.legs",
-    boots:    "slot.armor.feet"
-  };
+    const slotMap = {
+        mainhand: "slot.weapon.mainhand",
+        offhand: "slot.weapon.offhand",
+        helmet: "slot.armor.head",
+        chestplate: "slot.armor.chest",
+        leggings: "slot.armor.legs",
+        boots: "slot.armor.feet"
+    };
 
-  for (const [slotName, data] of Object.entries(equipment)) {
-    const cmdSlot = slotMap[slotName];
-    if (!cmdSlot || !data?.item) continue;
+    for (const [slotName, data] of Object.entries(equipment)) {
+        const commandSlot = slotMap[slotName];
+        if (!commandSlot || !data?.item) continue;
 
-    try {
-      entity.runCommand(`replaceitem entity @s ${cmdSlot} ${data.item} ${data.amount ?? 1}`);
+        try {
+            entity.runCommand(
+                `replaceitem entity @s ${commandSlot} ${data.item} ${data.amount ?? 1}`
+            );
 
-      if (Array.isArray(data.enchantments)) {
-        for (const ench of data.enchantments) {
-          entity.runCommand(`enchant @s ${ench.id} ${ench.level}`);
+            if (Array.isArray(data.enchantments)) {
+                for (const enchantment of data.enchantments) {
+                    entity.runCommand(
+                        `enchant @s ${enchantment.id} ${enchantment.level}`
+                    );
+                }
+            }
+        } catch (error) {
+            console.warn(
+                `[Soldier] Failed to equip ${slotName}: ${error}`
+            );
         }
-      }
-    } catch (e) {
-      // still weiter machen, auch wenn ein Slot fehlschlägt
     }
-  }
 }
