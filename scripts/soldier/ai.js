@@ -116,39 +116,6 @@ function synchronizeSoldierData(soldier) {
     if (!soldier.phase) soldier.phase = STATES.IDLE;
     if (!soldier.abilityCooldowns) soldier.abilityCooldowns = {};
 }
-
-function findTarget(soldierEntity) {
-    let entities;
-
-    try {
-        entities = soldierEntity.dimension.getEntities({
-            location: soldierEntity.location,
-            maxDistance: SEARCH_RADIUS
-        });
-    } catch {
-        return null;
-    }
-
-    let closest = null;
-    let closestDistanceSquared = Infinity;
-
-    for (const entity of entities) {
-        if (!isEnemy(soldierEntity, entity)) continue;
-
-        const distanceSquared = distanceSquaredBetween(
-            soldierEntity.location,
-            entity.location
-        );
-
-        if (distanceSquared < closestDistanceSquared) {
-            closest = entity;
-            closestDistanceSquared = distanceSquared;
-        }
-    }
-
-    return closest;
-}
-
 function findEntityById(referenceEntity, targetId) {
     if (!targetId || !isValidEntity(referenceEntity)) return null;
 
