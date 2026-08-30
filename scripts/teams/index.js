@@ -5,6 +5,7 @@ import {
     CustomCommandParamType,
     CustomCommandStatus
 } from "@minecraft/server";
+import { showTeamMenu } from "./ui.js";
 
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
@@ -172,8 +173,7 @@ function registerTeamCommands(registry) {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
 
-        system.run(() => showTeamMenu(player));
-        return { status: CustomCommandStatus.Success };
+        system.run(() => .
     });
 
     registry.registerCommand({
@@ -445,7 +445,7 @@ function registerTeamCommands(registry) {
 
         return { status: CustomCommandStatus.Success };
     });
-}
+};
 
 /**
  * Migrates an old name-based team membership to the player's ID.

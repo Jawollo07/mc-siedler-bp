@@ -14,7 +14,6 @@ export async function showTeamMenu(player) {
             .button("Team löschen")
             .button("Teams anzeigen")
             .button("Diplomatie verwalten")
-            .button("Steuer setzen (Befehl)");
         const r = await form.show(player);
         if (r.canceled) return;
         switch (r.selection) {
@@ -24,7 +23,6 @@ export async function showTeamMenu(player) {
             case 3: return showDeleteTeamForm(player);
             case 4: return showTeamList(player);
             case 5: return showDiplomacyMenu(player);
-            case 6: player.sendMessage("§eVerwende /siedler:team_settax <team> <x> <y> <z> [amount]."); break;
         }
     } catch (e) { formError(player, "Team-Menü", e); }
 }
