@@ -183,8 +183,10 @@ export function spawnSoldier(
             nextMovement: 0
         });
         if (DEBUG) {
-            console.warn( `[Soldier] Components: ${entity.getComponents().map(c => c.typeId).join(", ")}`);
-        };
+            const inventory = entity.getComponent("minecraft:inventory");
+
+            console.warn(`[Soldier] Inventory: ${inventory ? "YES" : "NO"}`);
+        }
         return entity;
     } catch (error) {
         console.warn(
