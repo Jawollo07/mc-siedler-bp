@@ -2,7 +2,6 @@ import {
     system,
     world,
     ItemStack,
-    EquipmentSlot
 } from "@minecraft/server";
 
 import {
@@ -156,37 +155,23 @@ export function spawnSoldier(
          */
         SOLDIERS.set(entity.id, {
             entity,
-
             type,
             level,
-
             ownerId: owner?.id ?? null,
-
             phase: "idle",
-
             targetId: null,
-
             abilities:
                 levelData.abilities ?? [],
-
             abilityCooldowns: {},
-
             spawnLocation: {
                 ...location
             },
-
             createdAt:
                 world.getAbsoluteTime(),
-
             nextAttack: 0,
             nextTargetSearch: 0,
             nextMovement: 0
         });
-        if (DEBUG) {
-            const inventory = entity.getComponent("minecraft:inventory");
-
-            console.warn(`[Soldier] Inventory: ${inventory ? "YES" : "NO"}`);
-        }
         return entity;
     } catch (error) {
         console.warn(
@@ -266,40 +251,44 @@ function setSoldierHealth(entity, value) {
 }
 
 /**
- * Applies equipment using EntityEquippableComponent.
+ * Applies soldier equipment using the entity inventory.
+ *
+ * Inventory layout:
+ *
+ * 0 = Mainhand
+ * 1 = Offhand
+ * 2 = Helmet
+ * 3 = Chestplate
+ * 4 = Leggings
+ * 5 = Boots
  *
  * @param {Entity} entity
  * @param {Object} equipment
  */
 function applyEquipment(entity, equipment) {
-    if (
-        !entity?.isValid ||
-        !equipment
-    ) {
+    if (!entity?.isValid || !equipment) {
         return;
     }
 
     try {
-        const equippable =
-            entity.getComponent(
-                "minecraft:equippable"
-            );
+        const inventory =
+            entity.getComponent("minecraft:inventory");
 
-        if (!equippable) {
+        if (!inventory?.container) {
             console.warn(
-                "[Soldier] Entity has no equippable component."
+                "[Soldier] Entity has no usable inventory."
             );
 
             return;
         }
 
         const slotMap = {
-            mainhand: EquipmentSlot.Mainhand,
-            offhand: EquipmentSlot.Offhand,
-            helmet: EquipmentSlot.Head,
-            chestplate: EquipmentSlot.Chest,
-            leggings: EquipmentSlot.Legs,
-            boots: EquipmentSlot.Feet
+            mainhand: 0,
+            offhand: 1,
+            helmet: 2,
+            chestplate: 3,
+            leggings: 4,
+            boots: 5
         };
 
         for (
@@ -310,10 +299,9 @@ function applyEquipment(entity, equipment) {
                 continue;
             }
 
-            const slot =
-                slotMap[slotName];
+            const slot = slotMap[slotName];
 
-            if (!slot) {
+            if (slot === undefined) {
                 console.warn(
                     `[Soldier] Unknown equipment slot: ${slotName}`
                 );
@@ -322,39 +310,18 @@ function applyEquipment(entity, equipment) {
             }
 
             try {
-                const itemStack =
-                    new ItemStack(
-                        data.item,
-                        data.amount ?? 1
-                    );
-
-                equippable.setEquipment(
-                    slot,
-                    itemStack
+                const itemStack = new ItemStack(
+                    data.item,
+                    data.amount ?? 1
                 );
 
                 /*
-                 * Apply enchantments.
+                 * Put the item into the soldier inventory.
                  */
-                if (
-                    Array.isArray(
-                        data.enchantments
-                    )
-                ) {
-                    applyEnchantments(
-                        itemStack,
-                        data.enchantments
-                    );
-
-                    /*
-                     * Re-set the ItemStack because
-                     * enchantments modify the stack.
-                     */
-                    equippable.setEquipment(
-                        slot,
-                        itemStack
-                    );
-                }
+                inventory.container.setItem(
+                    slot,
+                    itemStack
+                );
 
                 console.log(
                     `[Soldier] Equipped ${data.item} on ${slotName}`
@@ -371,7 +338,6 @@ function applyEquipment(entity, equipment) {
         );
     }
 }
-
 /**
  * Applies enchantments to an ItemStack.
  *
