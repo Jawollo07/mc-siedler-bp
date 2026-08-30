@@ -15,28 +15,6 @@
           "mob"
         ]
       },
-      "minecraft:equippable": {
-        "slots": [
-          {
-            "slot": 0
-          },
-          {
-            "slot": 1
-          },
-          {
-            "slot": 2
-          },
-          {
-            "slot": 3
-          },
-          {
-            "slot": 4
-          },
-          {
-            "slot": 5
-          }
-        ]
-      },
 
       "minecraft:health": {
         "value": 30,
@@ -58,6 +36,64 @@
       },
 
       "minecraft:movement.basic": {},
+
+      "minecraft:underwater_movement": {
+        "value": 0.02
+      },
+
+      "minecraft:lava_movement": {
+        "value": 0.02
+      },
+
+      "minecraft:equippable": {
+        "slots": [
+          {
+            "slot": 0,
+            "accepted_items": [
+              "minecraft:iron_sword",
+              "minecraft:diamond_sword"
+            ]
+          },
+          {
+            "slot": 1,
+            "accepted_items": [
+              "minecraft:shield"
+            ]
+          },
+          {
+            "slot": 2,
+            "accepted_items": [
+              "minecraft:chainmail_helmet",
+              "minecraft:iron_helmet",
+              "minecraft:diamond_helmet"
+            ]
+          },
+          {
+            "slot": 3,
+            "accepted_items": [
+              "minecraft:chainmail_chestplate",
+              "minecraft:iron_chestplate",
+              "minecraft:diamond_chestplate"
+            ]
+          },
+          {
+            "slot": 4,
+            "accepted_items": [
+              "minecraft:chainmail_leggings",
+              "minecraft:iron_leggings",
+              "minecraft:diamond_leggings"
+            ]
+          },
+          {
+            "slot": 5,
+            "accepted_items": [
+              "minecraft:chainmail_boots",
+              "minecraft:iron_boots",
+              "minecraft:diamond_boots"
+            ]
+          }
+        ]
+      },
 
       "minecraft:damage_sensor": {
         "triggers": {
