@@ -79,7 +79,6 @@ Das Soldier-System besitzt bereits eigene AI-, Spawn-, Config- und Command-Struk
 
 Das vorhandene Claims-System soll stärker mit dem Siedler-Gameplay verbunden werden.
 
-- [ ] Siedlungsgebiet
 - [x] Grenzmarker
 - [ ] Grenzstatus
 - [ ] Schutz abhängig von Team-/Diplomatiestatus
@@ -100,7 +99,6 @@ Die vorhandenen Teams werden zu politischen Fraktionen erweitert.
 - [ ] Kriegserklärungen
 - [x] Neutralität
 - [ ] Nichtangriffspakte
-- [ ] Handelsabkommen
 - [x] Beziehungen zwischen Teams
 - [x] Diplomatiestatus speichern
 - [ ] Kriegsstatus sichtbar machen
@@ -120,7 +118,6 @@ Die vorhandenen Teams werden zu politischen Fraktionen erweitert.
 - [ ] Handelsaufträge
 - [ ] Händler-NPCs
 - [ ] Angebot/Nachfrage
-- [ ] Handelsgebühren
 
 ---
 
@@ -131,13 +128,8 @@ Die vorhandenen Teams werden zu politischen Fraktionen erweitert.
 - [x] Siedlungs-Dashboard
 - [x] Wirtschaftsübersicht
 - [x] Steuerübersicht
-- [ ] Lagerübersicht
 - [ ] Militärübersicht
-- [ ] Claims-Karte/Übersicht
 - [ ] Diplomatie-Menü
-- [ ] Backpack-Menü
-- [ ] Produktionsstatus
-- [ ] Warnungen bei Ressourcenmangel
 - [ ] Warnungen bei Angriffen
 
 Die vorhandene `/siedler:stats`-UI bildet bereits ein zentrales Siedler-Spielermenü mit Profil, Team, Claims, Steuern/Wirtschaft und Server-Statistiken. Die übrigen Verwaltungsbereiche müssen noch integriert werden.
