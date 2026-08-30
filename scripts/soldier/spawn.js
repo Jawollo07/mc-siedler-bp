@@ -34,8 +34,7 @@ export function spawnSoldier(
     let entity;
 
     try {
-        // Vindicator is currently used as the AI base.
-        entity = dimension.spawnEntity("minecraft:vindicator", location, {
+        entity = dimension.spawnEntity("siedler:soldier", location, {
             initialPersistence: true
         });
     } catch (error) {
@@ -65,7 +64,12 @@ export function spawnSoldier(
     system.runTimeout(() => {
         applyEquipment(entity, levelData.equipment);
     }, 2);
+    const health = entity.getComponent("minecraft:health");
 
+    if (health) {
+        health.setCurrentValue(levelData.health);
+        health.setMaxValue(levelData.health);
+    }
     SOLDIERS.set(entity.id, {
         entity,
         type,

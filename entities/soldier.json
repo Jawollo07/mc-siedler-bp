@@ -1,0 +1,50 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "siedler:soldier",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+
+    "components": {
+      "minecraft:type_family": {
+        "family": [
+          "soldier",
+          "mob"
+        ]
+      },
+
+      "minecraft:health": {
+        "value": 30,
+        "max": 55
+      },
+
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.8
+      },
+
+      "minecraft:physics": {
+        "has_gravity": true,
+        "has_collision": true
+      },
+
+      "minecraft:movement": {
+        "value": 0.25
+      },
+
+      "minecraft:movement.basic": {},
+
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "all",
+          "deals_damage": true
+        }
+      },
+
+      "minecraft:persistent": {}
+    }
+  }
+}

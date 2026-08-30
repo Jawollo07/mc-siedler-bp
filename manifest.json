@@ -2,7 +2,7 @@
   "format_version": 2,
   "header": {
     "description": "Siedler Logic – Teams, Claims, Steuern, Monster und Essentials",
-    "name": "Siedler Logic",
+    "name": "Siedler Logic Behavior Pack",
     "uuid": "481d6fb2-75fa-4a3d-afa3-7def96812e6c",
     "version": [1, 1, 4],
     "min_engine_version": [1, 26, 0]
