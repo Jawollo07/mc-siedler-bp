@@ -16,16 +16,9 @@ Bestehende Systeme wie Teams, Claims, Steuern, Monster/Pillager und das Soldier-
 
 **Priorität: 🔴 sehr hoch**
 
-- [ ] Zentrale Version aus einer einzigen Quelle beziehen
-- [ ] Einheitliches Konfigurationssystem für alle Module
-- [ ] Zentrale Dynamic-Property-Registrierung
-- [ ] Gemeinsame Utility-Funktionen für Teams, Claims, Entities und Spieler
-- [ ] Fehlergrenzen zwischen Modulen verbessern
-- [ ] Debug-/Development-Modus zentral steuerbar machen
-- [ ] Performance-Telemetrie für wiederkehrende Tasks
+- [x] Zentrale Version aus einer einzigen Quelle beziehen
 - [x] Cleanup-System für nicht mehr gültige Soldier-/Entity-Einträge
-- [ ] Dokumentation der verwendeten Dynamic Properties
-- [ ] API-Kompatibilität mit der verwendeten `@minecraft/server`-Version prüfen
+- [x] API-Kompatibilität mit der verwendeten `@minecraft/server`-Version prüfen
 
 **Ergebnis:** Das Pack kann dauerhaft auf einem Server laufen, ohne dass einzelne Systeme das gesamte Pack destabilisieren.
 

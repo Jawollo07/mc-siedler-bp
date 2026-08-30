@@ -1,5 +1,5 @@
 import { system } from "@minecraft/server";
-
+import { version } from "./version.js"
 /**
  * Siedler Logic – Main Loader
  *
@@ -110,6 +110,7 @@ function finishStartup() {
         logSuccess("All modules initialized.");
         log(`Loaded ${MODULE_COUNT} modules.`);
         console.info("§7Teams · Taxes · Claims · Monster · Pillager · Outposts · Essentials · Soldier");
+        console.info("§7 Version: ${version}")
         console.info("§8----------------------------------------");
     });
 }
