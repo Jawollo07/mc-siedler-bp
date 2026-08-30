@@ -1,5 +1,15 @@
-import { system, world, ItemStack, EquipmentSlot } from "@minecraft/server";
-import { SOLDIER_TYPES, SOLDIER_CONFIG, SOLDIERS } from "./config.js";
+import {
+    system,
+    world,
+    ItemStack,
+    EquipmentSlot
+} from "@minecraft/server";
+
+import {
+    SOLDIER_TYPES,
+    SOLDIER_CONFIG,
+    SOLDIERS
+} from "./config.js";
 
 /**
  * Spawns a soldier and registers it for the script AI.
@@ -18,7 +28,9 @@ export function spawnSoldier(
     level = 1,
     owner
 ) {
-    if (!SOLDIER_CONFIG.enabled) return null;
+    if (!SOLDIER_CONFIG.enabled) {
+        return null;
+    }
 
     const typeData = SOLDIER_TYPES[type];
 
@@ -33,36 +45,54 @@ export function spawnSoldier(
         console.warn(
             `[Soldier] Level ${level} does not exist for ${type}`
         );
+
         return null;
     }
 
     let entity;
 
-    // Spawn the custom soldier entity.
+    /*
+     * Spawn custom soldier entity.
+     */
     try {
         entity = dimension.spawnEntity(
             "siedler:soldier",
             location
         );
     } catch (error) {
-        console.warn(`[Soldier] Spawn failed: ${error}`);
+        console.warn(
+            `[Soldier] Spawn failed: ${error}`
+        );
+
         return null;
     }
 
     try {
         /*
-         * Basic soldier metadata.
+         * Basic metadata.
          */
         entity.nameTag =
             `§e${typeData.displayName} §7Lv. ${level}`;
 
         entity.addTag("soldier");
         entity.addTag("villager");
-        entity.addTag(`soldier_type:${type}`);
-        entity.addTag(`soldier_level:${level}`);
 
+        entity.addTag(
+            `soldier_type:${type}`
+        );
+
+        entity.addTag(
+            `soldier_level:${level}`
+        );
+
+        /*
+         * Owner.
+         */
         if (owner) {
-            entity.addTag(`owner:${owner.name}`);
+            entity.addTag(
+                `owner:${owner.name}`
+            );
+
             entity.setDynamicProperty(
                 "soldier:ownerId",
                 owner.id
@@ -70,7 +100,7 @@ export function spawnSoldier(
         }
 
         /*
-         * Dynamic properties used by the soldier AI.
+         * Dynamic properties used by the AI.
          */
         entity.setDynamicProperty(
             "soldier:type",
@@ -98,17 +128,21 @@ export function spawnSoldier(
         );
 
         /*
-         * Set health after the entity has spawned.
+         * Set health.
          */
-        setSoldierHealth(entity, levelData.health);
+        setSoldierHealth(
+            entity,
+            levelData.health
+        );
 
         /*
-         * Equipment needs to be applied after spawning.
-         * This also gives the custom entity time to initialize.
+         * Equipment is applied one tick later.
          */
         if (levelData.equipment) {
             system.runTimeout(() => {
-                if (!entity?.isValid) return;
+                if (!entity?.isValid) {
+                    return;
+                }
 
                 applyEquipment(
                     entity,
@@ -118,22 +152,31 @@ export function spawnSoldier(
         }
 
         /*
-         * Register the soldier in the AI registry.
+         * Register soldier for AI.
          */
         SOLDIERS.set(entity.id, {
             entity,
+
             type,
             level,
+
             ownerId: owner?.id ?? null,
 
             phase: "idle",
+
             targetId: null,
 
-            abilities: levelData.abilities ?? [],
+            abilities:
+                levelData.abilities ?? [],
+
             abilityCooldowns: {},
 
-            spawnLocation: { ...location },
-            createdAt: world.getAbsoluteTime(),
+            spawnLocation: {
+                ...location
+            },
+
+            createdAt:
+                world.getAbsoluteTime(),
 
             nextAttack: 0,
             nextTargetSearch: 0,
@@ -143,7 +186,7 @@ export function spawnSoldier(
         return entity;
     } catch (error) {
         console.warn(
-            `[Soldier] Failed to initialize soldier: ${error}`
+            `[Soldier] Initialization failed: ${error}`
         );
 
         try {
@@ -159,63 +202,57 @@ export function spawnSoldier(
 /**
  * Sets the soldier's health.
  *
- * The custom entity should have a maximum health
- * high enough for the highest soldier level.
- *
  * @param {Entity} entity
  * @param {number} value
  */
 function setSoldierHealth(entity, value) {
-    if (!entity?.isValid || typeof value !== "number") {
+    if (
+        !entity?.isValid ||
+        typeof value !== "number"
+    ) {
         return;
     }
 
     try {
-        const health = entity.getComponent(
-            "minecraft:health"
-        );
+        const health =
+            entity.getComponent(
+                "minecraft:health"
+            );
 
         if (!health) {
             console.warn(
                 "[Soldier] Entity has no health component."
             );
+
             return;
         }
 
         /*
-         * The current Health API exposes resetToMaxValue()
-         * rather than setCurrentValue().
+         * @minecraft/server 2.9.0
          *
-         * We therefore use the entity's configured maximum
-         * health and damage it down only if necessary.
+         * setCurrentValue() is available on
+         * EntityHealthComponent.
          */
-        const maxHealth = health.effectiveMax;
-
-        if (value >= maxHealth) {
-            health.resetToMaxValue();
-            return;
-        }
-
-        /*
-         * If the entity supports setCurrentValue, use it.
-         * This is kept as a compatibility check.
-         */
-        if (typeof health.setCurrentValue === "function") {
+        if (
+            typeof health.setCurrentValue ===
+            "function"
+        ) {
             health.setCurrentValue(value);
             return;
         }
 
         /*
-         * Fallback:
-         * Reset to maximum and apply the required amount
-         * of damage.
+         * Fallback for unexpected API differences.
          */
         health.resetToMaxValue();
 
-        const damage = maxHealth - value;
+        const maxHealth =
+            health.effectiveMax;
 
-        if (damage > 0) {
-            entity.applyDamage(damage);
+        if (value < maxHealth) {
+            entity.applyDamage(
+                maxHealth - value
+            );
         }
     } catch (error) {
         console.warn(
@@ -225,60 +262,165 @@ function setSoldierHealth(entity, value) {
 }
 
 /**
- * Applies equipment and enchantments using the
- * EntityEquippable component.
+ * Applies equipment using EntityEquippableComponent.
  *
  * @param {Entity} entity
  * @param {Object} equipment
  */
 function applyEquipment(entity, equipment) {
-    if (!entity?.isValid || !equipment) return;
-
-    const equippable = entity.getComponent("minecraft:equippable");
-
-    if (!equippable) {
-        console.warn("[Soldier] Entity has no equippable component.");
+    if (
+        !entity?.isValid ||
+        !equipment
+    ) {
         return;
     }
 
-    const slotMap = {
-        mainhand: EquipmentSlot.Mainhand,
-        offhand: EquipmentSlot.Offhand,
-        helmet: EquipmentSlot.Head,
-        chestplate: EquipmentSlot.Chest,
-        leggings: EquipmentSlot.Legs,
-        boots: EquipmentSlot.Feet
-    };
-
-    for (const [slotName, data] of Object.entries(equipment)) {
-        if (!data?.item) continue;
-
-        const slot = slotMap[slotName];
-
-        if (!slot) {
-            console.warn(
-                `[Soldier] Unknown equipment slot: ${slotName}`
+    try {
+        const equippable =
+            entity.getComponent(
+                "minecraft:equippable"
             );
-            continue;
+
+        if (!equippable) {
+            console.warn(
+                "[Soldier] Entity has no equippable component."
+            );
+
+            return;
         }
 
-        try {
-            const itemStack = new ItemStack(
-                data.item,
-                data.amount ?? 1
-            );
+        const slotMap = {
+            mainhand: EquipmentSlot.Mainhand,
+            offhand: EquipmentSlot.Offhand,
+            helmet: EquipmentSlot.Head,
+            chestplate: EquipmentSlot.Chest,
+            leggings: EquipmentSlot.Legs,
+            boots: EquipmentSlot.Feet
+        };
 
-            equippable.setEquipment(slot, itemStack);
+        for (
+            const [slotName, data]
+            of Object.entries(equipment)
+        ) {
+            if (!data?.item) {
+                continue;
+            }
 
-            console.log(
-                `[Soldier] Equipped ${data.item} on ${slotName}`
-            );
+            const slot =
+                slotMap[slotName];
 
-            // Enchantments können wir danach separat behandeln.
-        } catch (error) {
-            console.warn(
-                `[Soldier] Failed to equip ${slotName}: ${error}`
-            );
+            if (!slot) {
+                console.warn(
+                    `[Soldier] Unknown equipment slot: ${slotName}`
+                );
+
+                continue;
+            }
+
+            try {
+                const itemStack =
+                    new ItemStack(
+                        data.item,
+                        data.amount ?? 1
+                    );
+
+                equippable.setEquipment(
+                    slot,
+                    itemStack
+                );
+
+                /*
+                 * Apply enchantments.
+                 */
+                if (
+                    Array.isArray(
+                        data.enchantments
+                    )
+                ) {
+                    applyEnchantments(
+                        itemStack,
+                        data.enchantments
+                    );
+
+                    /*
+                     * Re-set the ItemStack because
+                     * enchantments modify the stack.
+                     */
+                    equippable.setEquipment(
+                        slot,
+                        itemStack
+                    );
+                }
+
+                console.log(
+                    `[Soldier] Equipped ${data.item} on ${slotName}`
+                );
+            } catch (error) {
+                console.warn(
+                    `[Soldier] Failed to equip ${slotName}: ${error}`
+                );
+            }
         }
+    } catch (error) {
+        console.warn(
+            `[Soldier] Equipment initialization failed: ${error}`
+        );
+    }
+}
+
+/**
+ * Applies enchantments to an ItemStack.
+ *
+ * @param {ItemStack} itemStack
+ * @param {Array} enchantments
+ */
+function applyEnchantments(
+    itemStack,
+    enchantments
+) {
+    if (
+        !itemStack ||
+        !Array.isArray(enchantments)
+    ) {
+        return;
+    }
+
+    try {
+        const enchantable =
+            itemStack.getComponent(
+                "minecraft:enchantable"
+            );
+
+        if (!enchantable) {
+            return;
+        }
+
+        for (
+            const enchantment
+            of enchantments
+        ) {
+            if (
+                !enchantment?.id ||
+                typeof enchantment.level !==
+                    "number"
+            ) {
+                continue;
+            }
+
+            try {
+                enchantable.addEnchantment({
+                    type: enchantment.id,
+                    level: enchantment.level
+                });
+            } catch (error) {
+                console.warn(
+                    `[Soldier] Failed to enchant ${itemStack.typeId}: ${error}`
+                );
+            }
+        }
+    } catch (error) {
+        console.warn(
+            `[Soldier] Enchantment setup failed: ${error}`
+        );
     }
 }
