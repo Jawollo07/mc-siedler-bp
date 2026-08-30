@@ -219,7 +219,7 @@ function isEnemy(soldier, target) {
     }
 
     /*
-     * Normal mobs can remain hostile.
+     * Normal mobs can remain friendly.
      */
     return false;
 }
