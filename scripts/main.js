@@ -51,7 +51,7 @@ import "./essentials/player_stats.js";
 // -----------------------------------------------------------------------------
 // Soldier system
 // -----------------------------------------------------------------------------
-import "./soldier/scripts/main.js";
+import "./soldier/index.js";
 
 const VERSION = "1.1.4";
 const MODULE_COUNT = 15;
