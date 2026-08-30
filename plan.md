@@ -12,7 +12,7 @@ Bestehende Systeme wie Teams, Claims, Steuern, Monster/Pillager und das Soldier-
 
 ---
 
-# Phase 0 – Fundament und Stabilität
+# Punkt 1 - Fundament und Stabilität
 
 **Priorität: 🔴 sehr hoch**
 
@@ -21,7 +21,6 @@ Bestehende Systeme wie Teams, Claims, Steuern, Monster/Pillager und das Soldier-
 - [ ] Zentrale Dynamic-Property-Registrierung
 - [ ] Gemeinsame Utility-Funktionen für Teams, Claims, Entities und Spieler
 - [ ] Fehlergrenzen zwischen Modulen verbessern
-- [ ] Sicherstellen, dass ein fehlerhaftes Modul den Loader nicht stoppt
 - [ ] Debug-/Development-Modus zentral steuerbar machen
 - [ ] Performance-Telemetrie für wiederkehrende Tasks
 - [ ] Cleanup-System für nicht mehr gültige Soldier-/Entity-Einträge
@@ -32,150 +31,13 @@ Bestehende Systeme wie Teams, Claims, Steuern, Monster/Pillager und das Soldier-
 
 ---
 
-# Phase 1 – Backpack als Siedler-Logistik
-
-**Priorität: 🔴 sehr hoch**
-
-Das Backpack soll sich am Siedler-Konzept orientieren und deshalb vor allem die **Logistik zwischen Spieler, Siedlung und Militär** verbessern.
-
-## 1.1 Backpack-Grundsystem
-
-- [ ] Backpack-Definition und eindeutige Identität
-- [ ] Sicheres Öffnen/Schließen
-- [ ] Persistenter Inhalt
-- [ ] Schutz vor Item-Verlust
-- [ ] Drop-/Tod-Verhalten definieren
-- [ ] Backpack nicht duplizierbar machen
-- [ ] Rechteprüfung bei fremden Backpacks
-
-## 1.2 Siedler-Funktionen
-
-- [ ] Unterschiedliche Backpack-Größen/Stufen
-- [ ] Upgrade-System
-- [ ] Gewichts-/Kapazitätskonzept optional vorbereiten
-- [ ] Schnellzugriff für häufig benötigte Siedler-Gegenstände
-- [ ] Anzeige von Kapazität und Zustand
-
-## 1.3 Logistik
-
-- [ ] Backpack als persönliches Transportlager
-- [ ] Verbindung mit Wirtschafts-/Steuersystem
-- [ ] Transport von Ressourcen zwischen Siedlungen
-- [ ] Transportaufträge für Spieler/Soldaten vorbereiten
-- [ ] Händler-/Handels-Backpack als spätere Erweiterung
-- [ ] Ressourcen-Kategorien definieren
-
-## 1.4 Militärische Nutzung
-
-- [ ] Soldaten können Ausrüstung logisch verwalten
-- [ ] Versorgung mit Nahrung/Ausrüstung
-- [ ] Munitions-/Versorgungskonzept für spätere Fernkampf-Einheiten
-- [ ] Feldversorgung und Nachschub
-- [ ] Keine direkte Verbindung zwischen Backpack und unbegrenzter Item-Erzeugung
-
-**Ziel:** Das Backpack wird ein Bestandteil des Siedler-Systems und kein gewöhnliches "mehr Inventar"-Feature.
-
----
-
-# Phase 2 – Siedlung und Bevölkerung
-
-**Priorität: 🔴 sehr hoch**
-
-## 2.1 Bevölkerung
-
-- [ ] Siedler-/Bürgerdatenmodell
-- [ ] Bevölkerung pro Siedlung speichern
-- [ ] Bevölkerungsgrenzen
-- [ ] Zufriedenheit
-- [ ] Versorgung
-- [ ] Wohnraum
-- [ ] Steuerfähigkeit abhängig von der Bevölkerung
-
-## 2.2 Berufe
-
-- [ ] Arbeiter
-- [ ] Bauer
-- [ ] Holzfäller
-- [ ] Steinmetz
-- [ ] Bergarbeiter
-- [ ] Händler
-- [ ] Soldat
-- [ ] Spezialisten später ergänzen
-
-## 2.3 Gebäude
-
-- [ ] Rathaus / Siedlungszentrum
-- [ ] Wohngebäude
-- [ ] Lager
-- [ ] Bauernhof
-- [ ] Holzfäller
-- [ ] Steinbruch
-- [ ] Mine
-- [ ] Schmiede
-- [ ] Kaserne
-- [ ] Markt
-- [ ] Verteidigungsgebäude
-
-Gebäude sollten langfristig echte Funktionen erhalten und nicht nur Dekoration sein.
-
----
-
-# Phase 3 – Waren- und Wirtschaftssystem
-
-**Priorität: 🔴 sehr hoch**
-
-Das vorhandene Steuersystem soll zu einer vollständigen Wirtschaft ausgebaut werden.
-
-## 3.1 Ressourcen
-
-- [ ] Holz
-- [ ] Stein
-- [ ] Eisen
-- [ ] Kohle
-- [ ] Nahrung
-- [ ] Getreide
-- [ ] Mehl
-- [ ] Brot
-- [ ] Werkzeuge
-- [ ] Waffen
-- [ ] Rüstung
-- [ ] Emeralds als Geld-/Steuereinheit
-
-## 3.2 Produktionsketten
-
-Beispiel:
-
-`Getreide → Mehl → Brot → Nahrung`
-
-`Eisenerz → Eisen → Werkzeug/Waffe`
-
-`Holz → Bretter → Gebäude`
-
-- [ ] Produktionszeiten
-- [ ] Produktionskapazitäten
-- [ ] Lagerbestände
-- [ ] Verbrauch
-- [ ] Produktionsengpässe
-
-## 3.3 Lager und Logistik
-
-- [ ] Zentrallager
-- [ ] Lagerkapazität
-- [ ] Ein-/Auslagerung
-- [ ] Ressourcen-Sortierung
-- [ ] Transport zwischen Lagern
-- [ ] Prioritäten für wichtige Ressourcen
-- [ ] Verbindung zum Backpack-System
-
----
-
-# Phase 4 – Soldier-System zu einem vollständigen Militärsystem ausbauen
+# Punkt 2 - Soldier-System zu einem vollständigen Militärsystem ausbauen
 
 **Priorität: 🔴 sehr hoch**
 
 Das Soldier-System besitzt bereits eigene AI-, Spawn-, Config- und Command-Strukturen. fileciteturn4file0 fileciteturn4file1 fileciteturn4file2 fileciteturn4file3
 
-## 4.1 Einheiten
+## 2.1 Einheiten
 
 - [ ] Nahkämpfer
 - [ ] Bogenschütze
@@ -184,7 +46,7 @@ Das Soldier-System besitzt bereits eigene AI-, Spawn-, Config- und Command-Struk
 - [ ] Unterschiedliche Werte pro Einheit
 - [ ] Level/Erfahrung
 
-## 4.2 AI
+## 2.2 AI
 
 - [ ] Zielsuche
 - [ ] Team-/Feinderkennung
@@ -199,7 +61,7 @@ Das Soldier-System besitzt bereits eigene AI-, Spawn-, Config- und Command-Struk
 - [ ] Wegfindung verbessern
 - [ ] Hinderniserkennung
 
-## 4.3 Kommandos
+## 2.3 Kommandos
 
 - [ ] Auswahl von Soldaten
 - [ ] Gruppen bilden
@@ -209,32 +71,24 @@ Das Soldier-System besitzt bereits eigene AI-, Spawn-, Config- und Command-Struk
 - [ ] Rückzug
 - [ ] Garnison
 
-## 4.4 Versorgung
+## 2.4 Versorgung
 
 - [ ] Nahrung
 - [ ] Waffen
 - [ ] Rüstung
 - [ ] Heilung
-- [ ] Nachschub
-- [ ] Verbindung mit Backpack und Lagern
 
 ---
 
-# Phase 5 – Claims als echtes Territorialsystem
+# Punkt 3 - Claims als echtes Territorialsystem
 
 **Priorität: 🟠 hoch**
 
 Das vorhandene Claims-System soll stärker mit dem Siedler-Gameplay verbunden werden.
 
 - [ ] Siedlungsgebiet
-- [ ] Erweiterbare Grenzen
 - [ ] Grenzmarker
 - [ ] Grenzstatus
-- [ ] Besitzwechsel
-- [ ] Neutralgebiet
-- [ ] Militärische Besetzung
-- [ ] Claims durch Siedlungsfortschritt erweitern
-- [ ] Ressourcen innerhalb eines Gebiets erfassen
 - [ ] Schutz abhängig von Team-/Diplomatiestatus
 
 ## Grenzlogik
@@ -243,7 +97,7 @@ Das vorhandene Claims-System soll stärker mit dem Siedler-Gameplay verbunden we
 
 ---
 
-# Phase 6 – Diplomatie und Politik
+# Punkt 4 – Diplomatie und Politik
 
 **Priorität: 🟠 hoch**
 
@@ -261,58 +115,22 @@ Die vorhandenen Teams werden zu politischen Fraktionen erweitert.
 
 ---
 
-# Phase 7 – Monster, Plünderer und Weltereignisse
-
-**Priorität: 🟠 hoch**
-
-Das bestehende Monster-/Pillager-System wird zu einem dynamischen PvE-System.
-
-- [ ] Plündererlager
-- [ ] Dynamische Raids
-- [ ] Außenposten als echte Bedrohung
-- [ ] Verstärkungssystem
-- [ ] Schwierigkeitsstufen
-- [ ] Belohnungen
-- [ ] Gebietskontrolle durch Monster
-- [ ] Ereignisse/Angriffe auf Siedlungen
-- [ ] Eskalation bei schwacher Verteidigung
-
----
-
-# Phase 8 – Handel
+# Punkt 5 – Handel
 
 **Priorität: 🟡 mittel**
 
 - [ ] Markt
-- [ ] Spielerhandel
 - [ ] Teamhandel
 - [ ] Ressourcenpreise
 - [ ] Handelsaufträge
 - [ ] Händler-NPCs
-- [ ] Handelsrouten
 - [ ] Angebot/Nachfrage
 - [ ] Handelsgebühren
 
-Das Handelssystem sollte auf dem Waren-/Lagersystem aufbauen und nicht unabhängig davon entstehen.
 
 ---
 
-# Phase 9 – Forschung und Fortschritt
-
-**Priorität: 🟡 mittel**
-
-- [ ] Technologie-/Fortschrittsbaum
-- [ ] Militärische Upgrades
-- [ ] Wirtschafts-Upgrades
-- [ ] Lager-Upgrades
-- [ ] Backpack-Upgrades
-- [ ] Gebäude-Upgrades
-- [ ] neue Einheiten freischalten
-- [ ] neue Produktionsketten freischalten
-
----
-
-# Phase 10 – Spieler-UI und Verwaltung
+# Punkt 6 - Spieler-UI und Verwaltung
 
 **Priorität: 🟡 mittel**
 
@@ -332,42 +150,7 @@ Die UI sollte möglichst einheitlich aufgebaut sein und nicht für jedes Modul e
 
 ---
 
-# Phase 11 – Spielereignisse und Endgame
-
-**Priorität: 🟡 mittel**
-
-- [ ] Große Raids
-- [ ] Grenzkriege
-- [ ] Ressourcenkrisen
-- [ ] Hungersnöte
-- [ ] Handelsereignisse
-- [ ] Belohnungsereignisse
-- [ ] Eroberung von Schlüsselgebieten
-- [ ] Siegbedingungen
-- [ ] saisonale/optionale Ereignisse
-
----
-
-# Phase 12 – Balance und Performance
-
-**Priorität: 🟢 fortlaufend**
-
-- [ ] Tick-Last messen
-- [ ] AI-Intervalle optimieren
-- [ ] Entity-Suchen minimieren
-- [ ] Chunk-/Dimension-Checks
-- [ ] unnötige `getEntities()`-Aufrufe reduzieren
-- [ ] Daten-Caching
-- [ ] regelmäßige Cleanup-Jobs
-- [ ] Limits für Soldaten/Entities
-- [ ] Limits für Claims
-- [ ] Limits für Produktionssysteme
-- [ ] Lasttests mit vielen Spielern
-- [ ] Lasttests mit vielen Soldaten
-
----
-
-# Phase 13 – Admin- und Debug-Werkzeuge
+# Punkt 7 - Admin- und Debug-Werkzeuge
 
 **Priorität: 🟢 mittel**
 
@@ -384,118 +167,6 @@ Die UI sollte möglichst einheitlich aufgebaut sein und nicht für jedes Modul e
 
 ---
 
-# Empfohlene Reihenfolge
-
-## Sprint 1 – Fundament
-
-- [ ] Stabilität
-- [ ] zentrale Config
-- [ ] Dynamic Properties
-- [ ] gemeinsame Utilities
-- [ ] Versionierung
-
-## Sprint 2 – Backpack + Logistik
-
-- [ ] Backpack-Grundsystem
-- [ ] Persistenz
-- [ ] Kapazität/Stufen
-- [ ] Lager-Anbindung
-- [ ] Ressourcen-Transport
-
-## Sprint 3 – Wirtschaft
-
-- [ ] Ressourcen
-- [ ] Produktionsketten
-- [ ] Lager
-- [ ] Verbrauch
-- [ ] Steuern mit Wirtschaft verbinden
-
-## Sprint 4 – Militär
-
-- [ ] Soldier AI stabilisieren
-- [ ] Einheitenklassen
-- [ ] Gruppen
-- [ ] Befehle
-- [ ] Versorgung
-- [ ] Garnisonen
-
-## Sprint 5 – Territorium
-
-- [ ] Siedlungsgebiete
-- [ ] Grenzerweiterung
-- [ ] Außenposten
-- [ ] Gebietskontrolle
-
-## Sprint 6 – Diplomatie + Krieg
-
-- [ ] Beziehungen
-- [ ] Bündnisse
-- [ ] Krieg
-- [ ] Belagerung
-- [ ] Eroberung
-
-## Sprint 7 – PvE + Events
-
-- [ ] Plündererlager
-- [ ] dynamische Raids
-- [ ] Weltereignisse
-- [ ] Belohnungen
-
-## Sprint 8 – Polish
-
-- [ ] UI
-- [ ] Balance
-- [ ] Performance
-- [ ] Admin-Tools
-- [ ] Dokumentation
-
----
-
-# Architektur-Ziel
-
-Langfristig sollte die Struktur ungefähr so aussehen:
-
-```text
-scripts/
-├── core/
-│   ├── config.js
-│   ├── database.js
-│   ├── dynamic_properties.js
-│   ├── events.js
-│   └── utils.js
-│
-├── settlement/
-│   ├── index.js
-│   ├── population.js
-│   ├── buildings.js
-│   └── professions.js
-│
-├── economy/
-│   ├── resources.js
-│   ├── production.js
-│   ├── storage.js
-│   ├── logistics.js
-│   └── trade.js
-│
-├── backpack/
-│   ├── index.js
-│   ├── storage.js
-│   ├── upgrades.js
-│   └── logistics.js
-│
-├── teams/
-├── claims/
-├── diplomacy/
-├── soldier/
-├── monster/
-├── taxes/
-├── essentials/
-└── ui/
-```
-
-Die tatsächliche Umstrukturierung sollte erst erfolgen, wenn die bestehenden Systeme stabil sind. Nicht funktionierende Module sollten nicht nur wegen einer schöneren Ordnerstruktur verschoben werden.
-
----
 
 # Wichtigste Gameplay-Verknüpfungen
 
