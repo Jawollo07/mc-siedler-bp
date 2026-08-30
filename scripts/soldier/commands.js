@@ -1,9 +1,9 @@
-import { spawnSoldier } from "./spawn.js"; 
+import { spawnSoldier } from "./spawn.js";
 import {
     system,
     CustomCommandParamType,
     CustomCommandStatus,
-    CommandPermissionLevel,   // or whatever you prefer
+    CommandPermissionLevel
 } from "@minecraft/server";
 
 system.beforeEvents.startup.subscribe((event) => {
@@ -28,9 +28,9 @@ function playerOnly(origin) {
 function registerSoldierCommands(registry) {
     registry.registerCommand(
         {
-            name: "sidler:spawn_soldier",
+            name: "siedler:spawn_soldier",
             description: "Spawnt einen Soldaten",
-            permissionLevel: CommandPermissionLevel.GameDirectors, // or .Admin / .Any
+            permissionLevel: CommandPermissionLevel.GameDirectors,
             cheatsRequired: false,
             mandatoryParameters: [
                 { type: CustomCommandParamType.String, name: "Type" }
@@ -39,15 +39,16 @@ function registerSoldierCommands(registry) {
                 { type: CustomCommandParamType.Integer, name: "Level" }
             ]
         },
-        (origin, type, level) => {          // parameters come as separate arguments
+        (origin, type, level) => {
             const player = playerOnly(origin);
             if (!player) {
                 return { status: CustomCommandStatus.Failure };
             }
 
             const soldierType = String(type ?? "").trim();
-            const soldierLevel = level ?? 1;   // default level if not provided
-            // Command callbacks run in read-only mode → defer actual work
+            const soldierLevel = level ?? 1;
+
+            // Command callbacks run in read-only mode, so defer actual work.
             system.run(() => {
                 const dimension = player.dimension;
                 const location = {
@@ -56,10 +57,16 @@ function registerSoldierCommands(registry) {
                     z: player.location.z
                 };
 
-                spawnSoldier(dimension, location, soldierType, soldierLevel, player);
+                spawnSoldier(
+                    dimension,
+                    location,
+                    soldierType,
+                    soldierLevel,
+                    player
+                );
             });
 
             return { status: CustomCommandStatus.Success };
         }
     );
-};
+}
