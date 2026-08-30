@@ -15,7 +15,7 @@ function formatPosition(location) {
 function getPlayerTeam(player) {
     const teams = getTeams();
     for (const [name, data] of Object.entries(teams)) {
-        if (Array.isArray(data?.players) && data.players.includes(player.name)) return { name, data };
+        if (Array.isArray(data?.players) && data.players.includes(player.id)) return { name, data };
     }
     return null;
 }

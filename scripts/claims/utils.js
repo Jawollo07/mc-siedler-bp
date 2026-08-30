@@ -65,7 +65,7 @@ export function hasAccess(player, claim) {
     const team = teams[claim.team];
     if (!team || !Array.isArray(team.players)) return false;
 
-    return team.players.includes(player.name);
+    return team.players.includes(player.id);
 }
 
 /**

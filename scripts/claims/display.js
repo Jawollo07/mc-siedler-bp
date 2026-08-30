@@ -173,7 +173,7 @@ function updateClaimDisplay(player) {
     const teamData = getTeams()[claim.team];
     const color = teamData?.color || "§f";
     const players = Array.isArray(teamData?.players) ? teamData.players : [];
-    const isOwnTeam = players.includes(player.name);
+    const isOwnTeam = players.includes(player.id);
 
     const text = isOwnTeam
         ? `§aDein Grundstück §7(${color}${claim.team}§7)`

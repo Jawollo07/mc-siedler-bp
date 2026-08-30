@@ -58,66 +58,106 @@ if (playerPlaceBlock && typeof playerPlaceBlock.subscribe === "function") {
                 try {
                     const block = event?.block;
                     const loc = block?.location;
-                    // Best-effort: eruiere Spieler aus dem Event (verschiedene Builds)
-                    const player = event.player || event.playerEntity || event.source || null;
+
+                    // Best-effort: Spieler aus verschiedenen Event-Varianten ermitteln
+                    const player =
+                        event?.player ??
+                        event?.playerEntity ??
+                        event?.source ??
+                        null;
+
                     if (!loc) return;
 
                     const claim = getClaimAt(loc);
                     if (!claim) return;
-                    if (player && hasAccess(player, claim)) return;
 
-                    // Versuche das platzierte Block rückgängig zu machen. Falls das
-                    // sofort nicht möglich ist, merken wir die Position zur
-                    // späteren Prüfung durch den periodischen Scanner vor.
-                    recentPlacements.push({
-                        x: Math.floor(loc.x),
-                        y: Math.floor(loc.y),
-                        z: Math.floor(loc.z),
-                        dim: "overworld",
-                        playerName: player && player.name ? player.name : null,
-                        ts: Date.now()
-                    });
+                    if (player && hasAccess(player, claim)) {
+                    return;
+                }
 
-                    // Truncate queue to reasonable size
-                    if (recentPlacements.length > 2000) recentPlacements.splice(0, recentPlacements.length - 2000);
+                // Für die spätere Prüfung ausschließlich die Player-ID speichern.
+                recentPlacements.push({
+                    x: Math.floor(loc.x),
+                    y: Math.floor(loc.y),
+                    z: Math.floor(loc.z),
 
-                    // Versuche sofort das platzierte Block rückgängig zu machen.
-                    try {
-                        // Wenn das Event-Block-Objekt eine direkte API hat.
-                        if (block && typeof block.setType === "function") {
-                            try { block.setType("minecraft:air"); } catch {}
-                        }
+                    // Die tatsächliche Dimension speichern, nicht immer "overworld".
+                    dim: player?.dimension?.id ?? "minecraft:overworld",
 
-                        // Fallback: direkt das Block-Objekt aus der Dimension holen
-                        // und best-effort entfernen.
+                    // ID statt Name
+                    playerId: player?.id ?? null,
+
+                    ts: Date.now()
+                });
+
+                // Queue begrenzen
+                if (recentPlacements.length > 2000) {
+                    recentPlacements.splice(
+                        0,
+                        recentPlacements.length - 2000
+                    );
+                }
+
+                // Versuche die unerlaubte Platzierung sofort rückgängig zu machen.
+                try {
+                    if (
+                        block &&
+                        typeof block.setType === "function"
+                    ) {
                         try {
-                            const dim = world.getDimension("overworld");
-                            const coord = { x: Math.floor(loc.x), y: Math.floor(loc.y), z: Math.floor(loc.z) };
-                            const current = dim.getBlock(coord);
-                            if (current) {
-                                if (typeof current.setType === "function") {
-                                    try { current.setType("minecraft:air"); } catch {}
-                                } else if (typeof current.setPermutation === "function") {
-                                    try { /* best-effort no-op to avoid errors */ } catch {}
-                                }
-                            }
+                            block.setType("minecraft:air");
                         } catch {}
-                    } catch (err) {
-                        // ignore
                     }
 
-                    // Informiere Spieler, falls vorhanden.
-                    try { if (player) deny(player, "§cDieses Grundstück ist geschützt! Platzierung rückgängig gemacht."); } catch {}
-                } catch (err) {
-                    if (console && console.warn) console.warn(`[Claims] After-Event-Fallback Fehler: ${err}`);
-                }
-            });
+                    // Fallback: Block direkt aus der richtigen Dimension holen.
+                    try {
+                        const dimension = world.getDimension(
+                            player?.dimension?.id ??
+                            "minecraft:overworld"
+                        );
 
-            console.info("§a[Siedler Logic] After-Event-Fallback für Platzierungen registriert.");
-            break; // einen passenden Kandidaten registrieren reicht
-        } catch (err) {
-            // try next candidate
-        }
+                        const coord = {
+                            x: Math.floor(loc.x),
+                            y: Math.floor(loc.y),
+                            z: Math.floor(loc.z)
+                        };
+
+                        const current = dimension.getBlock(coord);
+
+                        if (current) {
+                            if (
+                                typeof current.setType === "function"
+                            ) {
+                                try {
+                                current.setType("minecraft:air");
+                                } catch {}
+                            }
+                        }
+                    } catch {}
+                } catch {
+                    // Best-effort
+                }
+
+                // Spieler informieren.
+                try {
+                    if (player) {
+                        deny(
+                            player,
+                            "§cDieses Grundstück ist geschützt! Platzierung rückgängig gemacht."
+                        );
+                    }
+                } catch {}
+            } catch (err) {
+                console.warn(
+                    `[Claims] After-Event-Fallback Fehler: ${err}`
+                );
+            }
+        });
+    } catch (err) {
+        console.warn(
+        `[Claims] After-Event konnte nicht registriert werden: ${err}`
+        );
+    }
     }
 }
 
@@ -209,10 +249,18 @@ system.runInterval(() => {
             // entfernen den Block, da wir Annahme treffen, dass Platzierung
             // von Fremden war (best-effort).
             let allowed = false;
-            if (entry.playerName) {
-                // Erzeuge ein Pseudo-Spieler-Objekt mit `name` für hasAccess
-                const pseudo = { name: entry.playerName };
-                try { allowed = hasAccess(pseudo, claim); } catch { allowed = false; }
+            if (entry.playerId) {
+                const player = world
+                .getAllPlayers()
+                .find((p) => p.id === entry.playerId);
+
+                if (player) {
+                    try {
+                        allowed = hasAccess(player, claim);
+                    } catch {
+                        allowed = false;
+                    }
+                }
             }
 
             if (!allowed) {
@@ -228,9 +276,9 @@ system.runInterval(() => {
 
                 // Informiere (wenn möglich) den Spieler.
                 try {
-                    if (entry.playerName) {
+                    if (entry.playerId) {
                         for (const p of world.getAllPlayers()) {
-                            if (p.name === entry.playerName) {
+                            if (p.id === entry.playerId) {
                                 deny(p, "§cDieses Grundstück ist geschützt! Platzierung rückgängig gemacht.");
                                 break;
                             }

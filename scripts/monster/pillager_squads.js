@@ -24,7 +24,7 @@ function distanceSq(a, b) {
 
 function getPlayerTeam(player) {
     const teams = getTeams();
-    return Object.keys(teams).find((name) => Array.isArray(teams[name]?.players) && teams[name].players.includes(player.name)) ?? null;
+    return Object.keys(teams).find((name) => Array.isArray(teams[name]?.players) && teams[name].players.includes(player.id)) ?? null;
 }
 
 function getEnemyClaimNearPlayer(player) {

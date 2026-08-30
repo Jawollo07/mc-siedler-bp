@@ -61,7 +61,7 @@ function notifyTeamMembers(teamName, teamData, amount, villagerCount) {
     const message = `§a[Steuern] Euer Team ${color}${teamName}§a hat §e${amount} Emeralds§a erhalten §7(${villagerCount} Dorfbewohner)`;
 
     for (const player of world.getAllPlayers()) {
-        if (Array.isArray(teamData.players) && teamData.players.includes(player.name)) {
+        if (Array.isArray(teamData.players) && teamData.players.includes(player.id)) {
             player.sendMessage(message);
         }
     }

@@ -449,54 +449,10 @@ function registerTeamCommands(registry) {
     });
 }
 
-/**
- * Migrates an old name-based team membership to the player's ID.
- *
- * This runs when a player joins, so existing teams can be migrated
- * without requiring access to offline players.
- */
-function migratePlayerMembership(player) {
-    if (!player?.id || !player?.name) {
-        return;
-    }
-
-    const teams = getTeams();
-    let changed = false;
-
-    for (const teamData of Object.values(teams)) {
-        if (!Array.isArray(teamData?.players)) {
-            continue;
-        }
-
-        if (!teamData.players.includes(player.name)) {
-            continue;
-        }
-
-        teamData.players = teamData.players.filter(
-            identifier => identifier !== player.name
-        );
-
-        if (!teamData.players.includes(player.id)) {
-            teamData.players.push(player.id);
-        }
-
-        changed = true;
-    }
-
-    if (changed && !saveTeams(teams)) {
-        console.error(
-            `[Teams] Konnte Team-Mitgliedschaft von ${player.name} nicht migrieren.`
-        );
-    }
-}
-
 world.afterEvents.playerSpawn?.subscribe?.((event) => {
     if (!event.initialSpawn) return;
 
     const player = event.player;
-
-    // Convert legacy name-based memberships when the player joins.
-    migratePlayerMembership(player);
 
     const teamName = getPlayerTeam(player);
 

@@ -39,14 +39,14 @@ function loadPersistentState() {
 function saveHomes() { return writeObject(homesKey, Object.fromEntries(homes)); }
 function saveDeaths() { return writeObject(deathsKey, Object.fromEntries(deathPoints)); }
 function playerFrom(origin) { const player = origin?.sourceEntity; return player?.typeId === "minecraft:player" ? player : null; }
-function findPlayer(name) { return world.getPlayers().find((player) => player.name === String(name ?? "")) ?? null; }
+function findPlayer(name) { return world.getPlayers().find((player) => player.id === String(name ?? "")) ?? null; }
 function targetOrSelf(player, name) { return name ? findPlayer(name) : player; }
 
 system.runTimeout(loadPersistentState, 1);
 world.afterEvents.entityDie?.subscribe?.((event) => {
     const player = event.deadEntity;
     if (player?.typeId !== "minecraft:player") return;
-    deathPoints.set(player.name, { x: player.location.x, y: player.location.y, z: player.location.z, dimension: player.dimension.id, savedAt: Date.now() });
+    deathPoints.set(player.id, { x: player.location.x, y: player.location.y, z: player.location.z, dimension: player.dimension.id, savedAt: Date.now() });
     saveDeaths();
 });
 
@@ -66,19 +66,19 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand({ name: "siedler:sethome", description: "Setzt dein Zuhause.", permissionLevel: CommandPermissionLevel.Any, cheatsRequired: false }, (origin) => {
         const player = playerFrom(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        system.run(() => { homes.set(player.name, { x: Math.floor(player.location.x) + 0.5, y: Math.floor(player.location.y), z: Math.floor(player.location.z) + 0.5, dimension: player.dimension.id }); player.sendMessage(saveHomes() ? "§aZuhause gesetzt!" : "§cZuhause konnte nicht gespeichert werden."); });
+        system.run(() => { homes.set(player.id, { x: Math.floor(player.location.x) + 0.5, y: Math.floor(player.location.y), z: Math.floor(player.location.z) + 0.5, dimension: player.dimension.id }); player.sendMessage(saveHomes() ? "§aZuhause gesetzt!" : "§cZuhause konnte nicht gespeichert werden."); });
         return { status: CustomCommandStatus.Success };
     });
 
     registry.registerCommand({ name: "siedler:home", description: "Teleportiert dich nach Hause.", permissionLevel: CommandPermissionLevel.Any, cheatsRequired: false }, (origin) => {
         const player = playerFrom(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        system.run(() => { const home = homes.get(player.name); if (!home) { player.sendMessage("§cDu hast noch kein Zuhause. Nutze /siedler:sethome."); return; } try { const dimension = world.getDimension(home.dimension || "overworld"); player.teleport({ x: home.x, y: home.y, z: home.z }, { dimension }); player.sendMessage("§aWillkommen zu Hause!"); } catch { player.sendMessage("§cDie Dimension deines Homes existiert nicht mehr."); } });
+        system.run(() => { const home = homes.get(player.id); if (!home) { player.sendMessage("§cDu hast noch kein Zuhause. Nutze /siedler:sethome."); return; } try { const dimension = world.getDimension(home.dimension || "overworld"); player.teleport({ x: home.x, y: home.y, z: home.z }, { dimension }); player.sendMessage("§aWillkommen zu Hause!"); } catch { player.sendMessage("§cDie Dimension deines Homes existiert nicht mehr."); } });
         return { status: CustomCommandStatus.Success };
     });
 
     registry.registerCommand({ name: "siedler:delhome", description: "Löscht dein Zuhause.", permissionLevel: CommandPermissionLevel.Any, cheatsRequired: false }, (origin) => {
         const player = playerFrom(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        system.run(() => { if (!homes.delete(player.name)) { player.sendMessage("§cDu hast kein Zuhause."); return; } player.sendMessage(saveHomes() ? "§eZuhause gelöscht." : "§cÄnderung konnte nicht gespeichert werden."); });
+        system.run(() => { if (!homes.delete(player.id)) { player.sendMessage("§cDu hast kein Zuhause."); return; } player.sendMessage(saveHomes() ? "§eZuhause gelöscht." : "§cÄnderung konnte nicht gespeichert werden."); });
         return { status: CustomCommandStatus.Success };
     });
 
@@ -86,19 +86,19 @@ system.beforeEvents.startup.subscribe((event) => {
         const player = playerFrom(origin); if (!player) return { status: CustomCommandStatus.Failure };
         const target = findPlayer(args[0]); if (!target) { player.sendMessage(`§cSpieler "${args[0]}" ist nicht online.`); return { status: CustomCommandStatus.Failure }; }
         if (target.id === player.id) { player.sendMessage("§cDu kannst dir selbst keine Anfrage senden."); return { status: CustomCommandStatus.Failure }; }
-        system.run(() => { tpaRequests.set(target.name, { from: player.name, expiresAt: Date.now() + 60000 }); player.sendMessage(`§aTeleport-Anfrage an ${target.name} gesendet.`); target.sendMessage(`§e${player.name} möchte sich zu dir teleportieren.`); target.sendMessage("§7Nutze /siedler:tpaccept oder /siedler:tpdeny. Die Anfrage läuft nach 60 Sekunden ab."); });
+        system.run(() => { tpaRequests.set(target.id, { from: player.id, expiresAt: Date.now() + 60000 }); player.sendMessage(`§aTeleport-Anfrage an ${target.name} gesendet.`); target.sendMessage(`§e${player.name} möchte sich zu dir teleportieren.`); target.sendMessage("§7Nutze /siedler:tpaccept oder /siedler:tpdeny. Die Anfrage läuft nach 60 Sekunden ab."); });
         return { status: CustomCommandStatus.Success };
     });
 
     registry.registerCommand({ name: "siedler:tpaccept", description: "Nimmt eine Teleport-Anfrage an.", permissionLevel: CommandPermissionLevel.Any, cheatsRequired: false }, (origin) => {
         const player = playerFrom(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        system.run(() => { const request = tpaRequests.get(player.name); if (!request || request.expiresAt <= Date.now()) { tpaRequests.delete(player.name); player.sendMessage("§cKeine offene Teleport-Anfrage."); return; } const sender = findPlayer(request.from); if (!sender) { tpaRequests.delete(player.name); player.sendMessage("§cDer anfragende Spieler ist nicht mehr online."); return; } sender.teleport(player.location, { dimension: player.dimension }); sender.sendMessage(`§aDu wurdest zu ${player.name} teleportiert.`); player.sendMessage(`§a${sender.name} wurde zu dir teleportiert.`); tpaRequests.delete(player.name); });
+        system.run(() => { const request = tpaRequests.get(player.id); if (!request || request.expiresAt <= Date.now()) { tpaRequests.delete(player.id); player.sendMessage("§cKeine offene Teleport-Anfrage."); return; } const sender = findPlayer(request.from); if (!sender) { tpaRequests.delete(player.id); player.sendMessage("§cDer anfragende Spieler ist nicht mehr online."); return; } sender.teleport(player.location, { dimension: player.dimension }); sender.sendMessage(`§aDu wurdest zu ${player.name} teleportiert.`); player.sendMessage(`§a${sender.name} wurde zu dir teleportiert.`); tpaRequests.delete(player.id); });
         return { status: CustomCommandStatus.Success };
     });
 
     registry.registerCommand({ name: "siedler:tpdeny", description: "Lehnt eine Teleport-Anfrage ab.", permissionLevel: CommandPermissionLevel.Any, cheatsRequired: false }, (origin) => {
         const player = playerFrom(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        system.run(() => { const request = tpaRequests.get(player.name); if (!request) { player.sendMessage("§cKeine offene Teleport-Anfrage."); return; } findPlayer(request.from)?.sendMessage(`§c${player.name} hat deine Teleport-Anfrage abgelehnt.`); tpaRequests.delete(player.name); player.sendMessage("§eTeleport-Anfrage abgelehnt."); });
+        system.run(() => { const request = tpaRequests.get(player.id); if (!request) { player.sendMessage("§cKeine offene Teleport-Anfrage."); return; } findPlayer(request.from)?.sendMessage(`§c${player.name} hat deine Teleport-Anfrage abgelehnt.`); tpaRequests.delete(player.id); player.sendMessage("§eTeleport-Anfrage abgelehnt."); });
         return { status: CustomCommandStatus.Success };
     });
 
@@ -112,7 +112,7 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand({ name: "siedler:back", description: "Teleportiert dich zum letzten Todespunkt.", permissionLevel: CommandPermissionLevel.Any, cheatsRequired: false }, (origin) => {
         const player = playerFrom(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        system.run(() => { const death = deathPoints.get(player.name); if (!death) { player.sendMessage("§cKein Todespunkt gespeichert."); return; } try { const dimension = world.getDimension(death.dimension || "overworld"); player.teleport({ x: death.x, y: death.y, z: death.z }, { dimension }); player.sendMessage("§aZum letzten Todespunkt teleportiert."); } catch { player.sendMessage("§cDie Dimension des Todespunkts existiert nicht mehr."); } });
+        system.run(() => { const death = deathPoints.get(player.id); if (!death) { player.sendMessage("§cKein Todespunkt gespeichert."); return; } try { const dimension = world.getDimension(death.dimension || "overworld"); player.teleport({ x: death.x, y: death.y, z: death.z }, { dimension }); player.sendMessage("§aZum letzten Todespunkt teleportiert."); } catch { player.sendMessage("§cDie Dimension des Todespunkts existiert nicht mehr."); } });
         return { status: CustomCommandStatus.Success };
     });
 

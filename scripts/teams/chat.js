@@ -5,7 +5,7 @@ function getPlayerTeam(player) {
     const teams = getTeams();
     for (const [name, data] of Object.entries(teams)) {
         const players = Array.isArray(data?.players) ? data.players : [];
-        if (players.includes(player.name)) {
+        if (players.includes(player.id)) {
             return { name, ...data, players };
         }
     }
@@ -44,7 +44,7 @@ if (chatSend && typeof chatSend.subscribe === "function") {
                 let recipients = 0;
 
                 for (const target of world.getAllPlayers()) {
-                    if (team.players.includes(target.name)) {
+                    if (team.players.includes(target.id)) {
                         target.sendMessage(formatted);
                         recipients++;
                     }
