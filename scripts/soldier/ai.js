@@ -200,18 +200,62 @@ function setState(soldier, state) {
     }
 }
 
-function isEnemy(soldier, entity) {
-    if (!isValidEntity(soldier) || !isValidEntity(entity)) return false;
-    if (entity.id === soldier.id) return false;
+function isEnemy(soldier, target) {
+    if (!target?.isValid) {
+        return false;
+    }
 
-    // Temporary rules. Replace this with the Teams/Faction system later.
-    if (entity.hasTag("soldier")) return false;
-    if (entity.typeId === "minecraft:player") return false;
-    if (isDead(entity)) return false;
+    const soldierTeam = getSoldierTeam(soldier);
 
-    return true;
+    if (!soldierTeam) {
+        return false;
+    }
+
+    /*
+     * Player target
+     */
+    if (target.typeId === "minecraft:player") {
+        const targetTeam = getPlayerTeam(target);
+
+        if (!targetTeam) {
+            /*
+             * Spieler ohne Team können optional
+             * als neutral behandelt werden.
+             */
+            return false;
+        }
+
+        return (
+            getTeamRelation(
+                soldierTeam,
+                targetTeam
+            ) === TEAM_RELATION.HOSTILE
+        );
+    }
+
+    /*
+     * Soldier target
+     */
+    if (target.hasTag("soldier")) {
+        const targetTeam = getSoldierTeamByEntity(target);
+
+        if (!targetTeam) {
+            return false;
+        }
+
+        return (
+            getTeamRelation(
+                soldierTeam,
+                targetTeam
+            ) === TEAM_RELATION.HOSTILE
+        );
+    }
+
+    /*
+     * Normal mobs can remain hostile.
+     */
+    return false;
 }
-
 function isDead(entity) {
     try {
         const health = entity.getComponent("minecraft:health");

@@ -15,7 +15,7 @@ export function spawnSoldier(
     location,
     type = "infantry",
     level = 1,
-    owner = null
+    owner
 ) {
     if (!SOLDIER_CONFIG.enabled) return null;
 
@@ -48,7 +48,6 @@ export function spawnSoldier(
     entity.addTag("villager");
     entity.addTag(`soldier_type:${type}`);
     entity.addTag(`soldier_level:${level}`);
-
     if (owner) {
         entity.addTag(`owner:${owner.name}`);
         entity.setDynamicProperty("soldier:ownerId", owner.id);

@@ -47,7 +47,6 @@ function registerSoldierCommands(registry) {
 
             const soldierType = String(type ?? "").trim();
             const soldierLevel = level ?? 1;   // default level if not provided
-
             // Command callbacks run in read-only mode → defer actual work
             system.run(() => {
                 const dimension = player.dimension;
