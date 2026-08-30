@@ -13,47 +13,47 @@ import { version } from "./version.js"
 // -----------------------------------------------------------------------------
 // Core
 // -----------------------------------------------------------------------------
-import "./dynamic_properties.js";
+import ".././dynamic_properties.js";
 
 // -----------------------------------------------------------------------------
 // Teams
 // -----------------------------------------------------------------------------
-import "./teams/index.js";
-import "./teams/chat.js";
+import ".././teams/index.js";
+import ".././teams/chat.js";
 
 // -----------------------------------------------------------------------------
 // Economy
 // -----------------------------------------------------------------------------
-import "./taxes/index.js";
+import ".././taxes/index.js";
 
 // -----------------------------------------------------------------------------
 // Claims
 // -----------------------------------------------------------------------------
-import "./claims/index.js";
-import "./claims/protection.js";
-import "./claims/display.js";
+import ".././claims/index.js";
+import ".././claims/protection.js";
+import ".././claims/display.js";
 
 // -----------------------------------------------------------------------------
 // Monster system
 // -----------------------------------------------------------------------------
-import "./monster/index.js";
-import "./monster/pillager_squads.js";
-import "./monster/outpost_raids.js";
-import "./monster/commands.js";
-import "./monster/token.js";
+import ".././monster/index.js";
+import ".././monster/pillager_squads.js";
+import ".././monster/outpost_raids.js";
+import ".././monster/commands.js";
+import ".././monster/token.js";
 
 // -----------------------------------------------------------------------------
 // Essentials
 // -----------------------------------------------------------------------------
-import "./essentials/index.js";
-import "./essentials/player_stats.js";
+import ".././essentials/index.js";
+import ".././essentials/player_stats.js";
 
 // -----------------------------------------------------------------------------
 // Soldier system
 // -----------------------------------------------------------------------------
-import "./soldier/index.js";
+import ".././soldier/index.js";
 
-const VERSION = "1.1.4";
+const VERSION = version;
 const MODULE_COUNT = 15;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
