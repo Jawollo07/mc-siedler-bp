@@ -28,7 +28,7 @@ function playerOnly(origin) {
 function registerSoldierCommands(registry) {
     registry.registerCommand(
         {
-            name: "soldier:spawn",
+            name: "sidler:spawn_soldier",
             description: "Spawnt einen Soldaten",
             permissionLevel: CommandPermissionLevel.GameDirectors, // or .Admin / .Any
             cheatsRequired: false,
