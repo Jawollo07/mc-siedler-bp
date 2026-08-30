@@ -173,7 +173,7 @@ function registerTeamCommands(registry) {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
 
-        system.run(() => .
+        system.run(() => showTeamMenu();
     });
 
     registry.registerCommand({
