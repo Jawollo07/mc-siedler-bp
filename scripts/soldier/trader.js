@@ -1,4 +1,4 @@
-import { world, system } from "@minecraft/server";
+import { world, system, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { spawnSoldier } from "./spawn.js";
 import { SOLDIER_TYPES, SOLDIERS } from "./config.js";
@@ -6,6 +6,7 @@ import { SOLDIER_TYPES, SOLDIERS } from "./config.js";
 const TRADER_TYPE = "siedler:trader";
 const SOLDIER_TRADER_TAG = "soldier_trader";
 const EMERALD = "minecraft:emerald";
+const NAMES = { 1: "Rekrut", 2: "Veteran", 3: "Elite" };
 
 function getInfantryLevel(level) {
     return SOLDIER_TYPES.infantry?.levels?.[level] ?? null;
@@ -23,7 +24,6 @@ function countEmeralds(player) {
     try {
         const inventory = player.getComponent("minecraft:inventory")?.container;
         if (!inventory) return 0;
-
         let total = 0;
         for (let i = 0; i < inventory.size; i++) {
             const item = inventory.getItem(i);
@@ -48,14 +48,11 @@ function removeEmeralds(player, amount) {
             const remove = Math.min(item.amount, remaining);
             item.amount -= remove;
             remaining -= remove;
-
-            if (item.amount <= 0) inventory.setItem(i, undefined);
-            else inventory.setItem(i, item);
+            inventory.setItem(i, item.amount > 0 ? item : undefined);
         }
-
         return remaining === 0;
     } catch (error) {
-        console.warn(`[Soldier Trader] Failed to remove emeralds: ${error}`);
+        console.warn(`[Soldier Trader] Payment failed: ${error}`);
         return false;
     }
 }
@@ -64,40 +61,30 @@ function refundEmeralds(player, amount) {
     try {
         const inventory = player.getComponent("minecraft:inventory")?.container;
         if (!inventory) return;
-
         let remaining = amount;
+
         for (let i = 0; i < inventory.size && remaining > 0; i++) {
-            const existing = inventory.getItem(i);
-            if (existing && existing.typeId === EMERALD && existing.amount < 64) {
-                const add = Math.min(64 - existing.amount, remaining);
-                existing.amount += add;
-                remaining -= add;
-                inventory.setItem(i, existing);
-            }
+            const item = inventory.getItem(i);
+            if (!item || item.typeId !== EMERALD || item.amount >= 64) continue;
+            const add = Math.min(64 - item.amount, remaining);
+            item.amount += add;
+            remaining -= add;
+            inventory.setItem(i, item);
         }
 
-        while (remaining > 0) {
-            let inserted = false;
-            for (let i = 0; i < inventory.size; i++) {
-                if (inventory.getItem(i)) continue;
-                const add = Math.min(64, remaining);
-                const { ItemStack } = requireItemStack();
-                inventory.setItem(i, new ItemStack(EMERALD, add));
-                remaining -= add;
-                inserted = true;
-                break;
-            }
-            if (!inserted) break;
+        for (let i = 0; i < inventory.size && remaining > 0; i++) {
+            if (inventory.getItem(i)) continue;
+            const add = Math.min(64, remaining);
+            inventory.setItem(i, new ItemStack(EMERALD, add));
+            remaining -= add;
+        }
+
+        if (remaining > 0) {
+            player.dimension.spawnItem(new ItemStack(EMERALD, remaining), player.location);
         }
     } catch (error) {
         console.warn(`[Soldier Trader] Refund failed: ${error}`);
     }
-}
-
-// Kept isolated so the rest of the trader module remains compatible with
-// Bedrock versions where ItemStack is available from @minecraft/server.
-function requireItemStack() {
-    return { ItemStack: globalThis.__siedlerItemStack };
 }
 
 function spawnLocationNearTrader(trader, player) {
@@ -114,10 +101,9 @@ function spawnLocationNearTrader(trader, player) {
 async function openSoldierTrader(player, trader) {
     if (!player?.isValid || !trader?.isValid) return;
 
-    const levels = [1, 2, 3].map((level) => {
-        const data = getInfantryLevel(level);
-        return { level, data, cost: data?.cost ?? 0 };
-    }).filter((entry) => entry.data);
+    const levels = [1, 2, 3]
+        .map((level) => ({ level, data: getInfantryLevel(level) }))
+        .filter((entry) => entry.data);
 
     const form = new ActionFormData()
         .title("§c⚔ Soldatenhändler")
@@ -125,14 +111,12 @@ async function openSoldierTrader(player, trader) {
             `§7Rekrutiere Infanteristen für deine Armee.\n\n` +
             `§fAktive Soldaten: §e${getSoldierCount(player)}\n` +
             `§fDeine Emeralds: §a${countEmeralds(player)}\n\n` +
-            `§8Ein Soldat wird direkt vor dem Händler für dich erstellt.`
+            `§8Der Soldat wird direkt beim Händler für dich erstellt.`
         );
 
-    for (const { level, data, cost } of levels) {
-        const names = { 1: "Rekrut", 2: "Veteran", 3: "Elite" };
-        form.button(`§e${names[level]} §7(Lv. ${level})\n§a${cost} Emeralds`);
+    for (const { level, data } of levels) {
+        form.button(`§e${NAMES[level]} §7(Lv. ${level})\n§a${data.cost} Emeralds`);
     }
-
     form.button("§8Abbrechen");
 
     let result;
@@ -145,7 +129,7 @@ async function openSoldierTrader(player, trader) {
     if (result.canceled || result.selection === undefined || result.selection >= levels.length) return;
 
     const selected = levels[result.selection];
-    const cost = selected.cost;
+    const cost = selected.data.cost;
 
     if (countEmeralds(player) < cost) {
         player.sendMessage(`§8[§cSoldatenhändler§8]§r §cDu benötigst ${cost} Emeralds.`);
@@ -167,19 +151,17 @@ async function openSoldierTrader(player, trader) {
 
     if (!soldier) {
         refundEmeralds(player, cost);
-        player.sendMessage("§8[§cSoldatenhändler§8]§r §cDer Soldat konnte nicht rekrutiert werden. Deine Emeralds wurden zurückerstattet.");
+        player.sendMessage("§8[§cSoldatenhändler§8]§r §cDer Soldat konnte nicht rekrutiert werden. Die Emeralds wurden zurückerstattet.");
         return;
     }
 
-    player.sendMessage(`§8[§cSoldatenhändler§8]§r §a${selected.level === 1 ? "Rekrut" : selected.level === 2 ? "Veteran" : "Elite"} erfolgreich rekrutiert! §7(${cost} Emeralds)`);
+    player.sendMessage(`§8[§cSoldatenhändler§8]§r §a${NAMES[selected.level]} erfolgreich rekrutiert! §7(${cost} Emeralds)`);
     try { player.playSound("random.levelup"); } catch {}
 }
 
 world.afterEvents.playerInteractWithEntity.subscribe((event) => {
     const { player, target } = event;
-    if (target?.typeId !== TRADER_TYPE) return;
-    if (!target.hasTag(SOLDIER_TRADER_TAG)) return;
-
+    if (target?.typeId !== TRADER_TYPE || !target.hasTag(SOLDIER_TRADER_TAG)) return;
     system.run(() => openSoldierTrader(player, target));
 });
 
