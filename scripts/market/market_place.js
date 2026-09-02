@@ -1,40 +1,48 @@
 import { system, world } from "@minecraft/server";
 
 /**
- * Market places are protected areas where hostile entities are not allowed.
+ * Market places are protected rectangular areas where hostile entities are
+ * not allowed.
  *
- * Configure additional markets by adding entries to MARKET_PLACES.
+ * Coordinates describe the two opposite corners of the market. Y is ignored
+ * for the protection check, so the complete vertical area is protected.
  */
 export const MARKET_PLACES = [
     {
         id: "main_market",
         enabled: true,
         dimension: "overworld",
-        center: {
-            x: 100,
-            y: 64,
-            z: 200
+        min: {
+            x: 68,
+            y: 0,
+            z: 168
         },
-        radius: 32
+        max: {
+            x: 132,
+            y: 319,
+            z: 232
+        }
     }
 ];
-
-const DIMENSION_IDS = {
-    overworld: "minecraft:overworld",
-    nether: "minecraft:nether",
-    the_end: "minecraft:the_end"
-};
-
-function distanceSquared(a, b) {
-    const dx = a.x - b.x;
-    const dz = a.z - b.z;
-    return dx * dx + dz * dz;
-}
 
 function normalizeDimensionId(dimensionId) {
     return dimensionId?.startsWith("minecraft:")
         ? dimensionId.substring("minecraft:".length)
         : dimensionId;
+}
+
+function isInsideRectangle(location, min, max) {
+    const minX = Math.min(min.x, max.x);
+    const maxX = Math.max(min.x, max.x);
+    const minZ = Math.min(min.z, max.z);
+    const maxZ = Math.max(min.z, max.z);
+
+    return (
+        location.x >= minX &&
+        location.x <= maxX &&
+        location.z >= minZ &&
+        location.z <= maxZ
+    );
 }
 
 /**
@@ -47,10 +55,7 @@ export function getMarketAt(location, dimensionId = "overworld") {
         if (!market.enabled) continue;
         if (market.dimension !== normalizedDimension) continue;
 
-        if (
-            distanceSquared(location, market.center) <=
-            market.radius * market.radius
-        ) {
+        if (isInsideRectangle(location, market.min, market.max)) {
             return market;
         }
     }
@@ -92,9 +97,6 @@ export function removeMonsterFromMarket(entity) {
 
 /**
  * Removes all existing monsters from every configured market.
- *
- * This is a fallback for monsters that enter a market after spawning and for
- * monsters spawned by systems that do not use the normal monster spawn path.
  */
 export function cleanupMarketMonsters() {
     for (const market of MARKET_PLACES) {
@@ -102,9 +104,18 @@ export function cleanupMarketMonsters() {
 
         try {
             const dimension = world.getDimension(market.dimension);
+            const minX = Math.min(market.min.x, market.max.x);
+            const maxX = Math.max(market.min.x, market.max.x);
+            const minZ = Math.min(market.min.z, market.max.z);
+            const maxZ = Math.max(market.min.z, market.max.z);
+
             const monsters = dimension.getEntities({
-                location: market.center,
-                maxDistance: market.radius,
+                location: {
+                    x: (minX + maxX) / 2,
+                    y: market.min.y ?? 0,
+                    z: (minZ + maxZ) / 2
+                },
+                maxDistance: Math.max(maxX - minX, maxZ - minZ),
                 families: ["monster"]
             });
 
@@ -121,9 +132,6 @@ export function cleanupMarketMonsters() {
 
 /**
  * Remove newly spawned monsters immediately.
- *
- * This also covers monsters created directly by pillager squads, outpost
- * raids and other modules through Dimension.spawnEntity().
  */
 if (world.afterEvents?.entitySpawn) {
     world.afterEvents.entitySpawn.subscribe(({ entity }) => {
@@ -134,4 +142,4 @@ if (world.afterEvents?.entitySpawn) {
 // Run once every second as a safety net for monsters that walk/fly into a market.
 system.runInterval(cleanupMarketMonsters, 20);
 
-console.info("§a[Market] Monster-free market protection loaded");
+console.info("§a[Market] Rectangular monster-free market protection loaded");
