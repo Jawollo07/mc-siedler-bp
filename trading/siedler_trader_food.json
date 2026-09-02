@@ -1,25 +1,23 @@
 {
-  "tiers": [
-    {
-      "total_exp_required": 0,
-      "groups": [
-        {
-          "num_to_select": 1,
-          "trades": [
-            {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:bread","quantity":8}],"trader_exp":1,"max_uses":24,"reward_exp":true},
-            {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:carrot","quantity":16}],"trader_exp":1,"max_uses":24,"reward_exp":true},
-            {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:potato","quantity":16}],"trader_exp":1,"max_uses":20,"reward_exp":true}
-          ]
-        },
-        {
-          "num_to_select": 1,
-          "trades": [
-            {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cooked_beef","quantity":8}],"trader_exp":2,"max_uses":16,"reward_exp":true},
-            {"wants":[{"item":"minecraft:emerald","quantity":4,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cooked_cod","quantity":8}],"trader_exp":2,"max_uses":16,"reward_exp":true},
-            {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:apple","quantity":8}],"trader_exp":1,"max_uses":20,"reward_exp":true}
-          ]
-        }
-      ]
-    }
-  ]
+  "tiers": [{"total_exp_required":0,"groups":[
+    {"num_to_select":2,"trades":[
+      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:bread","quantity":8}],"trader_exp":1,"max_uses":64,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:carrot","quantity":16}],"trader_exp":1,"max_uses":64,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:potato","quantity":16}],"trader_exp":1,"max_uses":64,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:beetroot","quantity":16}],"trader_exp":1,"max_uses":48,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:apple","quantity":12}],"trader_exp":1,"max_uses":48,"reward_exp":true}
+    ]},
+    {"num_to_select":2,"trades":[
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cooked_beef","quantity":8}],"trader_exp":2,"max_uses":48,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cooked_porkchop","quantity":8}],"trader_exp":2,"max_uses":48,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cooked_chicken","quantity":8}],"trader_exp":2,"max_uses":48,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":4,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cooked_cod","quantity":8}],"trader_exp":2,"max_uses":40,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":4,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cooked_salmon","quantity":8}],"trader_exp":2,"max_uses":40,"reward_exp":true}
+    ]},
+    {"num_to_select":1,"trades":[
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.10}],"gives":[{"item":"minecraft:golden_carrot","quantity":4}],"trader_exp":3,"max_uses":32,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":4,"price_multiplier":0.10}],"gives":[{"item":"minecraft:cake","quantity":2}],"trader_exp":3,"max_uses":24,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":4,"price_multiplier":0.10}],"gives":[{"item":"minecraft:pumpkin_pie","quantity":4}],"trader_exp":3,"max_uses":24,"reward_exp":true}
+    ]}
+  ]}]
 }
