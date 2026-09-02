@@ -305,4 +305,4 @@ function formatError(error) {
     return error instanceof Error ? error.message : String(error);
 }
 
-export { STATES };
+export { SOLDIER_CONFIG as STATES };
