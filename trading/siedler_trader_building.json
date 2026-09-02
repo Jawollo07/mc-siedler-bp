@@ -4,9 +4,11 @@
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:oak_log","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:birch_log","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:spruce_log","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:jungle_log","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:acacia_log","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:dark_oak_log","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
-      {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:jungle_log","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true}
+      {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:mangrove_log","quantity":16}],"max_uses":48,"trader_exp":1,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:cherry_log","quantity":16}],"max_uses":48,"trader_exp":1,"reward_exp":true}
     ]},
     {"num_to_select":3,"trades":[
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:cobblestone","quantity":32}],"max_uses":64,"trader_exp":1,"reward_exp":true},
@@ -16,12 +18,13 @@
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:clay_ball","quantity":32}],"max_uses":40,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:flint","quantity":16}],"max_uses":40,"trader_exp":2,"reward_exp":true}
     ]},
-    {"num_to_select":2,"trades":[
+    {"num_to_select":3,"trades":[
       {"wants":[{"item":"minecraft:oak_log","quantity":32}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":48,"trader_exp":2,"reward_exp":true},
+      {"wants":[{"item":"minecraft:spruce_log","quantity":32}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":48,"trader_exp":2,"reward_exp":true},
+      {"wants":[{"item":"minecraft:birch_log","quantity":32}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":48,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:cobblestone","quantity":48}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":48,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:sand","quantity":48}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":40,"trader_exp":2,"reward_exp":true},
-      {"wants":[{"item":"minecraft:gravel","quantity":48}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":40,"trader_exp":2,"reward_exp":true},
-      {"wants":[{"item":"minecraft:clay_ball","quantity":32}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":32,"trader_exp":2,"reward_exp":true}
+      {"wants":[{"item":"minecraft:gravel","quantity":48}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":40,"trader_exp":2,"reward_exp":true}
     ]}
   ]}]
 }
