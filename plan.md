@@ -10,42 +10,30 @@
 
 # 🎯 Gesamtziel
 
-Das Projekt soll sich von einzelnen Server-Systemen zu einem zusammenhängenden Strategiespiel entwickeln:
-
 **Siedlung → Ressourcen → Wirtschaft → Bevölkerung → Handel → Territorium → Diplomatie → Militär → Krieg**
 
 ---
 
 # 📊 Aktueller Stand
 
-## Bereits vorhanden
-
 - [x] Zentraler, fehlertoleranter Loader
 - [x] World Dynamic Properties
-- [x] Teams und Team-Chat
-- [x] Teamfarben
-- [x] Teambeziehungen `friendly`, `neutral`, `hostile`
-- [x] Chunk-basierte Claims
-- [x] Claim-Grenzanzeige
+- [x] Teams, Team-Chat, Farben und Beziehungen
+- [x] Chunk-Claims und Claim-Grenzanzeige
 - [x] Steuern und Emerald-Wirtschaft
-- [x] Marktplätze mit Monster-Schutz
-- [x] Spezialisierte Händler und Handelstabellen
+- [x] Marktplätze und spezialisierte Händler
 - [x] Rohstofforientierte Händlerangebote
 - [x] Soldatenhändler mit Rekrutierungs-UI
 - [x] Soldaten-Entity und Spawn-System
 - [x] Soldier-Zuordnung über `player.id`
-- [x] Soldier-KI-Grundsystem
-- [x] Soldier-Befehle
-- [x] Soldier-Level 1–7
-- [x] Persistentes Soldier-XP-System
-- [x] Schadenabhängige Treffer-XP
-- [x] Gegnerstärkeabhängige Kill-XP
-- [x] Automatische Levelbeförderungen
+- [x] Soldier-KI-Grundsystem und Befehle
+- [x] Soldier-Level 1–7 und persistentes XP-System
+- [x] Schaden- und Gegnerstärke-basierte XP
 - [x] Infanterie
-- [x] Ausrüstungssystem
-- [x] Grundlage für Soldier-Fähigkeiten
-- [x] Monster-/Pillager-System
-- [x] Außenposten-/Belagerungsgrundlage
+- [x] Bogenschütze
+- [x] Kavallerie mit Pferd als Reittier
+- [x] Ausrüstungssystem und Grundlage für Fähigkeiten
+- [x] Monster-/Pillager-System und Belagerungsgrundlage
 - [x] Essentials, Homes, TPA und Dashboard
 - [x] Separates Resource Pack
 
@@ -70,13 +58,15 @@ Das Projekt soll sich von einzelnen Server-Systemen zu einem zusammenhängenden 
 ## 2.1 Einheiten
 
 - [x] Infanterie
-- [x] Level 1–7
-- [x] unterschiedliche HP, Schaden und Geschwindigkeit
+- [x] Bogenschütze
+- [x] Kavallerie
+- [x] Kavallerie-Reittier (`minecraft:horse`)
+- [x] Level 1–7 für die Einheitentypen
+- [x] unterschiedliche HP, Schaden, Reichweite und Geschwindigkeit
 - [x] unterschiedliche Ausrüstung
 - [x] XP-/Level-System mit persistentem XP-Fortschritt
 - [x] automatische Beförderung anhand der XP
 - [x] Rekrutierung über Soldatenhändler
-- [ ] Bogenschütze
 - [ ] Schwerer Soldat
 - [ ] Spezialeinheiten
 - [ ] weitere Einheitentypen
@@ -97,8 +87,6 @@ Das Projekt soll sich von einzelnen Server-Systemen zu einem zusammenhängenden 
 
 ### Aktuelle XP-Regeln
 
-XP wird im Kampf nach Leistung vergeben und persistent als `soldier:xp` gespeichert.
-
 | Ereignis | XP |
 |---|---:|
 | 1–2 verursachter Schaden | 1 XP |
@@ -109,31 +97,13 @@ XP wird im Kampf nach Leistung vergeben und persistent als `soldier:xp` gespeich
 | Kill eines starken Gegners | 50–75 XP |
 | Kill eines sehr starken Gegners/Bosses | 75–100 XP |
 
-Treffer-XP wird zufällig innerhalb des jeweiligen Bereichs bestimmt. Der finale Treffer eines Gegners erhält keine zusätzliche Treffer-XP, weil der Kill separat vergütet wird.
-
-Die Kill-Klassifizierung unterstützt:
-
-- explizite Tags `soldier_xp_boss`, `boss`, `very_strong`
-- explizite Tags `soldier_xp_strong`, `strong`
-- bekannte starke Gegner wie Vindicator, Evoker, Ravager, Warden, Elder Guardian und Piglin Brute
-- Ender Dragon und Wither als Bosse
-- maximale Lebenspunkte als Fallback für nicht explizit konfigurierte Gegner
-
-Implementierung:
-
-```text
-scripts/soldier/level.js
-```
-
-Konfigurationswerte befinden sich zentral in `SOLDIER_LEVEL_CONFIG` in `level.js`.
-
 ## 2.2 Rekrutierung
 
 - [x] Soldatenhändler
 - [x] eigene Rekrutierungs-UI
-- [x] Rekrut Level 1 für 8 Emeralds
-- [x] Veteran Level 2 für 18 Emeralds
-- [x] Elite Level 3 für 35 Emeralds
+- [x] Infanterie Level 1–3 im Händler
+- [x] Bogenschütze Level 1–3 im Händler
+- [x] Kavallerie Level 1–3 im Händler
 - [x] Zahlung aus Spielerinventar
 - [x] automatische Besitzerzuordnung über `player.id`
 - [x] Rückerstattung bei fehlgeschlagenem Spawn
@@ -141,6 +111,16 @@ Konfigurationswerte befinden sich zentral in `SOLDIER_LEVEL_CONFIG` in `level.js
 - [ ] Bevölkerung als Voraussetzung
 - [ ] maximale Armeegröße
 - [ ] Unterhaltskosten
+
+### Einheitentypen
+
+| Typ | Rolle | Besonderheit |
+|---|---|---|
+| Infanterie | Nahkampf | Schild und starke Rüstung |
+| Bogenschütze | Fernkampf | Bogen und hohe Reichweite |
+| Kavallerie | Mobiler Nahkampf | Pferd und erhöhte Geschwindigkeit |
+
+Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird über Konfiguration, Tags und Dynamic Properties festgelegt. Die Kavallerie erhält beim Spawn zusätzlich ein `minecraft:horse`-Reittier.
 
 ## 2.3 Bewegung & KI
 
@@ -171,6 +151,8 @@ Konfigurationswerte befinden sich zentral in `SOLDIER_LEVEL_CONFIG` in `level.js
 - [ ] kein hektisches Hin-und-her-Laufen
 - [ ] bessere Kollision/Abstände
 - [ ] unterschiedliches Kampfverhalten je Einheitentyp
+- [ ] echte Projektil-/Bogenschützenlogik
+- [ ] Kavallerie-Sturmangriff als eigene Kampfmechanik
 - [ ] Fokusfeuer
 - [ ] sinnvoller Zielwechsel
 - [ ] Kampfmoral
@@ -187,7 +169,7 @@ Konfigurationswerte befinden sich zentral in `SOLDIER_LEVEL_CONFIG` in `level.js
 - [x] `/siedler:defend`
 - [x] `/siedler:patrol`
 - [x] `/siedler:stop`
-- [x] Grundlage für Soldatenauswahl
+- [x] Soldatenauswahl-Grundlage
 - [x] Soldatengruppen
 - [x] Gruppenverwaltung
 - [x] Formationsgrundlage
@@ -372,6 +354,7 @@ Konfigurationswerte befinden sich zentral in `SOLDIER_LEVEL_CONFIG` in `level.js
 - [ ] Animationen verbessern
 - [ ] Ausrüstung korrekt darstellen
 - [ ] Soldier-Typen visuell unterscheiden
+- [ ] Kavallerie visuell als berittene Einheit darstellen
 - [ ] Level visuell darstellen
 - [ ] Teamfarbe darstellen
 - [ ] Kampfanimationen
@@ -437,12 +420,12 @@ Konfigurationswerte befinden sich zentral in `SOLDIER_LEVEL_CONFIG` in `level.js
 # 📌 Aktueller Schwerpunkt
 
 1. **Soldatensteuerung und Kampf natürlicher machen**
-2. **Soldatengruppen und Auswahl vollständig ausbauen**
-3. **Soldatenversorgung und Unterhalt hinzufügen**
-4. **Rohstoffwirtschaft mit echten Produktionsketten verbinden**
-5. **Siedlungen und Bevölkerung implementieren**
-6. **Diplomatie mit Claims, Handel und Militär verbinden**
-7. **Resource-Pack-Darstellung stabilisieren**
-8. **Soldier-XP im Multiplayer und mit unterschiedlichen Gegnerstärken testen**
-
-Der Soldaten-Levelpfad umfasst aktuell sieben Stufen. XP wird jetzt nach tatsächlich verursachtem Schaden und Gegnerstärke vergeben. Die nächsten Schritte sind, Beförderungen stärker mit Rängen, Gruppenverwaltung, Versorgung und den Siedlungsstufen zu verknüpfen.
+2. **Bogenschützen mit echter Projektil-/Sichtlinienlogik ausbauen**
+3. **Kavallerie mit Sturmangriff und zuverlässiger Reitlogik ausbauen**
+4. **Soldatengruppen und Auswahl vollständig ausbauen**
+5. **Soldatenversorgung und Unterhalt hinzufügen**
+6. **Rohstoffwirtschaft mit echten Produktionsketten verbinden**
+7. **Siedlungen und Bevölkerung implementieren**
+8. **Diplomatie mit Claims, Handel und Militär verbinden**
+9. **Resource-Pack-Darstellung stabilisieren**
+10. **Soldier-XP im Multiplayer und mit unterschiedlichen Gegnerstärken testen**
