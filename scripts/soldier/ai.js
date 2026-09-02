@@ -17,6 +17,7 @@ const TURN_RESPONSE = 0.22;
 // This creates a visible wind-up, impact and recovery instead of instant damage every interval.
 const ATTACK_WINDUP = 320;
 const ATTACK_RECOVERY = 260;
+const ATTACK_ANIMATION_TICKS = 13;
 const ATTACK_RANGE_PADDING = 0.18;
 const COMBAT_STOP_PADDING = 0.18;
 const HIT_LUNGE = 0.035;
@@ -63,6 +64,7 @@ function registerExistingSoldier(entity) {
         attack: null,
         strafe: { x: 0, z: 0, until: 0, next: 0 }
     });
+    setCombatAnimation(entity, "idle");
 }
 
 function updateSoldiers() {
@@ -193,6 +195,7 @@ function beginAttack(soldier, target, now) {
         hit: false
     };
     setState(soldier, SOLDIER_CONFIG.STATES.ATTACK);
+    setCombatAnimation(soldier.entity, "attack");
     stopMoving(soldier);
     faceTargetSmoothly(soldier.entity, target.location);
     debug(`${soldier.entity.id} started attack on ${target.id}`);
@@ -238,10 +241,28 @@ function finishAttack(soldier, now) {
     soldier.nextAttack = now + getAttackCooldown(soldier);
     soldier.attack = null;
     soldier.strafe.until = now + ATTACK_RECOVERY;
+
+    // Keep the attack pose alive until the client animation has completed.
+    // The hit occurs around the middle of the 0.65 second animation.
+    const entity = soldier.entity;
+    system.runTimeout(() => {
+        if (!isValid(entity) || soldier.attack) return;
+        setCombatAnimation(entity, "idle");
+    }, ATTACK_ANIMATION_TICKS);
 }
 
 function cancelAttack(soldier) {
     soldier.attack = null;
+    if (isValid(soldier.entity)) setCombatAnimation(soldier.entity, "idle");
+}
+
+function setCombatAnimation(entity, state) {
+    if (!isValid(entity) || typeof entity.setProperty !== "function") return;
+    try {
+        entity.setProperty("siedler:combat_state", state);
+    } catch (error) {
+        debug(`Combat animation state failed: ${formatError(error)}`);
+    }
 }
 
 function applyHitLunge(soldier, target) {
@@ -447,6 +468,7 @@ function synchronize(soldier) {
     if (!soldier.desiredDirection) soldier.desiredDirection = { x: 0, z: 0 };
     if (!soldier.velocity) soldier.velocity = { x: 0, z: 0 };
     if (!soldier.strafe) soldier.strafe = { x: 0, z: 0, until: 0, next: 0 };
+    if (!Object.prototype.hasOwnProperty.call(soldier, "attack")) soldier.attack = null;
 }
 
 function isDead(entity) { try { const health = entity.getComponent("minecraft:health"); return health ? health.currentValue <= 0 : false; } catch { return true; } }
