@@ -94,4 +94,4 @@ function testEquipment() {
 
 system.runTimeout(() => {
     testEquipment();
-}, 40);
+}, 4000);
