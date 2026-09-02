@@ -13,7 +13,7 @@ import {
     commandDefend,
     commandPatrol,
     commandStop
-} from "./soldier_commands.js";
+} from "./command_manager.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
