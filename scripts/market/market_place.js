@@ -9,18 +9,18 @@ import { system, world } from "@minecraft/server";
  */
 export const MARKET_PLACES = [
     {
-        id: "main_market",
+        id: "markt",
         enabled: true,
         dimension: "overworld",
         min: {
-            x: 68,
-            y: 0,
-            z: 168
+            x: 36,
+            y: 106,
+            z: 67
         },
         max: {
-            x: 132,
-            y: 319,
-            z: 232
+            x: -18,
+            y: 106,
+            z: 13
         }
     }
 ];
