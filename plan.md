@@ -177,16 +177,6 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [ ] Zielpositionen markieren
 - [ ] Garnisonen erstellen
 
-## 2.6 Versorgung
-
-- [ ] Nahrung als Militärressource
-- [ ] Waffenverbrauch/Instandhaltung
-- [ ] Rüstungsunterhalt
-- [ ] Heilung über Versorgung
-- [ ] Versorgungslager
-- [ ] Nachschubwege
-- [ ] Soldatenunterhalt über Emeralds
-
 ---
 
 # 🟠 Phase 3 – Claims & Territorium
@@ -197,10 +187,6 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [x] Claim-Limits
 - [ ] Hauptsiedlung
 - [ ] Außenposten
-- [ ] Grenzgebiete
-- [ ] Einflussbereiche
-- [ ] Gebietserweiterung durch Siedlungsfortschritt
-- [ ] Diplomatie bei Schutzregeln
 - [ ] militärische Kontrolle
 - [ ] umkämpfte Gebiete
 
@@ -213,16 +199,9 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [x] `hostile`
 - [x] Beziehungen persistent speichern
 - [ ] Bündnisse
-- [ ] Kriegserklärungen
-- [ ] Nichtangriffspakte
-- [ ] Friedensverträge
-- [ ] Handelsabkommen
-- [ ] Kriegsstatus
 - [ ] Diplomatie-UI
 - [ ] Claims berücksichtigen Diplomatie
 - [ ] Soldiers berücksichtigen Diplomatie
-- [ ] Marktregeln berücksichtigen Diplomatie
-
 ---
 
 # 🟡 Phase 5 – Wirtschaft & Ressourcen
@@ -240,26 +219,11 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [x] Tierprodukte
 - [ ] weitere unverarbeitete Rohstoffe
 
-## Produktion
-
-- [ ] Produktionsketten
-- [ ] Rohstoff → Verarbeitung → Endprodukt
-- [ ] Gebäude als Produktionsstätten
-- [ ] Produktionskapazitäten
-- [ ] Lagerbestände
-- [ ] Transportwege
-- [ ] Arbeiter/Siedler als Produktionsfaktor
-
 ## Wirtschaft
 
 - [x] Steuern
 - [x] Emerald-Währung
-- [ ] Team-Kasse
-- [ ] Produktionskosten
-- [ ] Soldatenunterhalt
-- [ ] Gebäudekosten
-- [ ] Wirtschaftswachstum
-- [ ] Ressourcenknappheit
+- [x] Team-Kasse
 
 ---
 
@@ -283,12 +247,6 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [ ] Handelsaufträge
 - [ ] Ressourcenpreise
 - [ ] Angebot/Nachfrage
-- [ ] regionale Preisunterschiede
-- [ ] Handelsrouten
-- [ ] Händlerbewegung
-- [ ] Händler-Lagerbestand
-- [ ] Handelsverträge
-- [ ] Marktübersicht im Dashboard
 
 ### Aktuelle Händler
 
@@ -305,18 +263,10 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 # 🟡 Phase 7 – Siedlungen & Bevölkerung
 
 - [ ] Siedlungen
-- [ ] Einwohnerzahl
+- [x] Einwohnerzahl
 - [ ] Bevölkerung wächst durch Nahrung/Wirtschaft
 - [ ] Wohngebäude
-- [ ] Arbeiter
-- [ ] Berufe
-- [ ] Produktionsgebäude
-- [ ] Lagerhäuser
-- [ ] Versorgung
-- [ ] Zufriedenheit
 - [ ] Bevölkerungsgrenzen
-- [ ] Siedlungsstufen
-- [ ] Hauptsiedlung als Zentrum
 
 ### Zielmodell
 
@@ -374,46 +324,23 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [x] Vindicators/Ravager
 - [x] Außenposten-/Raid-Logik
 - [x] Belagerungsgrundlage
-- [ ] gezielte Angriffe auf Siedlungen
-- [ ] Bedrohungsstufen
-- [ ] Verteidigungswarnungen
-- [ ] Angriffe auf Produktionsgebiete
-- [ ] Integration in Wirtschaft und Bevölkerung
-
+- [x] gezielte Angriffe auf Siedlungen
+- [x] Verteidigungswarnungen
 ---
 
 # 🔵 Phase 11 – Siedler-3-Spielgefühl
 
 - [ ] klare Ressourcenketten
-- [ ] Produktionskreisläufe
-- [ ] Lager und Logistik
 - [ ] Bevölkerung als Wirtschaftsfaktor
-- [ ] Militär als wirtschaftlich relevantes System
 - [ ] Territorium als strategische Ressource
 - [ ] Handel zwischen Teams
-- [ ] Diplomatie
+- [x] Diplomatie
 - [ ] Krieg und Frieden
 - [ ] Belagerungen
-- [ ] Siegbedingungen
 
 ### Leitprinzip
 
 > **Nicht möglichst viele Features hinzufügen, sondern die vorhandenen Systeme zu einem funktionierenden Wirtschafts-, Siedlungs- und Strategiespiel verbinden.**
-
----
-
-# 🧪 Phase 12 – Qualität, Performance & Tests
-
-- [ ] Testwelt für alle Systeme
-- [ ] Regressionstests nach API-Updates
-- [ ] Soldier-Kampftests inklusive XP-Verteilung
-- [ ] Soldier-Rekrutierungstests
-- [ ] Händler-/UI-Tests
-- [ ] Multiplayer-Test mit 8 Spielern / 4 Teams
-- [ ] Performance-Test bei vielen Soldaten
-- [ ] Performance-Test bei vielen Händlern
-- [ ] Fehler-/Crash-Analyse
-- [ ] Backup-/Rollback-Prozess
 
 ---
 
