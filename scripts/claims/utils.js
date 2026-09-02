@@ -50,6 +50,38 @@ export function saveClaims(claims) {
     }
 }
 
+/** Entfernt alle Claims eines Teamnamens, auch wenn das Team nicht mehr existiert. */
+export function forceRemoveClaimsForTeam(teamName) {
+    const claims = getClaims();
+    let removed = 0;
+
+    for (const [key, claim] of Object.entries(claims)) {
+        if (claim?.team === teamName) {
+            delete claims[key];
+            removed++;
+        }
+    }
+
+    return {
+        removed,
+        saved: removed === 0 || saveClaims(claims)
+    };
+}
+
+/** Gibt den Claim am angegebenen Standort unabhängig vom Team frei. */
+export function forceRemoveClaimAt(location) {
+    const chunk = getChunkCoords(location);
+    const claims = getClaims();
+    const key = getChunkKey(chunk.x, chunk.z);
+
+    if (!claims[key]) {
+        return { removed: 0, saved: true, chunk };
+    }
+
+    delete claims[key];
+    return { removed: 1, saved: saveClaims(claims), chunk };
+}
+
 /** Gibt den Claim eines Chunks zurück (oder null). */
 export function getClaimAt(location) {
     const chunk = getChunkCoords(location);

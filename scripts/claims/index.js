@@ -1,6 +1,6 @@
 import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
-import { getChunkCoords, getChunkKey, getClaims, saveClaims, get4x4ChunksFromChunk, areChunksFree, countTeamClaims } from "./utils.js";
+import { getChunkCoords, getChunkKey, getClaims, saveClaims, get4x4ChunksFromChunk, areChunksFree, countTeamClaims, forceRemoveClaimsForTeam, forceRemoveClaimAt } from "./utils.js";
 import { getTeams } from "../teams/index.js";
 
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
@@ -201,6 +201,41 @@ system.beforeEvents.startup.subscribe((event) => {
         const teamName = String(team ?? "").trim();
         if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; }
         removeClaimsForTeam(player, teamName);
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({ name: "siedler:claim_force_remove", description: "Löscht Claims eines nicht mehr existierenden Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => {
+        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
+        const teamName = String(team ?? "").trim();
+        if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; }
+
+        system.run(() => {
+            const result = forceRemoveClaimsForTeam(teamName);
+            if (!result.removed) {
+                player.sendMessage(`§cKeine Claims für Team "${teamName}" gefunden.`);
+                return;
+            }
+            player.sendMessage(result.saved
+                ? `§eClaims des Teams "${teamName}" force gelöscht (${result.removed} Chunks).`
+                : "§cDie Claims konnten nicht gespeichert werden.");
+        });
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({ name: "siedler:claim_force_release", description: "Gibt den Claim im aktuellen Chunk frei.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
+        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
+
+        system.run(() => {
+            const result = forceRemoveClaimAt(player.location);
+            const chunkLabel = `${result.chunk.x}, ${result.chunk.z}`;
+            if (!result.removed) {
+                player.sendMessage(`§cDer aktuelle Chunk (${chunkLabel}) ist nicht geclaimt.`);
+                return;
+            }
+            player.sendMessage(result.saved
+                ? `§eClaim im aktuellen Chunk (${chunkLabel}) wurde freigegeben.`
+                : "§cDer aktuelle Claim konnte nicht gespeichert werden.");
+        });
         return { status: CustomCommandStatus.Success };
     });
 
