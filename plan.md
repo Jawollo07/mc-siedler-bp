@@ -36,8 +36,8 @@ Das Projekt soll sich von einzelnen Server-Systemen zu einem zusammenhängenden 
 - [x] Soldier-Zuordnung über `player.id`
 - [x] Soldier-KI-Grundsystem
 - [x] Soldier-Befehle
-- [x] Soldier-Level 1–3
-- [x] Soldier-XP-Grundlage
+- [x] Soldier-Level 1–7
+- [x] Soldier-XP mit sieben XP-Schwellen
 - [x] Infanterie
 - [x] Ausrüstungssystem
 - [x] Grundlage für Soldier-Fähigkeiten
@@ -67,17 +67,32 @@ Das Projekt soll sich von einzelnen Server-Systemen zu einem zusammenhängenden 
 ## 2.1 Einheiten
 
 - [x] Infanterie
-- [x] Level 1–3
+- [x] Level 1–7
 - [x] unterschiedliche HP, Schaden und Geschwindigkeit
 - [x] unterschiedliche Ausrüstung
-- [x] XP-/Level-Grundlage
+- [x] XP-/Level-System mit persistentem XP-Fortschritt
+- [x] automatische Beförderung anhand der XP
 - [x] Rekrutierung über Soldatenhändler
 - [ ] Bogenschütze
 - [ ] Schwerer Soldat
 - [ ] Spezialeinheiten
 - [ ] weitere Einheitentypen
-- [ ] Beförderungen
+- [ ] Beförderungen mit zusätzlichen Rängen/Abzeichen
 - [ ] Unterhalt pro Einheit
+
+### Aktuelle XP-Schwellen
+
+| Level | Rang | Gesamt-XP |
+|---:|---|---:|
+| 1 | Rekrut | 0 |
+| 2 | Veteran | 100 |
+| 3 | Elite | 300 |
+| 4 | Hauptmann | 600 |
+| 5 | Kriegsveteran | 1.000 |
+| 6 | Kriegsherr | 1.500 |
+| 7 | Marschall | 2.100 |
+
+XP-Gewinn: **+5 pro Treffer**, **+50 pro Kill**.
 
 ## 2.2 Rekrutierung
 
@@ -394,4 +409,4 @@ Das Projekt soll sich von einzelnen Server-Systemen zu einem zusammenhängenden 
 6. **Diplomatie mit Claims, Handel und Militär verbinden**
 7. **Resource-Pack-Darstellung stabilisieren**
 
-Der Soldatenhändler ist damit technisch vorhanden; als nächster Ausbau soll die Rekrutierung stärker an Siedlungsstufe, Bevölkerung, Ressourcen und langfristigen Soldatenunterhalt gekoppelt werden.
+Der Soldaten-Levelpfad umfasst aktuell sieben Stufen. Die nächsten Schritte sind, Beförderungen stärker mit Rängen, Gruppenverwaltung, Versorgung und den Siedlungsstufen zu verknüpfen.
