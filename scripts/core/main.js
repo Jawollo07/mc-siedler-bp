@@ -59,9 +59,10 @@ import ".././essentials/player_stats.js";
 // Soldier system
 // -----------------------------------------------------------------------------
 import ".././soldier/index.js";
+import ".././soldier/trader.js";
 
 const VERSION = version;
-const MODULE_COUNT = 18;
+const MODULE_COUNT = 19;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
 
