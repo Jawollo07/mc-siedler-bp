@@ -1,3 +1,6 @@
 import "./commands.js";
-import "./ai.js"
-console.log("[SOLDIER] Loaded")
+import { startSoldierAI } from "./ai.js";
+
+startSoldierAI();
+
+console.log("[SOLDIER] Loaded");
