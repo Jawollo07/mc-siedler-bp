@@ -37,7 +37,10 @@ Das Projekt soll sich von einzelnen Server-Systemen zu einem zusammenhängenden 
 - [x] Soldier-KI-Grundsystem
 - [x] Soldier-Befehle
 - [x] Soldier-Level 1–7
-- [x] Soldier-XP mit sieben XP-Schwellen
+- [x] Persistentes Soldier-XP-System
+- [x] Schadenabhängige Treffer-XP
+- [x] Gegnerstärkeabhängige Kill-XP
+- [x] Automatische Levelbeförderungen
 - [x] Infanterie
 - [x] Ausrüstungssystem
 - [x] Grundlage für Soldier-Fähigkeiten
@@ -85,14 +88,44 @@ Das Projekt soll sich von einzelnen Server-Systemen zu einem zusammenhängenden 
 | Level | Rang | Gesamt-XP |
 |---:|---|---:|
 | 1 | Rekrut | 0 |
-| 2 | Veteran | 100 |
-| 3 | Elite | 300 |
-| 4 | Hauptmann | 600 |
-| 5 | Kriegsveteran | 1.000 |
-| 6 | Kriegsherr | 1.500 |
-| 7 | Marschall | 2.100 |
+| 2 | Veteran | 150 |
+| 3 | Elite | 400 |
+| 4 | Hauptmann | 800 |
+| 5 | Kriegsveteran | 1.400 |
+| 6 | Kriegsherr | 2.200 |
+| 7 | Marschall | 3.500 |
 
-XP-Gewinn: **+5 pro Treffer**, **+50 pro Kill**.
+### Aktuelle XP-Regeln
+
+XP wird im Kampf nach Leistung vergeben und persistent als `soldier:xp` gespeichert.
+
+| Ereignis | XP |
+|---|---:|
+| 1–2 verursachter Schaden | 1 XP |
+| 3–5 verursachter Schaden | 2–4 XP |
+| 6–10 verursachter Schaden | 5–7 XP |
+| 11+ verursachter Schaden | 1–8 XP, maximal 8 XP |
+| Kill eines normalen Gegners | 25–50 XP |
+| Kill eines starken Gegners | 50–75 XP |
+| Kill eines sehr starken Gegners/Bosses | 75–100 XP |
+
+Treffer-XP wird zufällig innerhalb des jeweiligen Bereichs bestimmt. Der finale Treffer eines Gegners erhält keine zusätzliche Treffer-XP, weil der Kill separat vergütet wird.
+
+Die Kill-Klassifizierung unterstützt:
+
+- explizite Tags `soldier_xp_boss`, `boss`, `very_strong`
+- explizite Tags `soldier_xp_strong`, `strong`
+- bekannte starke Gegner wie Vindicator, Evoker, Ravager, Warden, Elder Guardian und Piglin Brute
+- Ender Dragon und Wither als Bosse
+- maximale Lebenspunkte als Fallback für nicht explizit konfigurierte Gegner
+
+Implementierung:
+
+```text
+scripts/soldier/level.js
+```
+
+Konfigurationswerte befinden sich zentral in `SOLDIER_LEVEL_CONFIG` in `level.js`.
 
 ## 2.2 Rekrutierung
 
@@ -150,13 +183,15 @@ XP-Gewinn: **+5 pro Treffer**, **+50 pro Kill**.
 - [x] `/siedler:move`
 - [x] `/siedler:follow`
 - [x] `/siedler:stay`
-- [ ] `/siedler:attack`
-- [ ] `/siedler:defend`
-- [ ] `/siedler:patrol`
-- [ ] `/siedler:stop`
+- [x] `/siedler:attack`
+- [x] `/siedler:defend`
+- [x] `/siedler:patrol`
+- [x] `/siedler:stop`
 - [x] Grundlage für Soldatenauswahl
-- [ ] mehrere Soldaten gleichzeitig befehligen
-- [ ] Gruppen speichern
+- [x] Soldatengruppen
+- [x] Gruppenverwaltung
+- [x] Formationsgrundlage
+- [ ] mehrere komplexe Gruppen gleichzeitig befehligen
 - [ ] Zielpositionen markieren
 - [ ] Garnisonen erstellen
 
@@ -318,7 +353,7 @@ XP-Gewinn: **+5 pro Treffer**, **+50 pro Kill**.
 - [ ] Militärübersicht
 - [ ] Soldatenliste
 - [ ] Soldatenauswahl vollständig ausbauen
-- [ ] Gruppenverwaltung
+- [x] Gruppenverwaltung
 - [ ] Diplomatie-Menü
 - [ ] Handelsübersicht
 - [ ] Ressourcenübersicht
@@ -388,7 +423,7 @@ XP-Gewinn: **+5 pro Treffer**, **+50 pro Kill**.
 
 - [ ] Testwelt für alle Systeme
 - [ ] Regressionstests nach API-Updates
-- [ ] Soldier-Kampftests
+- [ ] Soldier-Kampftests inklusive XP-Verteilung
 - [ ] Soldier-Rekrutierungstests
 - [ ] Händler-/UI-Tests
 - [ ] Multiplayer-Test mit 8 Spielern / 4 Teams
@@ -408,5 +443,6 @@ XP-Gewinn: **+5 pro Treffer**, **+50 pro Kill**.
 5. **Siedlungen und Bevölkerung implementieren**
 6. **Diplomatie mit Claims, Handel und Militär verbinden**
 7. **Resource-Pack-Darstellung stabilisieren**
+8. **Soldier-XP im Multiplayer und mit unterschiedlichen Gegnerstärken testen**
 
-Der Soldaten-Levelpfad umfasst aktuell sieben Stufen. Die nächsten Schritte sind, Beförderungen stärker mit Rängen, Gruppenverwaltung, Versorgung und den Siedlungsstufen zu verknüpfen.
+Der Soldaten-Levelpfad umfasst aktuell sieben Stufen. XP wird jetzt nach tatsächlich verursachtem Schaden und Gegnerstärke vergeben. Die nächsten Schritte sind, Beförderungen stärker mit Rängen, Gruppenverwaltung, Versorgung und den Siedlungsstufen zu verknüpfen.
