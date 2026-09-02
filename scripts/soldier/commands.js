@@ -42,7 +42,7 @@ function registerSoldierCommands(registry) {
             permissionLevel: CommandPermissionLevel.GameDirectors,
             cheatsRequired: false,
             mandatoryParameters: [
-                { type: CustomCommandParamType.Vector3, name: "Target" }
+                { type: CustomCommandParamType.Location, name: "Target" }
             ]
         },
         commandMove
