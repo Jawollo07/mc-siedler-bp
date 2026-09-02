@@ -5,7 +5,15 @@
       "identifier": "siedler:soldier",
       "is_spawnable": true,
       "is_summonable": true,
-      "is_experimental": false
+      "is_experimental": false,
+      "properties": {
+        "siedler:combat_state": {
+          "type": "enum",
+          "values": ["idle", "move", "attack"],
+          "default": "idle",
+          "client_sync": true
+        }
+      }
     },
     "components": {
       "minecraft:type_family": {
