@@ -59,7 +59,7 @@ import ".././essentials/player_stats.js";
 // Soldier system
 // -----------------------------------------------------------------------------
 import ".././soldier/index.js";
-import "../tests/equipment.js";
+
 const VERSION = version;
 const MODULE_COUNT = 18;
 const STARTUP_DELAY = 20;
