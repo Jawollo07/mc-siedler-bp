@@ -90,7 +90,7 @@ export function getHitXP(damage) {
 }
 
 export function getEnemyStrength(entity) {
-    if (!entity?.isValid) return "normal";
+    if (!entity) return "normal";
     try {
         const tags = new Set(entity.getTags?.() ?? []);
         if (tags.has("soldier_xp_boss") || tags.has("boss") || tags.has("very_strong")) return "boss";
