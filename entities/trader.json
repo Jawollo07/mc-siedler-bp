@@ -1,0 +1,71 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "siedler:trader",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "trades_default": {
+        "minecraft:trade_table": {
+          "display_name": "Siedler Händler",
+          "table": "trading/siedler_trader_trades.json",
+          "new_screen": true
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": ["trader", "mob"]
+      },
+      "minecraft:health": {
+        "value": 20,
+        "max": 20
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.95
+      },
+      "minecraft:movement": {
+        "value": 0.5
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:navigation.walk": {
+        "can_path_over_water": false,
+        "avoid_water": true,
+        "can_open_doors": true
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:nameable": {},
+      "minecraft:interact": {
+        "interactions": []
+      },
+      "minecraft:behavior.trade_with_player": {
+        "priority": 1
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 2,
+        "look_distance": 8,
+        "probability": 1
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 8,
+        "speed_multiplier": 0.6
+      },
+      "minecraft:persistent": {}
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": ["trades_default"]
+        }
+      }
+    }
+  }
+}
