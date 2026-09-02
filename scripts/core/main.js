@@ -34,6 +34,11 @@ import ".././claims/protection.js";
 import ".././claims/display.js";
 
 // -----------------------------------------------------------------------------
+// Market
+// -----------------------------------------------------------------------------
+import ".././market/market_place.js";
+
+// -----------------------------------------------------------------------------
 // Monster system
 // -----------------------------------------------------------------------------
 import ".././monster/index.js";
@@ -54,7 +59,7 @@ import ".././essentials/player_stats.js";
 import ".././soldier/index.js";
 import "../tests/equipment.js";
 const VERSION = version;
-const MODULE_COUNT = 15;
+const MODULE_COUNT = 16;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
 
@@ -109,7 +114,7 @@ function finishStartup() {
         console.info("§8----------------------------------------");
         logSuccess("All modules initialized.");
         log(`Loaded ${MODULE_COUNT} modules.`);
-        console.info("§7Teams · Taxes · Claims · Monster · Pillager · Outposts · Essentials · Soldier");
+        console.info("§7Teams · Taxes · Claims · Market · Monster · Pillager · Outposts · Essentials · Soldier");
         console.info("§7 Version: " + VERSION);
         console.info("§8----------------------------------------");
     });
