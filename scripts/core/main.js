@@ -37,6 +37,7 @@ import ".././claims/display.js";
 // Market
 // -----------------------------------------------------------------------------
 import ".././market/market_place.js";
+import ".././market/commands.js";
 
 // -----------------------------------------------------------------------------
 // Monster system
@@ -59,7 +60,7 @@ import ".././essentials/player_stats.js";
 import ".././soldier/index.js";
 import "../tests/equipment.js";
 const VERSION = version;
-const MODULE_COUNT = 16;
+const MODULE_COUNT = 17;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
 
