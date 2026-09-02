@@ -35,7 +35,7 @@ export function initializeSoldierProgression(soldier) {
     if (!entity?.isValid) return;
     const typeData = SOLDIER_TYPES[soldier.type] ?? SOLDIER_TYPES.infantry;
     const maxLevel = getMaxLevel(typeData);
-    let xp = getSoldierXP(entity);
+    const xp = getSoldierXP(entity);
     try { if (entity.getDynamicProperty(XP_PROPERTY) === undefined) saveXP(entity, 0); } catch {}
     const earnedLevel = getLevelForXP(xp, maxLevel);
     const storedLevel = clampLevel(Number(soldier.level ?? getLevel(entity)), maxLevel);
@@ -91,8 +91,10 @@ function applySoldierLevel(soldier, level, xp) {
     }
 
     if (soldier.ownerId) {
-        const owner = world.getPlayers().find(p => p.id === soldier.ownerId);
-        if (owner) system.run(() => owner.sendMessage(`§6⚔ §f${typeData.displayName} §eLv. ${level}§f wurde befördert! §7(${xp} XP)`));
+        try {
+            const owner = world.getPlayers().find(p => p.id === soldier.ownerId);
+            if (owner) system.run(() => owner.sendMessage(`§6⚔ §f${typeData.displayName} §eLv. ${level}§f wurde befördert! §7(${xp} XP)`));
+        } catch {}
     }
 }
 
@@ -114,12 +116,17 @@ function getLevelForXP(xp, maxLevel) {
     for (let i = 2; i <= maxLevel; i++) if (xp >= xpForLevel(i)) level = i;
     return level;
 }
-
 function xpForLevel(level) { return SOLDIER_LEVEL_CONFIG.LEVEL_XP[level] ?? Number.MAX_SAFE_INTEGER; }
 function getMaxLevel(typeData) { return Math.max(1, ...Object.keys(typeData?.levels ?? {}).map(Number)); }
 function clampLevel(level, maxLevel) { return Number.isFinite(level) ? Math.max(1, Math.min(maxLevel, Math.floor(level))) : 1; }
 function getLevel(entity) { try { return Number(entity.getDynamicProperty("soldier:level")) || 1; } catch { return 1; } }
 function getType(entity) { try { return String(entity.getDynamicProperty("soldier:type") ?? "infantry"); } catch { return "infantry"; } }
+
+system.runInterval(() => {
+    for (const soldier of SOLDIERS.values()) {
+        try { initializeSoldierProgression(soldier); } catch (error) { console.debug(`[Soldier Level] sync failed: ${error}`); }
+    }
+}, 40);
 
 world.afterEvents.entityHurt.subscribe(event => {
     try {
