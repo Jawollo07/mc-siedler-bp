@@ -72,6 +72,8 @@ Das Soldaten-System stellt steuerbare `siedler:soldier`-Einheiten bereit.
 - Infanterie
 - Level 1–7
 - Soldaten-XP
+- XP abhängig vom verursachten Kampfschaden
+- Bonus-XP für Kills abhängig von der Gegnerstärke
 - unterschiedliche HP, Geschwindigkeit und Schaden
 - stufenweise bessere Waffen, Schilde und Rüstung
 - Fähigkeiten auf höheren Stufen
@@ -84,16 +86,32 @@ Soldaten starten auf Level 1 und sammeln dauerhaft XP. Ab bestimmten Gesamt-XP s
 | Level | Bezeichnung | benötigte Gesamt-XP | HP | Schaden | Geschwindigkeit |
 |---:|---|---:|---:|---:|---:|
 | 1 | Rekrut | 0 | 30 | 4 | 0,25 |
-| 2 | Veteran | 100 | 40 | 6 | 0,28 |
-| 3 | Elite | 300 | 55 | 8 | 0,32 |
-| 4 | Hauptmann | 600 | 65 | 10 | 0,34 |
-| 5 | Kriegsveteran | 1.000 | 75 | 12 | 0,36 |
-| 6 | Kriegsherr | 1.500 | 85 | 14 | 0,38 |
-| 7 | Marschall | 2.100 | 100 | 16 | 0,40 |
+| 2 | Veteran | 150 | 40 | 6 | 0,28 |
+| 3 | Elite | 400 | 55 | 8 | 0,32 |
+| 4 | Hauptmann | 800 | 65 | 10 | 0,34 |
+| 5 | Kriegsveteran | 1.400 | 75 | 12 | 0,36 |
+| 6 | Kriegsherr | 2.200 | 85 | 14 | 0,38 |
+| 7 | Marschall | 3.500 | 100 | 16 | 0,40 |
 
-**XP:** 5 XP pro erfolgreichem Treffer und 50 XP pro Kill. Die XP werden persistent als Dynamic Property gespeichert.
+### ⚔️ XP durch Kampf
 
-Konfiguration:
+XP wird nicht mehr pauschal pro Treffer vergeben, sondern anhand des tatsächlich verursachten Schadens. Der letzte Treffer eines Gegners wird als Kill gewertet und erhält keine zusätzliche Treffer-XP.
+
+| Ereignis | XP |
+|---|---:|
+| 1–2 Schaden | 1 XP |
+| 3–5 Schaden | 2–4 XP |
+| 6–10 Schaden | 5–7 XP |
+| 11+ Schaden | 1–8 XP, maximal 8 |
+| Kill eines normalen Gegners | 25–50 XP |
+| Kill eines starken Gegners | 50–75 XP |
+| Kill eines sehr starken Gegners/Bosses | 75–100 XP |
+
+Starke Gegner werden unter anderem über Vindicator, Evoker, Ravager, Warden, Elder Guardian und Piglin Brute erkannt. Ender Dragon und Wither gelten als Bosse. Zusätzlich können eigene Entities über die Tags `soldier_xp_strong`, `strong`, `soldier_xp_boss`, `boss` oder `very_strong` klassifiziert werden. Als Fallback wird die maximale Lebenspunktzahl berücksichtigt.
+
+Die XP wird persistent als Dynamic Property `soldier:xp` gespeichert.
+
+Konfiguration und Logik:
 
 ```text
 scripts/soldier/config.js
@@ -178,17 +196,6 @@ scripts/core/main.js
 /siedler:move <x y z>
 /siedler:follow
 /siedler:stay
-```
-
-### Markt
-
-```text
-/siedler:market_status
-/siedler:market_enable <id>
-/siedler:market_disable <id>
-/siedler:market_setcorner1 <id>
-/siedler:market_setcorner2 <id>
-/siedler:market_cleanup
 ```
 
 ## 🛠️ Entwicklung
