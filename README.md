@@ -19,7 +19,7 @@ Aktuelle Systeme:
 - 🧑‍🌾 vordefinierte Händler und Handelstabellen
 - 👹 konfigurierbares Monster-System
 - 🏴 Pillager-Trupps, Außenposten-Raids und Belagerungen
-- ⚔️ Soldaten-System mit KI, Befehlen, Leveln und Ausrüstung
+- ⚔️ Soldaten-System mit KI, Befehlen, Leveln, XP und Ausrüstung
 - 🧰 Essentials, Homes, TPA und Spieler-Dashboard
 - 💾 persistente Speicherung über World Dynamic Properties
 
@@ -119,9 +119,41 @@ Aktuell vorhanden:
 - Bewegungs- und Befehlslogik
 - Infanterie als aktueller Einheitentyp
 - Level 1–3
-- unterschiedliche HP, Geschwindigkeit und Schaden
+- persistente Soldaten-XP über Entity Dynamic Properties
+- XP für erfolgreiche Treffer und Kills
+- automatische Beförderung bei Erreichen der XP-Schwellen
+- Level-Up aktualisiert HP, Schaden, Reichweite, Geschwindigkeit, Fähigkeiten und Ausrüstung
+- Beförderungsbenachrichtigung an den Besitzer
 - Waffen, Schild und Rüstung
 - Fähigkeiten auf höheren Stufen
+
+### ⚔️ Soldaten-Level & Erfahrung
+
+Die aktuelle Infanterie besitzt drei Erfahrungsstufen:
+
+| Level | Bezeichnung | benötigte Gesamt-XP | HP | Schaden | Geschwindigkeit |
+|---|---|---:|---:|---:|---:|
+| 1 | Rekrut | 0 | 30 | 4 | 0,25 |
+| 2 | Veteran | 100 | 40 | 6 | 0,28 |
+| 3 | Elite | 300 | 55 | 8 | 0,32 |
+
+XP-Quellen:
+
+- **+5 XP** für einen erfolgreichen Treffer
+- **+50 XP** für einen Kill
+
+Die XP werden auf dem Soldaten gespeichert. Dadurch bleibt der Fortschritt auch nach einem Server-/Script-Neustart erhalten. Das aktuell konfigurierte Maximum ist Level 3; weitere Einheitentypen können später eigene Levelkurven erhalten.
+
+Beim Level-Up werden die Werte aus `config.js` übernommen und die Ausrüstung des neuen Levels erneut angewendet.
+
+Beispielbefehle:
+
+```text
+/siedler:soldier_info
+/siedler:soldier_xp <Amount>
+```
+
+`/siedler:soldier_xp` ist primär für Administration und Tests gedacht.
 
 Beispiel:
 
@@ -129,18 +161,23 @@ Beispiel:
 /siedler:spawn_soldier infantry 1
 ```
 
-Befehle:
+Weitere Befehle:
 
 ```text
 /siedler:move <x y z>
 /siedler:follow
 /siedler:stay
+/siedler:attack [Radius]
+/siedler:defend [Radius]
+/siedler:patrol <x y z>
+/siedler:stop
 ```
 
 Konfiguration:
 
 ```text
 scripts/soldier/config.js
+scripts/soldier/level.js
 ```
 
 Die Darstellung der Entity kommt aus dem Resource Pack.
@@ -246,6 +283,8 @@ scripts/core/main.js
     ├── Spawn
     ├── KI
     ├── Command Manager
+    ├── Gruppen
+    ├── Level / XP
     └── Konfiguration
 ```
 
@@ -281,8 +320,11 @@ mc-siedler-bp/
         ├── ai.js
         ├── commands.js
         ├── command_manager.js
+        ├── groups.js
+        ├── level.js
         ├── config.js
-        └── spawn.js
+        ├── spawn.js
+        └── ui.js
 ```
 
 Die README dokumentiert die Architektur auf Modulebene; einzelne Dateien können sich während der Entwicklung weiter verändern.
@@ -377,9 +419,15 @@ Zusätzlich existieren administrative Funktionen wie Heal, Food, Godmode, Flugmo
 
 ```text
 /siedler:spawn_soldier <type> [level]
+/siedler:soldier_info
+/siedler:soldier_xp <Amount>
 /siedler:move <x y z>
 /siedler:follow
 /siedler:stay
+/siedler:attack [Radius]
+/siedler:defend [Radius]
+/siedler:patrol <x y z>
+/siedler:stop
 ```
 
 > Administrative Custom Commands verwenden aktuell `GameDirectors` als Berechtigungsebene.
@@ -390,11 +438,11 @@ Zusätzlich existieren administrative Funktionen wie Heal, Food, Godmode, Flugmo
 
 Der derzeit konfigurierte Einheitentyp ist **Infanterie**.
 
-| Level | Bezeichnung | HP | Schaden | Geschwindigkeit | Kosten |
-|---|---|---:|---:|---:|---:|
-| 1 | Rekrut | 30 | 4 | 0,25 | 8 Emeralds |
-| 2 | Veteran | 40 | 6 | 0,28 | 18 Emeralds |
-| 3 | Elite | 55 | 8 | 0,32 | 35 Emeralds |
+| Level | Bezeichnung | HP | Schaden | Geschwindigkeit | Kosten | XP für Level |
+|---|---|---:|---:|---:|---:|---:|
+| 1 | Rekrut | 30 | 4 | 0,25 | 8 Emeralds | 0 |
+| 2 | Veteran | 40 | 6 | 0,28 | 18 Emeralds | 100 |
+| 3 | Elite | 55 | 8 | 0,32 | 35 Emeralds | 300 |
 
 Höhere Stufen erhalten bessere Ausrüstung und zusätzliche Fähigkeiten wie **Kampfschrei**, **Schildstoß**, **Zweiter Wind** und **Eiserner Wille**.
 
@@ -431,6 +479,7 @@ Dazu gehören je nach System unter anderem:
 - Homes
 - Todespunkte
 - Monster-Konfiguration
+- Soldaten-XP
 - weitere serverweite Zustände
 
 Bei größeren Änderungen an Datenstrukturen sollte ein Server-/Welt-Backup erstellt werden.
@@ -506,7 +555,10 @@ Die detaillierte Planung befindet sich in [`plan.md`](plan.md).
 Aktuelle Ausbauziele umfassen insbesondere:
 
 - natürlichere Soldatenbewegung und Kampf-KI
-- weitere Einheitentypen
+- Ausbau des Soldier-XP-Systems um weitere Einheitentypen und Levelkurven
+- Beförderungen und später militärische Ränge
+- Unterhalt und Versorgung der Soldaten
+- vollständige Gruppen-/Auswahlsteuerung
 - Ausbau der Teambeziehungen
 - weitere Händler und Waren
 - stärkeres Siedler-3-inspiriertes Wirtschaftssystem
