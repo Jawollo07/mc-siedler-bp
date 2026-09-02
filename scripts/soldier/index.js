@@ -1,3 +1,4 @@
+import "./archer.js";
 import "./commands.js";
 import "./ui.js";
 import "./level.js";
