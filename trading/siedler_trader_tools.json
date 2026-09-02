@@ -1,0 +1,13 @@
+{
+  "tiers": [
+    {
+      "total_exp_required": 0,
+      "trades": [
+        {"max_uses":8,"reward_exp":false,"wants":[{"item":"minecraft:emerald","quantity":8}],"gives":[{"item":"minecraft:iron_pickaxe","quantity":1}]},
+        {"max_uses":8,"reward_exp":false,"wants":[{"item":"minecraft:emerald","quantity":7}],"gives":[{"item":"minecraft:iron_axe","quantity":1}]},
+        {"max_uses":8,"reward_exp":false,"wants":[{"item":"minecraft:emerald","quantity":7}],"gives":[{"item":"minecraft:iron_shovel","quantity":1}]},
+        {"max_uses":6,"reward_exp":false,"wants":[{"item":"minecraft:emerald","quantity":12}],"gives":[{"item":"minecraft:diamond","quantity":1}]}
+      ]
+    }
+  ]
+}
