@@ -9,7 +9,8 @@ const TRADER_TYPES = {
     resources: { event: "siedler:set_resources", name: "§7Rohstoffhändler" },
     tools: { event: "siedler:set_tools", name: "§bWerkzeughändler" },
     weapons: { event: "siedler:set_weapons", name: "§cWaffenhändler" },
-    supplies: { event: "siedler:set_supplies", name: "§dVersorgungshändler" }
+    supplies: { event: "siedler:set_supplies", name: "§dVersorgungshändler" },
+    soldiers: { event: null, name: "§cSoldatenhändler", tag: "soldier_trader" }
 };
 
 function playerOnly(origin) {
@@ -30,9 +31,11 @@ function spawnTrader(player, type, location) {
         reply(player, `§7Verfügbar: ${Object.keys(TRADER_TYPES).join(", ")}`);
         return;
     }
+
     try {
         const trader = player.dimension.spawnEntity(TRADER_TYPE, location);
-        trader.triggerEvent(config.event);
+        if (config.event) trader.triggerEvent(config.event);
+        if (config.tag) trader.addTag(config.tag);
         try { trader.nameTag = config.name; } catch {}
         reply(player, `§a${config.name} §agespawnt.`);
     } catch (error) {
