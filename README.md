@@ -70,17 +70,34 @@ Das Soldaten-System stellt steuerbare `siedler:soldier`-Einheiten bereit.
 - `idle`, `attack`, `follow`, `move`, `retreat`
 - Move, Follow und Stay
 - Infanterie
-- Level 1–3
+- Level 1–7
 - Soldaten-XP
 - unterschiedliche HP, Geschwindigkeit und Schaden
-- Waffen, Schild und Rüstung
+- stufenweise bessere Waffen, Schilde und Rüstung
 - Fähigkeiten auf höheren Stufen
 - direkte Rekrutierung über den Soldatenhändler
+
+### Level-System
+
+Soldaten starten auf Level 1 und sammeln dauerhaft XP. Ab bestimmten Gesamt-XP steigen sie automatisch auf das nächste Level auf. Dabei werden Werte, Ausrüstung und Fähigkeiten aktualisiert.
+
+| Level | Bezeichnung | benötigte Gesamt-XP | HP | Schaden | Geschwindigkeit |
+|---:|---|---:|---:|---:|---:|
+| 1 | Rekrut | 0 | 30 | 4 | 0,25 |
+| 2 | Veteran | 100 | 40 | 6 | 0,28 |
+| 3 | Elite | 300 | 55 | 8 | 0,32 |
+| 4 | Hauptmann | 600 | 65 | 10 | 0,34 |
+| 5 | Kriegsveteran | 1.000 | 75 | 12 | 0,36 |
+| 6 | Kriegsherr | 1.500 | 85 | 14 | 0,38 |
+| 7 | Marschall | 2.100 | 100 | 16 | 0,40 |
+
+**XP:** 5 XP pro erfolgreichem Treffer und 50 XP pro Kill. Die XP werden persistent als Dynamic Property gespeichert.
 
 Konfiguration:
 
 ```text
 scripts/soldier/config.js
+scripts/soldier/level.js
 ```
 
 ## 💰 Wirtschaft & Handel
@@ -138,6 +155,7 @@ scripts/core/main.js
     ├── commands.js
     ├── command_manager.js
     ├── config.js
+    ├── level.js
     ├── spawn.js
     └── trader.js
 ```
@@ -172,14 +190,6 @@ scripts/core/main.js
 /siedler:market_setcorner2 <id>
 /siedler:market_cleanup
 ```
-
-## ⚔️ Soldaten – aktuelle Werte
-
-| Level | Bezeichnung | HP | Schaden | Geschwindigkeit | Kosten |
-|---|---|---:|---:|---:|---:|
-| 1 | Rekrut | 30 | 4 | 0,25 | 8 Emeralds |
-| 2 | Veteran | 40 | 6 | 0,28 | 18 Emeralds |
-| 3 | Elite | 55 | 8 | 0,32 | 35 Emeralds |
 
 ## 🛠️ Entwicklung
 
