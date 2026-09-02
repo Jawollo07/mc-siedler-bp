@@ -1,34 +1,15 @@
 import { system } from "@minecraft/server";
 import { SOLDIERS, SOLDIER_CONFIG } from "./config.js";
 
-const AI_INTERVAL = 5;
-const TARGET_INTERVAL = 10;
-const MOVEMENT_INTERVAL = 5;
-
-const SEARCH_RADIUS = 16;
-const ATTACK_DISTANCE_PADDING = 0.5;
-
-const DEFAULT_ATTACK_RANGE = 1.5;
-const DEFAULT_DAMAGE = 4;
-const DEFAULT_SPEED = 0.25;
-
-const STATES = Object.freeze({
-    IDLE: "idle",
-    ATTACK: "attack",
-    FOLLOW: "follow",
-    MOVE: "move",
-    RETREAT: "retreat"
-});
-
 export function startSoldierAI() {
     if (!SOLDIER_CONFIG.enabled) {
         console.info("[Soldier AI] Disabled");
         return;
     }
 
-    system.runInterval(updateSoldiers, AI_INTERVAL);
+    system.runInterval(updateSoldiers, SOLDIER_CONFIG.AI_INTERVAL);
     console.info(
-        `[Soldier AI] Started (AI=${AI_INTERVAL}, target=${TARGET_INTERVAL})`
+        `[Soldier AI] Started (AI=${SOLDIER_CONFIG.AI_INTERVAL}, target=${SOLDIER_CONFIG.TARGET_INTERVAL})`
     );
 }
 
@@ -68,13 +49,13 @@ function updateSoldier(soldier, now) {
     if (!soldier.targetId && now >= soldier.nextTargetSearch) {
         const target = findTarget(entity);
 
-        soldier.nextTargetSearch = now + ticksToMilliseconds(TARGET_INTERVAL);
+        soldier.nextTargetSearch = now + ticksToMilliseconds(SOLDIER_CONFIG.TARGET_INTERVAL);
 
         if (target) setTarget(soldier, target);
     }
 
     if (!soldier.targetId) {
-        setState(soldier, STATES.IDLE);
+        setState(soldier, SOLDIER_CONFIG.STATES.IDLE);
         return true;
     }
 
@@ -86,10 +67,10 @@ function updateSoldier(soldier, now) {
     }
 
     const distance = distanceBetween(entity.location, target.location);
-    const attackRange = getDynamicNumber(entity, "soldier:attackRange", DEFAULT_ATTACK_RANGE);
+    const attackRange = getDynamicNumber(entity, "soldier:attackRange", SOLDIER_CONFIG.DEFAULT_ATTACK_RANGE);
 
-    if (distance <= attackRange + ATTACK_DISTANCE_PADDING) {
-        setState(soldier, STATES.ATTACK);
+    if (distance <= attackRange + SOLDIER_CONFIG.ATTACK_DISTANCE_PADDING) {
+        setState(soldier, SOLDIER_CONFIG.STATES.ATTACK);
 
         if (now >= soldier.nextAttack) {
             attack(soldier, target);
@@ -99,11 +80,11 @@ function updateSoldier(soldier, now) {
         return true;
     }
 
-    setState(soldier, STATES.MOVE);
+    setState(soldier, SOLDIER_CONFIG.STATES.MOVE);
 
     if (now >= soldier.nextMovement) {
         moveTowards(entity, target);
-        soldier.nextMovement = now + ticksToMilliseconds(MOVEMENT_INTERVAL);
+        soldier.nextMovement = now + ticksToMilliseconds(SOLDIER_CONFIG.MOVEMENT_INTERVAL);
     }
 
     return true;
@@ -113,7 +94,7 @@ function synchronizeSoldierData(soldier) {
     if (!Number.isFinite(soldier.nextAttack)) soldier.nextAttack = 0;
     if (!Number.isFinite(soldier.nextTargetSearch)) soldier.nextTargetSearch = 0;
     if (!Number.isFinite(soldier.nextMovement)) soldier.nextMovement = 0;
-    if (!soldier.phase) soldier.phase = STATES.IDLE;
+    if (!soldier.phase) soldier.phase = SOLDIER_CONFIG.STATES.IDLE;
     if (!soldier.abilityCooldowns) soldier.abilityCooldowns = {};
 }
 function findEntityById(referenceEntity, targetId) {
@@ -122,7 +103,7 @@ function findEntityById(referenceEntity, targetId) {
     try {
         const entities = referenceEntity.dimension.getEntities({
             location: referenceEntity.location,
-            maxDistance: SEARCH_RADIUS + 4
+            maxDistance: SOLDIER_CONFIG.SEARCH_RADIUS + 4
         });
 
         for (const entity of entities) {
@@ -147,12 +128,12 @@ function setTarget(soldier, target) {
     if (!target?.id) return;
 
     soldier.targetId = target.id;
-    setState(soldier, STATES.ATTACK);
+    setState(soldier, SOLDIER_CONFIG.STATES.ATTACK);
 }
 
 function clearTarget(soldier) {
     soldier.targetId = null;
-    setState(soldier, STATES.IDLE);
+    setState(soldier, SOLDIER_CONFIG.STATES.IDLE);
 }
 
 function setState(soldier, state) {
@@ -242,7 +223,7 @@ function attack(soldier, target) {
         return;
     }
 
-    const damage = getDynamicNumber(entity, "soldier:damage", DEFAULT_DAMAGE);
+    const damage = getDynamicNumber(entity, "soldier:damage", SOLDIER_CONFIG.DEFAULT_DAMAGE);
 
     try {
         target.applyDamage(damage);
@@ -271,7 +252,7 @@ function moveTowards(entity, target) {
         if (distanceSquared <= 0.0001) return;
 
         const distance = Math.sqrt(distanceSquared);
-        const speed = getDynamicNumber(entity, "soldier:speed", DEFAULT_SPEED);
+        const speed = getDynamicNumber(entity, "soldier:speed", SOLDIER_CONFIG.DEFAULT_SPEED);
 
         entity.lookAt(target.location);
         entity.applyImpulse({

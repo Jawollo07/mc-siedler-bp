@@ -5,6 +5,21 @@
 export const SOLDIER_CONFIG = {
   enabled: true,
   debug: false,
+  AI_INTERVAL: 5,
+  TARGET_INTERVAL: 10,
+  MOVEMENT_INTERVAL: 5,
+  SEARCH_RADIUS: 16,
+  ATTACK_DISTANCE_PADDING: 0.5,
+  DEFAULT_ATTACK_RANGE: 1.5,
+  DEFAULT_DAMAGE: 4,
+  DEFAULT_SPEED: 0.25,
+  STATES: Object.freeze({
+      IDLE: "idle",
+      ATTACK: "attack",
+      FOLLOW: "follow",
+      MOVE: "move",
+      RETREAT: "retreat"
+  })
 };
 export const SOLDIERS = new Map(); // entityId → soldierData
 /**
