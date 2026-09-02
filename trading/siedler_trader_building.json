@@ -1,14 +1,21 @@
 {
   "tiers":[{"total_exp_required":0,"groups":[
-    {"num_to_select":1,"trades":[
-      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:oak_log","quantity":16}],"trader_exp":1,"max_uses":24,"reward_exp":true},
-      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cobblestone","quantity":32}],"trader_exp":1,"max_uses":24,"reward_exp":true},
-      {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:glass","quantity":16}],"trader_exp":1,"max_uses":16,"reward_exp":true}
+    {"num_to_select":2,"trades":[
+      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:oak_log","quantity":16}],"trader_exp":1,"max_uses":64,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:birch_log","quantity":16}],"trader_exp":1,"max_uses":64,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:cobblestone","quantity":32}],"trader_exp":1,"max_uses":64,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":1,"price_multiplier":0.05}],"gives":[{"item":"minecraft:stone","quantity":32}],"trader_exp":1,"max_uses":64,"reward_exp":true}
     ]},
-    {"num_to_select":1,"trades":[
-      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.05}],"gives":[{"item":"minecraft:brick","quantity":16}],"trader_exp":2,"max_uses":12,"reward_exp":true},
-      {"wants":[{"item":"minecraft:emerald","quantity":4,"price_multiplier":0.05}],"gives":[{"item":"minecraft:stone_bricks","quantity":24}],"trader_exp":2,"max_uses":12,"reward_exp":true},
-      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.05}],"gives":[{"item":"minecraft:sand","quantity":32}],"trader_exp":2,"max_uses":16,"reward_exp":true}
+    {"num_to_select":2,"trades":[
+      {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:glass","quantity":16}],"trader_exp":2,"max_uses":48,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:brick","quantity":16}],"trader_exp":2,"max_uses":40,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.05}],"gives":[{"item":"minecraft:stone_bricks","quantity":24}],"trader_exp":2,"max_uses":40,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:sand","quantity":32}],"trader_exp":2,"max_uses":48,"reward_exp":true}
+    ]},
+    {"num_to_select":2,"trades":[
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.10}],"gives":[{"item":"minecraft:oak_planks","quantity":32}],"trader_exp":3,"max_uses":40,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.10}],"gives":[{"item":"minecraft:stone_brick_stairs","quantity":16}],"trader_exp":3,"max_uses":32,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.10}],"gives":[{"item":"minecraft:stone_brick_slab","quantity":24}],"trader_exp":3,"max_uses":32,"reward_exp":true}
     ]}
   ]}]
 }
