@@ -1,130 +1,166 @@
 # 🏘️ Siedler Logic
 
-> Ein modulares Minecraft-Bedrock-Behavior-Pack für Siedler-, Survival- und Multiplayer-Server.
+> Modulares Minecraft-Bedrock-Behavior-Pack für das Minecraft-Siedler-Projekt – mit Teams, Claims, Wirtschaft, Märkten, Händlern, Monstern und Soldaten.
 
 [![Minecraft Bedrock](https://img.shields.io/badge/Minecraft%20Bedrock-1.26.0%2B-62B47A?logo=minecraft)](https://www.minecraft.net/)
 [![API](https://img.shields.io/badge/%40minecraft%2Fserver-2.9.0-5C5CFF)](https://learn.microsoft.com/minecraft/creator/scriptapi/minecraft/server/minecraft-server)
-[![Version](https://img.shields.io/badge/Version-1.1.4-orange)](https://github.com/Jawollo07/mc-siedler-bp)
+[![UI API](https://img.shields.io/badge/%40minecraft%2Fserver--ui-2.1.0-5C5CFF)](https://learn.microsoft.com/minecraft/creator/scriptapi/minecraft/server-ui/minecraft-server-ui)
 
-Siedler Logic ist ein modulares Minecraft-Bedrock-Behavior-Pack für Siedler-, Survival- und Multiplayer-Server. Das Pack kombiniert **Teams, Claims, Steuern, Spieler-Statistiken, Essentials und ein konfigurierbares Monster-System**. Dazu kommen organisierte **Pillager-Trupps, eigene KI, Belagerungen und Pillager-Außenposten-Raids**.
+## 📖 Übersicht
 
----
+**Siedler Logic** ist die Gameplay- und Serverlogik des Minecraft-Siedler-Projekts. Das Behavior Pack ist modular aufgebaut und wird über einen zentralen, fehlertoleranten Loader gestartet.
 
-## 📋 Inhaltsverzeichnis
+Aktuelle Systeme:
 
-- [✨ Features](#-features)
-- [📦 Installation](#-installation)
-- [🗂️ Projektstruktur](#️-projektstruktur)
-- [🎮 Befehle](#-befehle)
-- [📊 Siedler-Spielermenü](#-siedler-spielermenü)
-- [🏠 Claim-Menü](#-claim-menü)
-- [💰 Steuern](#-steuern)
-- [👹 Monster-System](#-monster-system)
-- [🏴 Pillager-Trupps](#-pillager-trupps)
-- [🧠 Pillager-KI](#-pillager-ki)
-- [⚙️ Konfiguration](#️-konfiguration)
-- [💾 Speicherung](#-speicherung)
-- [🔐 Berechtigungen](#-berechtigungen)
-- [🛠️ Entwicklung](#️-entwicklung)
-- [⚠️ Hinweise](#-hinweise)
-- [🤝 Mitwirken](#-mitwirken)
-- [📜 Lizenz](#-lizenz)
+- 👥 Teams und Team-Chat
+- 🏠 Claims und Gebietsschutz
+- 💰 Steuern und Emerald-basierte Wirtschaft
+- 🏪 rechteckige Marktplätze mit Monster-Schutz
+- 🧑‍🌾 vordefinierte Händler und Handelstabellen
+- 👹 konfigurierbares Monster-System
+- 🏴 Pillager-Trupps, Außenposten-Raids und Belagerungen
+- ⚔️ Soldaten-System mit KI, Befehlen, Leveln und Ausrüstung
+- 🧰 Essentials, Homes, TPA und Spieler-Dashboard
+- 💾 persistente Speicherung über World Dynamic Properties
+
+Das Repository enthält die **Behavior-Pack-/Script-Seite**. Die sichtbare Darstellung eigener Entities wird vom separaten Resource Pack übernommen.
+
+**Resource Pack:** https://github.com/Jawollo07/mc-siedler-rp
 
 ---
 
-## ✨ Features
+## ✨ Systeme
 
 ### 👥 Teams
 
 - Teams erstellen, löschen und verwalten
-- Spieler zu Teams hinzufügen und entfernen
-- Frei definierbare Minecraft-Teamfarbe
-- Teamübersicht mit Mitgliedern und Steuerkiste
+- Spieler Teams zuordnen und entfernen
+- Teamfarben
 - Team-Chat über `@team`
-- Dauerhafte Speicherung über World Dynamic Properties
-- Server-Formulare für Teamverwaltung und Teaminformationen
+- Teaminformationen und Dashboard
+- persistente Speicherung
+- Teambeziehungen als Grundlage für Kampf- und Soldatenlogik
 
 ### 🏠 Claims
 
-Claims schützen die Gebiete der einzelnen Teams.
+- Gebietsschutz auf Chunk-Basis
+- Claim-Limit pro Team
+- Prüfung bereits belegter Chunks
+- Claim-Informationen
+- Verwaltung über Forms und Commands
+- visuelle Claim-Grenzen
+- persistente Speicherung
 
-- Ein Claim umfasst **2×2 Chunks**
-- Bis zu **4 Chunks pro Team**
-- Bereits belegte Chunks werden erkannt
-- Schutz vor unerlaubten Aktionen in geschützten Gebieten
-- Claim-Informationen können abgefragt werden
-- Claim-Daten werden dauerhaft gespeichert
-- Server-Formular zur Verwaltung der Claims
+### 💰 Steuern & Wirtschaft
 
-### 📊 Spieler-Statistiken
-
-Das zentrale Spieler-Dashboard ist über ein Server-Formular erreichbar.
-
-- Spielerprofil
-- Position und Dimension
-- aktueller Claim
-- eigenes Team
-- Teammitglieder
-- Anzahl der Team-Claims
-- Anzahl der Dorfbewohner innerhalb der Team-Claims
-- tägliche Steuer
-- Steuerkisten-Status
-- Server-Statistiken
-- Aktualisieren-Funktion
-
-### 💰 Steuern
-
-Das Steuersystem versorgt Teams automatisch mit Emeralds.
+**Emeralds** sind die Standardwährung.
 
 - Steuerkiste pro Team
-- Berechnung anhand der Dorfbewohner innerhalb der Team-Claims
-- Optional fester Steuerbetrag
-- Automatische Auszahlung zu Beginn eines neuen Minecraft-Tages
-- Emeralds werden in die Steuerkiste gelegt
-- Überschüssige Emeralds werden bei voller Kiste daneben gespawnt
-- Teammitglieder werden über die Auszahlung informiert
+- Steuerberechnung anhand der Dorfbewohner in Team-Claims
+- optional fester Steuerbetrag
+- automatische Auszahlung nach Minecraft-Tagen
+- Benachrichtigung der Teammitglieder
 
-### 🧰 Essentials
+### 🏪 Marktplätze
 
-Enthalten sind unter anderem:
+Marktplätze sind rechteckige, konfigurierbare Gebiete. Aktive Marktplätze sind von feindlichen Monstern geschützt: Monster werden beim Spawn erkannt und zusätzlich regelmäßig entfernt, wenn sie in einen Markt gelangen.
 
-- `/siedler:spawn`
-- `/siedler:sethome`
-- `/siedler:home`
-- `/siedler:delhome`
-- `/siedler:tpa`
-- `/siedler:tpaccept`
-- `/siedler:tpdeny`
-- `/siedler:msg`
-- `/siedler:back`
-- Admin-Heal und Admin-Food
-- Godmode
-- Flugmodus
-- Spieler töten
-- Inventar leeren
-- Tag/Nacht setzen
-- Wetter ändern
+Die Konfiguration befindet sich aktuell in:
 
-Homes und Todespunkte werden dauerhaft gespeichert.
+```text
+scripts/market/market_place.js
+```
 
-### 👹 Monster-System
+Verwaltung:
 
-Das Monster-System besitzt eine zentrale, speicherbare Konfiguration und unterstützt:
+```text
+/siedler:market_status
+/siedler:market_enable <id>
+/siedler:market_disable <id>
+/siedler:market_setcorner1 <id>
+/siedler:market_setcorner2 <id>
+/siedler:market_cleanup
+```
 
-- Individuelle Spawn-Chancen
-- Globale Spawnrate
+### 🧑‍🌾 Händler
+
+Händler werden als `siedler:trader` gespawnt und erhalten abhängig vom Typ ihre jeweilige Handelstabelle.
+
+| Typ | Händler |
+|---|---|
+| `food` | Lebensmittelhändler |
+| `building` | Baustoffhändler |
+| `resources` | Rohstoffhändler |
+| `tools` | Werkzeughändler |
+| `weapons` | Waffenhändler |
+| `supplies` | Versorgungshändler |
+
+Commands:
+
+```text
+/siedler:trader <type>
+/siedler:trader_here <type>
+/siedler:trader_types
+/siedler:trader_remove
+```
+
+Die Handelstabellen liegen unter `trading/`.
+
+### ⚔️ Soldaten
+
+Das Soldaten-System stellt steuerbare `siedler:soldier`-Einheiten mit eigener KI bereit.
+
+Aktuell vorhanden:
+
+- Besitzerzuordnung über `player.id`
+- Zielsuche und Kampf-KI
+- Teambeziehungen bei der Zielauswahl
+- Zustände `idle`, `attack`, `follow`, `move`, `retreat`
+- Bewegungs- und Befehlslogik
+- Infanterie als aktueller Einheitentyp
+- Level 1–3
+- unterschiedliche HP, Geschwindigkeit und Schaden
+- Waffen, Schild und Rüstung
+- Fähigkeiten auf höheren Stufen
+
+Beispiel:
+
+```text
+/siedler:spawn_soldier infantry 1
+```
+
+Befehle:
+
+```text
+/siedler:move <x y z>
+/siedler:follow
+/siedler:stay
+```
+
+Konfiguration:
+
+```text
+scripts/soldier/config.js
+```
+
+Die Darstellung der Entity kommt aus dem Resource Pack.
+
+### 👹 Monster & Pillager
+
+Das Monster-System besitzt eine zentrale, speicherbare Konfiguration und unterstützt unter anderem:
+
+- globale Spawnrate
+- individuelle Spawnchancen
 - Nacht-Multiplikator
-- Unterschiedliche Spawnregeln für Claims
-- Deaktivierbare Monster
-- Konfigurierbares Schwäche-System
+- Claim-Regeln
 - Monster-Tokens
 - Pillager-Trupps
-- Vindicator- und Ravager-Anteile
 - Pillager-Captains
-- Eigene Pillager-KI
+- Vindicators und Ravager
+- eigene Pillager-KI
+- Außenposten-Raids
 - Belagerungen gegnerischer Gebiete
-- Pillager-Außenposten als bevorzugte Spawnpunkte
-- Konfiguration zur Laufzeit
+- Laufzeit-Konfiguration
 
 ---
 
@@ -134,37 +170,86 @@ Das Monster-System besitzt eine zentrale, speicherbare Konfiguration und unterst
 
 | Komponente | Version |
 |---|---|
-| Minecraft Bedrock | **1.26.0+** |
-| `@minecraft/server` | **2.9.0** |
-| Script Entry Point | `scripts/main.js` |
+| Minecraft Bedrock | `1.26.0+` |
+| `@minecraft/server` | `2.9.0` |
+| `@minecraft/server-ui` | `2.1.0` |
+| Script Entry Point | `scripts/core/main.js` |
 
-### 1. Repository klonen
+### Behavior Pack installieren
 
 ```bash
 git clone https://github.com/Jawollo07/mc-siedler-bp.git
 cd mc-siedler-bp
 ```
 
-### 2. Behavior Pack einbinden
+Der Repository-Ordner ist das Behavior Pack. Binde ihn in die gewünschte Bedrock-Welt bzw. den Server ein und aktiviere das Pack.
 
-Der Repository-Ordner ist das Behavior Pack. Binde ihn in die gewünschte Minecraft-Bedrock-Welt bzw. den Server ein und aktiviere das Pack.
-
-Der Script-Einstiegspunkt ist:
+Der **aktuelle** Script-Einstiegspunkt ist:
 
 ```text
-scripts/main.js
+scripts/core/main.js
 ```
 
-### 3. Start prüfen
+> Ältere Dokumentation kann noch `scripts/main.js` nennen. Das ist nicht mehr der aktuelle Einstiegspunkt.
 
-Beim erfolgreichen Laden sollten im Scripting-Log Meldungen wie diese erscheinen:
+Für `siedler:soldier` und `siedler:trader` wird zusätzlich das Resource Pack benötigt:
 
 ```text
-[Siedler Logic] Alle Module geladen!
-[Siedler Logic] Erfolgreich gestartet!
+https://github.com/Jawollo07/mc-siedler-rp
 ```
 
-Nach Änderungen an Custom Commands oder Server-Formularen sollte der Behavior Pack bzw. der Server vollständig neu geladen werden.
+Nach Änderungen an Scripts, Custom Commands oder Entity-Definitionen sollte die Welt bzw. der Server vollständig neu geladen werden.
+
+---
+
+## 🧩 Architektur
+
+Der zentrale Loader lädt die Module in definierter Reihenfolge. Dynamic Properties werden vor den Modulen initialisiert, die sie verwenden.
+
+```text
+scripts/core/main.js
+│
+├── Core
+│   ├── Dynamic Properties
+│   └── Version
+│
+├── Teams
+│   ├── Team-System
+│   └── Team-Chat
+│
+├── Economy
+│   └── Steuern
+│
+├── Claims
+│   ├── Verwaltung
+│   ├── Schutz
+│   └── Anzeige
+│
+├── Market
+│   ├── Marktplätze
+│   ├── Monster-Schutz
+│   └── Händler
+│
+├── Monster
+│   ├── Konfiguration
+│   ├── Tokens
+│   ├── Pillager-Trupps
+│   ├── Außenposten-Raids
+│   └── Commands
+│
+├── Essentials
+│   ├── Spielerfunktionen
+│   └── Dashboard
+│
+└── Soldier
+    ├── Commands
+    ├── Spawn
+    ├── KI
+    ├── Command Manager
+    └── Konfiguration
+```
+
+Der Loader schützt die Startup-Sequenz vor nicht-kritischen Fehlern und besitzt einen Watchdog für ungewöhnlich lange Initialisierung.
 
 ---
 
@@ -174,523 +259,283 @@ Nach Änderungen an Custom Commands oder Server-Formularen sollte der Behavior P
 mc-siedler-bp/
 ├── manifest.json
 ├── README.md
+├── plan.md
+├── entities/
+│   ├── soldier.json
+│   └── trader.json
+├── trading/
+│   └── siedler_trader_*.json
 └── scripts/
-    ├── main.js
-    ├── dynamic_properties.js
-    │
+    ├── core/
+    │   ├── main.js
+    │   ├── dynamic_properties.js
+    │   └── version.js
+    ├── teams/
     ├── claims/
-    │   ├── display.js
-    │   ├── index.js
-    │   ├── protection.js
-    │   └── utils.js
-    │
-    ├── essentials/
-    │   ├── index.js
-    │   └── player_stats.js
-    │
-    ├── monster/
-    │   ├── commands.js
-    │   ├── config.js
-    │   ├── index.js
-    │   ├── outpost_raids.js
-    │   ├── pillager_squads.js
-    │   └── token.js
-    │
     ├── taxes/
-    │   ├── taxes.js
-    │   └── time_watcher.js
-    │
-    └── teams/
-        ├── chat.js
-        └── index.js
+    ├── market/
+    ├── monster/
+    ├── essentials/
+    └── soldier/
+        ├── index.js
+        ├── ai.js
+        ├── commands.js
+        ├── command_manager.js
+        ├── config.js
+        └── spawn.js
 ```
 
-### Architektur
-
-```text
-scripts/main.js
-│
-├── Dynamic Properties
-├── Teams
-│   └── Team-Chat
-├── Steuern
-├── Claims
-│   ├── Verwaltung / Formulare
-│   ├── Schutz
-│   └── Anzeige
-├── Essentials
-│   └── Spieler-Dashboard
-└── Monster
-    ├── Konfiguration
-    ├── Tokens
-    ├── Pillager-Trupps
-    ├── Außenposten-Raids
-    └── Commands
-```
+Die README dokumentiert die Architektur auf Modulebene; einzelne Dateien können sich während der Entwicklung weiter verändern.
 
 ---
 
-## 🎮 Befehle
+## 🎮 Commands
 
-### 👥 Team-Befehle
+### Teams
 
-| Befehl | Beschreibung | Berechtigung |
-|---|---|---|
-| `/siedler:team` | Öffnet das Team-Menü | Spieler |
-| `/siedler:team_create <name> [farbe]` | Erstellt ein Team | OP |
-| `/siedler:team_add <spieler> <team>` | Fügt einen Spieler hinzu | OP |
-| `/siedler:team_remove <spieler> <team>` | Entfernt einen Spieler | OP |
-| `/siedler:team_delete <team>` | Löscht ein Team | OP |
-| `/siedler:team_list` | Zeigt alle Teams | OP |
-| `/siedler:team_settax <team> <x> <y> <z> [amount]` | Setzt Steuerkiste und optional festen Betrag | OP |
+```text
+/siedler:team
+/siedler:team_create <name> [farbe]
+/siedler:team_add <spieler> <team>
+/siedler:team_remove <spieler> <team>
+/siedler:team_delete <team>
+/siedler:team_list
+/siedler:team_settax <team> <x> <y> <z> [amount]
+```
 
-### 💬 Team-Chat
+### Claims
+
+```text
+/siedler:claim
+/siedler:claim_set <team>
+/siedler:claim_remove <team>
+/siedler:claim_info
+/siedler:claim_list
+```
+
+### Essentials
+
+```text
+/siedler:stats
+/siedler:spawn
+/siedler:sethome
+/siedler:home
+/siedler:delhome
+/siedler:tpa
+/siedler:tpaccept
+/siedler:tpdeny
+/siedler:msg
+/siedler:back
+```
+
+Zusätzlich existieren administrative Funktionen wie Heal, Food, Godmode, Flugmodus, Inventarverwaltung sowie Zeit- und Wettersteuerung.
+
+### Team-Chat
 
 ```text
 @team Hallo zusammen!
 ```
 
-Die Nachricht wird an die Mitglieder des eigenen Teams gesendet.
-
-### 🏞️ Claim-Befehle
-
-| Befehl | Beschreibung | Berechtigung |
-|---|---|---|
-| `/siedler:claim` | Öffnet das Claim-Menü | Spieler |
-| `/siedler:claim_set <team>` | Setzt einen 2×2-Chunk-Claim | OP |
-| `/siedler:claim_remove <team>` | Entfernt den Claim eines Teams | OP |
-| `/siedler:claim_info` | Zeigt den aktuellen Claim | Alle |
-| `/siedler:claim_list` | Listet Claims auf | OP |
-
-### 📊 Spieler-Menü
-
-```text
-/siedler:stats
-```
-
-Öffnet das zentrale Siedler-Spielermenü.
-
----
-
-## 📊 Siedler-Spielermenü
-
-Mit `/siedler:stats` erhalten Spieler ein zentrales Server-Formular für ihre wichtigsten Informationen.
-
-### 🏠 Hauptmenü
-
-```text
-👤 Mein Profil
-🛡️ Team
-🏠 Claims
-💰 Steuern & Wirtschaft
-📊 Server-Statistiken
-🔄 Aktualisieren
-✕ Schließen
-```
-
-### 👤 Mein Profil
-
-Zeigt:
-
-- Spielername
-- aktuelle Position
-- aktuelle Dimension
-- Anzahl der Online-Spieler
-- eigenes Team
-- Anzahl der Teammitglieder
-
-### 🛡️ Team
-
-Zeigt Informationen zum eigenen Team:
-
-- Teamname
-- Mitgliederzahl
-- Anzahl der beanspruchten Chunks
-- Anzahl der Dorfbewohner in den Team-Claims
-- Teamfarbe
-
-Ist der Spieler keinem Team zugeordnet, wird dies entsprechend angezeigt.
-
-### 🏠 Claims
-
-Zeigt:
-
-- aktuellen Chunk
-- Team des aktuellen Claims
-- ob der aktuelle Standort frei ist
-- Anzahl der eigenen Team-Claims
-- aktuelles Claim-Limit
-
-### 💰 Steuern & Wirtschaft
-
-Zeigt:
-
-- Team
-- Anzahl der Dorfbewohner
-- tägliche Steuer
-- Steuerberechnung
-- Steuerkisten-Status
-
-### 📊 Server-Statistiken
-
-Zeigt unter anderem:
-
-- Online-Spieler
-- Anzahl der Teams
-- Anzahl der beanspruchten Chunks
-- Anzahl der Dorfbewohner in der aktuellen Dimension
-- aktuelle Dimension
-
-### 🔄 Aktualisieren
-
-Die Werte können direkt aus dem Menü heraus aktualisiert werden, ohne `/siedler:stats` erneut auszuführen.
-
----
-
-## 🏠 Claim-Menü
-
-Mit:
-
-```text
-/siedler:claim
-```
-
-wird das Claim-Server-Formular geöffnet.
-
-### 🟢 Grundstück setzen
-
-- zeigt alle vorhandenen Teams in einem Dropdown
-- Team auswählen
-- Claim wird am aktuellen Spielerstandort gesetzt
-- das normale Claim-Limit und die Belegungsprüfung bleiben aktiv
-
-### 🔴 Grundstück entfernen
-
-- Team auswählen
-- alle Claims dieses Teams werden entfernt
-
-### 🟡 Aktuellen Claim anzeigen
-
-Zeigt, ob der aktuelle Chunk frei ist oder zu welchem Team er gehört.
-
-### 🟠 Alle Claims anzeigen
-
-Listet die aktuell vergebenen Claims nach Team auf.
-
----
-
-## 💰 Steuern
-
-Die Steuerberechnung basiert standardmäßig auf den Dorfbewohnern innerhalb der Claims eines Teams.
-
-Ein Team kann außerdem einen festen Steuerbetrag konfigurieren.
-
-Die Steuerkiste wird über den Team-Steuerbefehl eingerichtet:
-
-```text
-/siedler:team_settax <team> <x> <y> <z> [amount]
-```
-
-Die Auszahlung erfolgt automatisch zum Beginn eines neuen Minecraft-Tages.
-
----
-
-## 👹 Monster-System
-
-Die Monster-Konfiguration wird zentral verwaltet und kann dauerhaft in den World Dynamic Properties gespeichert werden.
-
-### Monster-Status
+### Monster
 
 ```text
 /siedler:monster_status
-```
-
-Zeigt unter anderem:
-
-- Status des Monster-Systems
-- Pillager-Status
-- Spawnchance
-- Truppgröße
-- maximale Anzahl aktiver Trupps
-- Outpost-Status
-- Belagerungsstatus
-
-### System aktivieren/deaktivieren
-
-```text
 /siedler:monster_enable
 /siedler:monster_disable
-```
-
-### Pillager aktivieren/deaktivieren
-
-```text
-/siedler:monster_pillager on
-/siedler:monster_pillager off
-```
-
-### Außenposten-Raids
-
-```text
-/siedler:monster_outpost on
-/siedler:monster_outpost off
-```
-
-### Belagerungen
-
-```text
-/siedler:monster_siege on
-/siedler:monster_siege off
-```
-
-### Trupp manuell spawnen
-
-```text
-/siedler:monster_spawn 10
-```
-
-Die Anzahl ist auf **1–32** begrenzt.
-
-### Markierte Monster entfernen
-
-```text
+/siedler:monster_pillager on|off
+/siedler:monster_outpost on|off
+/siedler:monster_siege on|off
+/siedler:monster_spawn <1-32>
 /siedler:monster_clear
-```
-
-### Konfiguration neu laden/speichern
-
-```text
 /siedler:monster_reload
 /siedler:monster_save
-```
-
-### Konfigurationswerte lesen und setzen
-
-```text
 /siedler:monster_get <path>
 /siedler:monster_set <path> <value>
 ```
 
-Beispiele:
+### Markt
 
 ```text
-/siedler:monster_get pillager.spawnChance
-/siedler:monster_set pillager.spawnChance 0.5
-/siedler:monster_set pillager.outpost.enabled true
+/siedler:market_status
+/siedler:market_enable <id>
+/siedler:market_disable <id>
+/siedler:market_setcorner1 <id>
+/siedler:market_setcorner2 <id>
+/siedler:market_cleanup
 ```
+
+### Händler
+
+```text
+/siedler:trader <type>
+/siedler:trader_here <type>
+/siedler:trader_types
+/siedler:trader_remove
+```
+
+### Soldaten
+
+```text
+/siedler:spawn_soldier <type> [level]
+/siedler:move <x y z>
+/siedler:follow
+/siedler:stay
+```
+
+> Administrative Custom Commands verwenden aktuell `GameDirectors` als Berechtigungsebene.
+
+---
+
+## ⚔️ Soldaten – aktuelle Werte
+
+Der derzeit konfigurierte Einheitentyp ist **Infanterie**.
+
+| Level | Bezeichnung | HP | Schaden | Geschwindigkeit | Kosten |
+|---|---|---:|---:|---:|---:|
+| 1 | Rekrut | 30 | 4 | 0,25 | 8 Emeralds |
+| 2 | Veteran | 40 | 6 | 0,28 | 18 Emeralds |
+| 3 | Elite | 55 | 8 | 0,32 | 35 Emeralds |
+
+Höhere Stufen erhalten bessere Ausrüstung und zusätzliche Fähigkeiten wie **Kampfschrei**, **Schildstoß**, **Zweiter Wind** und **Eiserner Wille**.
 
 ---
 
 ## 🏴 Pillager-Trupps
 
-Pillager können als organisierte feindliche Truppen auftreten.
+Die Trupp-Konfiguration unterstützt organisierte feindliche Einheiten.
 
-### Standardwerte
+Typische Parameter umfassen:
 
-| Einstellung | Standardwert |
-|---|---:|
-| Truppgröße | `4–7` |
-| Maximale aktive Trupps | `3` |
-| Spawnchance | `22 %` |
-| Outpost-Spawnchance | `70 %` |
-| Mindestdistanz | `36 Blöcke` |
-| Maximaldistanz | `64 Blöcke` |
-| Lebensdauer | `24.000 Ticks` |
-| KI-Intervall | `10 Ticks` |
-| Nahkampfreichweite | `3,2 Blöcke` |
-| Fernkampfreichweite | `18 Blöcke` |
+- Truppgröße
+- maximale Anzahl aktiver Trupps
+- Spawnchance
+- Outpost-Spawnchance
+- Mindest-/Maximaldistanz
+- Lebensdauer
+- KI-Intervall
+- Nah- und Fernkampfreichweite
+- Zusammensetzung aus Pillagern, Captains, Vindicators und Ravagern
 
-### Truppzusammensetzung
-
-Je nach Konfiguration können Truppen enthalten:
-
-- Pillager
-- Pillager-Captain
-- Vindicator
-- Ravager
-
----
-
-## 🏰 Pillager-Außenposten
-
-Das Monster-System kann Pillager-Truppen bevorzugt an bzw. in der Nähe von **Pillager-Außenposten** erzeugen.
-
-Die relevanten Einstellungen befinden sich im Bereich:
-
-```text
-pillager.outpost
-```
-
-Beispiel:
-
-```text
-/siedler:monster_get pillager.outpost.enabled
-/siedler:monster_set pillager.outpost.enabled true
-```
-
----
-
-## ⚔️ Belagerungen
-
-Pillager-Truppen können gegnerische Gebiete als Ziele verwenden. In Verbindung mit Claims können Spielergebiete dadurch von feindlichen Truppen angegriffen werden.
-
-Aktivieren/deaktivieren:
-
-```text
-/siedler:monster_siege on
-/siedler:monster_siege off
-```
-
----
-
-## 🧠 Pillager-KI
-
-Die Pillager-Truppen besitzen eine eigene Logik und sind nicht nur zufällige Mob-Spawns.
-
-Je nach aktivierten Funktionen kann die KI unter anderem:
-
-- Ziele suchen
-- Entfernungen bewerten
-- zu Zielen laufen
-- Nah- und Fernkampf einsetzen
-- Truppmitglieder zusammenhalten
-- getrennte Einheiten wieder gruppieren
-- gegnerische Claims als Ziele verwenden
-- Angriffe bzw. Belagerungen durchführen
-
----
-
-## ⚙️ Konfiguration
-
-Die Standardkonfiguration liegt in:
-
-```text
-scripts/monster/config.js
-```
-
-Typischer Aufbau:
-
-```js
-DEFAULT_CONFIG = {
-    enabled: true,
-    globalSpawnRate: 0.7,
-    nightSpawnMultiplier: 1.3,
-
-    allowedMobs: { ... },
-    spawnChances: { ... },
-
-    claims: { ... },
-    weakness: { ... },
-    token: { ... },
-    pillager: { ... }
-};
-```
-
-Der `pillager`-Bereich ist wiederum in verschiedene Teilbereiche gegliedert, darunter:
-
-```text
-pillager
-├── ai
-├── siege
-├── outpost
-└── composition
-```
-
-### Konfiguration zur Laufzeit
-
-Werte können über `monster_get` gelesen und über `monster_set` verändert werden.
-
-| Eingabe | Ergebnis |
-|---|---|
-| `true` / `false` | Boolean |
-| `0.5`, `10`, usw. | Number |
-| `{...}` | JSON-Objekt, sofern gültig |
-| `[...]` | JSON-Array, sofern gültig |
-| sonstiger Text | String |
+Die zentrale Konfiguration befindet sich im Monster-Modul.
 
 ---
 
 ## 💾 Speicherung
 
-Siedler Logic verwendet **World Dynamic Properties** für dauerhafte Daten.
+Persistente Daten werden über **World Dynamic Properties** gespeichert.
 
-Dazu gehören unter anderem:
+Dazu gehören je nach System unter anderem:
 
 - Teams
 - Claims
 - Homes
 - Todespunkte
 - Monster-Konfiguration
+- weitere serverweite Zustände
+
+Bei größeren Änderungen an Datenstrukturen sollte ein Server-/Welt-Backup erstellt werden.
 
 ---
 
 ## 🔐 Berechtigungen
 
-Administrative Commands sind entsprechend ihrer Funktion geschützt. Spielerbezogene Informationsmenüs wie `/siedler:stats` und `/siedler:claim` können von normalen Spielern geöffnet werden.
-
-| Bereich | Berechtigung |
+| Bereich | Standardberechtigung |
 |---|---|
-| Spieler-Statistiken | Alle Spieler |
-| Claim-Menü | Alle Spieler |
-| Claim setzen/entfernen per Command | OP |
-| Team-Verwaltung | OP |
-| Steuerkiste konfigurieren | OP |
-| Monster-Verwaltung | OP / Game Director |
+| Spieler-Dashboard | Spieler |
+| Claim-Menü | Spieler |
+| Team-Verwaltung | Game Director / OP |
+| Claim-Verwaltung per Command | Game Director / OP |
+| Marktverwaltung | Game Director / OP |
+| Händler spawnen/entfernen | Game Director / OP |
+| Soldatenbefehle | Game Director / OP |
+| Monsterverwaltung | Game Director / OP |
+
+Die tatsächliche Berechtigung richtet sich nach der jeweiligen Command-Registrierung im aktuellen Code.
 
 ---
 
 ## 🛠️ Entwicklung
 
-### Voraussetzungen
+### Technologie
 
-- Minecraft Bedrock `1.26.0+`
-- `@minecraft/server` `2.9.0`
+- Minecraft Bedrock Script API
 - JavaScript / ECMAScript
-- Behavior-Pack-Scripting
+- `@minecraft/server`
+- `@minecraft/server-ui`
+- Entity JSON
+- World Dynamic Properties
 
-### Einstiegspunkt
+### Entwicklungsregeln
+
+Neue Systeme sollten möglichst:
+
+1. in einem eigenen Modul unter `scripts/` liegen,
+2. einen klaren Einstiegspunkt besitzen,
+3. Abhängigkeiten möglichst gering halten,
+4. über `scripts/core/main.js` geladen werden,
+5. nicht-kritische Fehler lokal behandeln.
+
+### Aktueller Manifeststand
 
 ```text
-scripts/main.js
+Pack-Version: 1.1.4
+@minecraft/server: 2.9.0
+@minecraft/server-ui: 2.1.0
+Minimum Engine: 1.26.0
+Entry Point: scripts/core/main.js
 ```
 
-### Neue Module
-
-Neue Systeme sollten möglichst modular unter `scripts/` angelegt und über den zentralen Einstiegspunkt geladen werden.
-
-### Server-Formulare
-
-Für UI-Elemente wird `@minecraft/server-ui` verwendet, insbesondere:
-
-```js
-import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
-```
+Die Script-Version wird zusätzlich über `scripts/core/version.js` geführt.
 
 ---
 
 ## ⚠️ Hinweise
 
-- Nach Änderungen an Custom Commands sollte der Server bzw. das Behavior Pack neu geladen werden.
-- Die verwendete Bedrock-Scripting-API muss zur Version des Packs passen.
-- Team-, Claim- und Steuerdaten werden dauerhaft gespeichert und sollten bei größeren Änderungen gesichert werden.
-- Administrative Commands sollten nur vertrauenswürdigen Spielern zugänglich sein.
+- Das Projekt befindet sich aktiv in Entwicklung.
+- Behavior Pack und Resource Pack müssen bei Custom Entities zusammenpassen.
+- Änderungen an Entity-, Command- oder Script-Definitionen erfordern häufig einen vollständigen Reload.
+- Die Darstellung von `siedler:soldier` und `siedler:trader` wird vom Resource Pack bestimmt.
+- Die README beschreibt den aktuellen Entwicklungsstand und sollte bei größeren Architekturänderungen aktualisiert werden.
+
+---
+
+## 🗺️ Roadmap
+
+Die detaillierte Planung befindet sich in [`plan.md`](plan.md).
+
+Aktuelle Ausbauziele umfassen insbesondere:
+
+- natürlichere Soldatenbewegung und Kampf-KI
+- weitere Einheitentypen
+- Ausbau der Teambeziehungen
+- weitere Händler und Waren
+- stärkeres Siedler-3-inspiriertes Wirtschaftssystem
+- Ausbau von Märkten und Handelsrouten
+- engere Verbindung von Claims, Wirtschaft und Militär
+- Ausbau und Stabilisierung des Resource Packs
 
 ---
 
 ## 🤝 Mitwirken
 
-Issues und Pull Requests sind willkommen.
+Issues, Fehlerberichte und Pull Requests sind willkommen.
 
-Repository:
+Bei Fehlern möglichst angeben:
 
-https://github.com/Jawollo07/mc-siedler-bp
+- Minecraft-Bedrock-Version
+- Server-/Client-Umgebung
+- Behavior-Pack-Version
+- betroffene Funktion bzw. Command
+- relevante Logausgabe
+- reproduzierbare Schritte
 
 ---
 
-## 📜 Lizenz
+## 🔗 Projekte
 
-Siehe die Lizenzdatei bzw. Repository-Konfiguration für die aktuell geltenden Lizenzbedingungen.
+- **Behavior Pack:** https://github.com/Jawollo07/mc-siedler-bp
+- **Resource Pack:** https://github.com/Jawollo07/mc-siedler-rp
 
 ---
 
-**Siedler Logic** – Teams, Claims, Wirtschaft und Monster-System für Minecraft Bedrock. 🏘️
+**Siedler Logic** – Gameplay-, Wirtschafts-, Militär- und Serverlogik für das Minecraft-Siedler-Projekt. 🏘️
