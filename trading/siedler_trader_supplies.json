@@ -1,0 +1,13 @@
+{
+  "tiers": [{"total_exp_required":0,"groups":[
+    {"num_to_select":1,"trades":[
+      {"wants":[{"item":"minecraft:emerald","quantity":2,"price_multiplier":0.05}],"gives":[{"item":"minecraft:wheat","quantity":16}],"trader_exp":1,"max_uses":20,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":3,"price_multiplier":0.05}],"gives":[{"item":"minecraft:sugar","quantity":16}],"trader_exp":1,"max_uses":16,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":4,"price_multiplier":0.05}],"gives":[{"item":"minecraft:glass_bottle","quantity":8}],"trader_exp":2,"max_uses":12,"reward_exp":true}
+    ]},
+    {"num_to_select":1,"trades":[
+      {"wants":[{"item":"minecraft:emerald","quantity":5,"price_multiplier":0.10}],"gives":[{"item":"minecraft:book","quantity":2}],"trader_exp":3,"max_uses":10,"reward_exp":true},
+      {"wants":[{"item":"minecraft:emerald","quantity":4,"price_multiplier":0.10}],"gives":[{"item":"minecraft:leather","quantity":8}],"trader_exp":2,"max_uses":12,"reward_exp":true}
+    ]}
+  ]}]
+}
