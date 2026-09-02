@@ -82,12 +82,12 @@ function registerSoldierCommands(registry) {
                 { type: CustomCommandParamType.Location, name: "Target" }
             ]
         },
-        (origin, args) => {
+        (origin, target) => {
             const player = playerOnly(origin);
             if (!player) return commandResult(false);
 
             return commandResult(
-                commandMove(nearestOwnedSoldier(player), args[0])
+                commandMove(nearestOwnedSoldier(player), target)
             );
         }
     );
@@ -136,14 +136,14 @@ function registerSoldierCommands(registry) {
                 { type: CustomCommandParamType.Integer, name: "Level" }
             ]
         },
-        (origin, args) => {
+        (origin, type, level) => {
             const player = playerOnly(origin);
             if (!player) {
                 return { status: CustomCommandStatus.Failure };
             }
 
-            const soldierType = String(args[0] ?? "").trim();
-            const soldierLevel = args[1] ?? 1;
+            const soldierType = String(type ?? "").trim();
+            const soldierLevel = level ?? 1;
 
             // Command callbacks run in read-only mode, so defer actual work.
             system.run(() => {
