@@ -33,6 +33,7 @@ export function spawnSoldier(
     }
 
     let entity;
+    let mount;
     try {
         entity = dimension.spawnEntity("siedler:soldier", location);
     } catch (error) {
@@ -60,6 +61,28 @@ export function spawnSoldier(
         entity.setDynamicProperty("soldier:speed", levelData.speed ?? 0.25);
         setSoldierHealth(entity, levelData.health);
 
+        if (typeData.mount) {
+            try {
+                mount = dimension.spawnEntity(typeData.mount, {
+                    x: location.x,
+                    y: location.y,
+                    z: location.z
+                });
+                mount.addTag("soldier_mount");
+                mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
+                mount.setDynamicProperty("soldier:level", level);
+                if (typeof entity.startRiding === "function") {
+                    entity.startRiding(mount);
+                } else {
+                    console.warn("[Soldier] Riding API is unavailable; cavalry spawned without mount.");
+                }
+            } catch (error) {
+                console.warn(`[Soldier] Cavalry mount failed: ${error}`);
+                try { if (mount?.isValid) mount.remove(); } catch {}
+                mount = undefined;
+            }
+        }
+
         if (levelData.equipment) {
             system.runTimeout(() => {
                 if (entity?.isValid) applyEquipment(entity, levelData.equipment);
@@ -68,6 +91,7 @@ export function spawnSoldier(
 
         SOLDIERS.set(entity.id, {
             entity,
+            mount: mount ?? null,
             type,
             level,
             ownerId: owner?.id ?? null,
@@ -87,6 +111,7 @@ export function spawnSoldier(
     } catch (error) {
         console.warn(`[Soldier] Initialization failed: ${error}`);
         try { if (entity?.isValid) entity.remove(); } catch {}
+        try { if (mount?.isValid) mount.remove(); } catch {}
         return null;
     }
 }
