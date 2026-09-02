@@ -5,7 +5,8 @@ import { applyEquipment, setSoldierHealth } from "./spawn.js";
 export const SOLDIER_LEVEL_CONFIG = Object.freeze({
     XP_PER_HIT: 5,
     XP_PER_KILL: 50,
-    LEVEL_XP: Object.freeze({ 1: 0, 2: 100, 3: 300 })
+    // Gesamt-XP, die für das jeweilige Level benötigt werden.
+    LEVEL_XP: Object.freeze({ 1: 0, 2: 100, 3: 300, 4: 600, 5: 1000, 6: 1500, 7: 2100 })
 });
 
 const XP_PROPERTY = "soldier:xp";
