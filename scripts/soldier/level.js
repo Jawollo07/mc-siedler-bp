@@ -3,13 +3,23 @@ import { SOLDIERS, SOLDIER_TYPES } from "./config.js";
 import { applyEquipment, setSoldierHealth } from "./spawn.js";
 
 export const SOLDIER_LEVEL_CONFIG = Object.freeze({
-    XP_PER_HIT: 5,
-    XP_PER_KILL: 50,
-    // Gesamt-XP, die für das jeweilige Level benötigt werden.
-    LEVEL_XP: Object.freeze({ 1: 0, 2: 100, 3: 300, 4: 600, 5: 1000, 6: 1500, 7: 2100 })
+    HIT_XP_BY_DAMAGE: Object.freeze({
+        LOW: Object.freeze({ minXP: 1, maxXP: 1 }),
+        MEDIUM: Object.freeze({ minXP: 2, maxXP: 4 }),
+        HIGH: Object.freeze({ minXP: 5, maxXP: 7 }),
+        VERY_HIGH: Object.freeze({ minXP: 1, maxXP: 8 })
+    }),
+    KILL_XP: Object.freeze({
+        NORMAL: Object.freeze({ minXP: 25, maxXP: 50 }),
+        STRONG: Object.freeze({ minXP: 50, maxXP: 75 }),
+        BOSS: Object.freeze({ minXP: 75, maxXP: 100 })
+    }),
+    LEVEL_XP: Object.freeze({ 1: 0, 2: 150, 3: 400, 4: 800, 5: 1400, 6: 2200, 7: 3500 })
 });
 
 const XP_PROPERTY = "soldier:xp";
+const STRONG_ENEMIES = new Set(["minecraft:vindicator", "minecraft:evoker", "minecraft:ravager", "minecraft:warden", "minecraft:elder_guardian", "minecraft:piglin_brute"]);
+const BOSS_ENEMIES = new Set(["minecraft:ender_dragon", "minecraft:wither"]);
 
 export function getSoldierXP(entity) {
     if (!entity?.isValid) return 0;
@@ -48,7 +58,6 @@ export function addSoldierXP(soldier, amount, reason = "unknown") {
     if (!soldier?.entity?.isValid) return null;
     const gained = Math.max(0, Math.floor(Number(amount) || 0));
     if (!gained) return getSoldierProgress(soldier);
-
     const entity = soldier.entity;
     const typeData = SOLDIER_TYPES[soldier.type] ?? SOLDIER_TYPES.infantry;
     const maxLevel = getMaxLevel(typeData);
@@ -57,7 +66,6 @@ export function addSoldierXP(soldier, amount, reason = "unknown") {
     const oldLevel = clampLevel(Number(soldier.level ?? getLevel(entity)), maxLevel);
     const newLevel = getLevelForXP(xp, maxLevel);
     saveXP(entity, xp);
-
     if (newLevel > oldLevel) {
         applySoldierLevel(soldier, newLevel, xp);
         console.debug(`[Soldier Level] ${entity.id} reached level ${newLevel} (${reason})`);
@@ -68,12 +76,48 @@ export function addSoldierXP(soldier, amount, reason = "unknown") {
     return getSoldierProgress(soldier);
 }
 
+export function getHitXP(damage) {
+    const value = Math.max(0, Math.floor(Number(damage) || 0));
+    if (value <= 0) return 0;
+    const bracket = value <= 2
+        ? SOLDIER_LEVEL_CONFIG.HIT_XP_BY_DAMAGE.LOW
+        : value <= 5
+            ? SOLDIER_LEVEL_CONFIG.HIT_XP_BY_DAMAGE.MEDIUM
+            : value <= 10
+                ? SOLDIER_LEVEL_CONFIG.HIT_XP_BY_DAMAGE.HIGH
+                : SOLDIER_LEVEL_CONFIG.HIT_XP_BY_DAMAGE.VERY_HIGH;
+    return randomInt(bracket.minXP, bracket.maxXP);
+}
+
+export function getEnemyStrength(entity) {
+    if (!entity?.isValid) return "normal";
+    try {
+        const tags = new Set(entity.getTags?.() ?? []);
+        if (tags.has("soldier_xp_boss") || tags.has("boss") || tags.has("very_strong")) return "boss";
+        if (tags.has("soldier_xp_strong") || tags.has("strong")) return "strong";
+    } catch {}
+    if (BOSS_ENEMIES.has(entity.typeId)) return "boss";
+    if (STRONG_ENEMIES.has(entity.typeId)) return "strong";
+    try {
+        const health = entity.getComponent?.("minecraft:health");
+        const maxHealth = Number(health?.effectiveMax ?? health?.defaultValue ?? 0);
+        if (maxHealth >= 150) return "boss";
+        if (maxHealth >= 50) return "strong";
+    } catch {}
+    return "normal";
+}
+
+export function getKillXP(entity) {
+    const strength = getEnemyStrength(entity);
+    const reward = SOLDIER_LEVEL_CONFIG.KILL_XP[strength.toUpperCase()] ?? SOLDIER_LEVEL_CONFIG.KILL_XP.NORMAL;
+    return randomInt(reward.minXP, reward.maxXP);
+}
+
 function applySoldierLevel(soldier, level, xp) {
     const entity = soldier.entity;
     const typeData = SOLDIER_TYPES[soldier.type] ?? SOLDIER_TYPES.infantry;
     const levelData = typeData.levels?.[level];
     if (!levelData || !entity?.isValid) return;
-
     soldier.level = level;
     soldier.abilities = levelData.abilities ?? [];
     soldier.abilityCooldowns = {};
@@ -84,13 +128,11 @@ function applySoldierLevel(soldier, level, xp) {
     saveXP(entity, xp);
     updateMetadata(entity, soldier.type, level, xp, typeData);
     setSoldierHealth(entity, levelData.health);
-
     if (levelData.equipment) {
         system.runTimeout(() => {
             if (entity.isValid) applyEquipment(entity, levelData.equipment);
         }, 2);
     }
-
     if (soldier.ownerId) {
         try {
             const owner = world.getPlayers().find(p => p.id === soldier.ownerId);
@@ -111,7 +153,6 @@ function updateMetadata(entity, type, level, xp, typeData) {
 function saveXP(entity, xp) {
     try { entity.setDynamicProperty(XP_PROPERTY, Math.max(0, Math.floor(Number(xp) || 0))); } catch (error) { console.warn(`[Soldier Level] XP save failed: ${error}`); }
 }
-
 function getLevelForXP(xp, maxLevel) {
     let level = 1;
     for (let i = 2; i <= maxLevel; i++) if (xp >= xpForLevel(i)) level = i;
@@ -122,6 +163,7 @@ function getMaxLevel(typeData) { return Math.max(1, ...Object.keys(typeData?.lev
 function clampLevel(level, maxLevel) { return Number.isFinite(level) ? Math.max(1, Math.min(maxLevel, Math.floor(level))) : 1; }
 function getLevel(entity) { try { return Number(entity.getDynamicProperty("soldier:level")) || 1; } catch { return 1; } }
 function getType(entity) { try { return String(entity.getDynamicProperty("soldier:type") ?? "infantry"); } catch { return "infantry"; } }
+function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
 system.runInterval(() => {
     for (const soldier of SOLDIERS.values()) {
@@ -137,7 +179,8 @@ world.afterEvents.entityHurt.subscribe(event => {
         if (!soldier) return;
         const health = event.hurtEntity?.getComponent?.("minecraft:health");
         if (health && Number(health.currentValue) <= 0) return;
-        addSoldierXP(soldier, SOLDIER_LEVEL_CONFIG.XP_PER_HIT, "hit");
+        const xp = getHitXP(event.damage);
+        if (xp > 0) addSoldierXP(soldier, xp, `hit:${Math.floor(Number(event.damage) || 0)}dmg`);
     } catch (error) { console.debug(`[Soldier Level] entityHurt failed: ${error}`); }
 });
 
@@ -146,6 +189,8 @@ world.afterEvents.entityDie.subscribe(event => {
         const killer = event.damageSource?.damagingEntity;
         if (!killer || killer.typeId !== "siedler:soldier") return;
         const soldier = SOLDIERS.get(killer.id);
-        if (soldier) addSoldierXP(soldier, SOLDIER_LEVEL_CONFIG.XP_PER_KILL, "kill");
+        if (!soldier) return;
+        const xp = getKillXP(event.deadEntity);
+        if (xp > 0) addSoldierXP(soldier, xp, `kill:${getEnemyStrength(event.deadEntity)}`);
     } catch (error) { console.debug(`[Soldier Level] entityDie failed: ${error}`); }
 });
