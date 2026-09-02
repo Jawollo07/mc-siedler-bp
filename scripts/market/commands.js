@@ -43,6 +43,15 @@ function registerCommand(registry, definition, handler) {
     );
 }
 
+function formatBounds(market) {
+    const minX = Math.min(market.min.x, market.max.x);
+    const maxX = Math.max(market.min.x, market.max.x);
+    const minZ = Math.min(market.min.z, market.max.z);
+    const maxZ = Math.max(market.min.z, market.max.z);
+
+    return `X ${Math.round(minX)}..${Math.round(maxX)} | Z ${Math.round(minZ)}..${Math.round(maxZ)}`;
+}
+
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
@@ -50,7 +59,7 @@ system.beforeEvents.startup.subscribe((event) => {
         registry,
         {
             name: "siedler:market_status",
-            description: "Zeigt alle konfigurierten Marktplätze."
+            description: "Zeigt alle konfigurierten rechteckigen Marktplätze."
         },
         (origin) => {
             const player = playerOnly(origin);
@@ -67,8 +76,9 @@ system.beforeEvents.startup.subscribe((event) => {
                 for (const market of MARKET_PLACES) {
                     reply(
                         player,
-                        `§7${market.id}: ${market.enabled ? "§aAN" : "§cAUS"} §8| §7${market.dimension} §8| §7Radius §e${market.radius} §8| §7Center §e${Math.round(market.center.x)}, ${Math.round(market.center.y)}, ${Math.round(market.center.z)}`
+                        `§7${market.id}: ${market.enabled ? "§aAN" : "§cAUS"} §8| §7${market.dimension}`
                     );
+                    reply(player, `§7Bereich: §e${formatBounds(market)}`);
                 }
             });
 
@@ -89,16 +99,14 @@ system.beforeEvents.startup.subscribe((event) => {
             const player = playerOnly(origin);
             if (!player) return { status: CustomCommandStatus.Failure };
 
-            const id = String(args[0] ?? "").trim();
-            const market = findMarket(id);
-
+            const market = findMarket(String(args[0] ?? "").trim());
             if (!market) {
-                reply(player, `§cMarktplatz '${id}' wurde nicht gefunden.`);
+                reply(player, "§cMarktplatz wurde nicht gefunden.");
                 return { status: CustomCommandStatus.Failure };
             }
 
             market.enabled = true;
-            reply(player, `§aMarktplatz '${id}' aktiviert.`);
+            reply(player, `§aMarktplatz '${market.id}' aktiviert.`);
             return { status: CustomCommandStatus.Success };
         }
     );
@@ -116,16 +124,14 @@ system.beforeEvents.startup.subscribe((event) => {
             const player = playerOnly(origin);
             if (!player) return { status: CustomCommandStatus.Failure };
 
-            const id = String(args[0] ?? "").trim();
-            const market = findMarket(id);
-
+            const market = findMarket(String(args[0] ?? "").trim());
             if (!market) {
-                reply(player, `§cMarktplatz '${id}' wurde nicht gefunden.`);
+                reply(player, "§cMarktplatz wurde nicht gefunden.");
                 return { status: CustomCommandStatus.Failure };
             }
 
             market.enabled = false;
-            reply(player, `§cMarktplatz '${id}' deaktiviert.`);
+            reply(player, `§cMarktplatz '${market.id}' deaktiviert.`);
             return { status: CustomCommandStatus.Success };
         }
     );
@@ -133,42 +139,8 @@ system.beforeEvents.startup.subscribe((event) => {
     registerCommand(
         registry,
         {
-            name: "siedler:market_radius",
-            description: "Ändert den Radius eines Marktplatzes.",
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "id" },
-                { type: CustomCommandParamType.Float, name: "radius" }
-            ]
-        },
-        (origin, args) => {
-            const player = playerOnly(origin);
-            if (!player) return { status: CustomCommandStatus.Failure };
-
-            const id = String(args[0] ?? "").trim();
-            const radius = Number(args[1]);
-            const market = findMarket(id);
-
-            if (!market) {
-                reply(player, `§cMarktplatz '${id}' wurde nicht gefunden.`);
-                return { status: CustomCommandStatus.Failure };
-            }
-
-            if (!Number.isFinite(radius) || radius <= 0 || radius > 512) {
-                reply(player, "§cDer Radius muss zwischen 0 und 512 liegen.");
-                return { status: CustomCommandStatus.Failure };
-            }
-
-            market.radius = radius;
-            reply(player, `§aRadius von '${id}' auf §e${radius} §agesetzt.`);
-            return { status: CustomCommandStatus.Success };
-        }
-    );
-
-    registerCommand(
-        registry,
-        {
-            name: "siedler:market_setcenter",
-            description: "Setzt das Zentrum eines Marktplatzes auf deine aktuelle Position.",
+            name: "siedler:market_setcorner1",
+            description: "Setzt die erste Ecke des Marktplatzes auf deine aktuelle Position.",
             mandatoryParameters: [
                 { type: CustomCommandParamType.String, name: "id" }
             ]
@@ -177,27 +149,53 @@ system.beforeEvents.startup.subscribe((event) => {
             const player = playerOnly(origin);
             if (!player) return { status: CustomCommandStatus.Failure };
 
-            const id = String(args[0] ?? "").trim();
-            const market = findMarket(id);
-
+            const market = findMarket(String(args[0] ?? "").trim());
             if (!market) {
-                reply(player, `§cMarktplatz '${id}' wurde nicht gefunden.`);
+                reply(player, "§cMarktplatz wurde nicht gefunden.");
                 return { status: CustomCommandStatus.Failure };
             }
 
-            market.center = {
-                x: player.location.x,
-                y: player.location.y,
-                z: player.location.z
+            market.min = {
+                x: Math.floor(player.location.x),
+                y: player.dimension.heightRange?.min ?? 0,
+                z: Math.floor(player.location.z)
             };
-
             market.dimension = player.dimension.id.replace(/^minecraft:/, "");
 
-            reply(
-                player,
-                `§aZentrum von '${id}' gesetzt: §e${Math.round(player.location.x)}, ${Math.round(player.location.y)}, ${Math.round(player.location.z)} §7(${market.dimension})`
-            );
+            reply(player, `§aEcke 1 von '${market.id}' gesetzt.`);
+            reply(player, `§7${formatBounds(market)}`);
+            return { status: CustomCommandStatus.Success };
+        }
+    );
 
+    registerCommand(
+        registry,
+        {
+            name: "siedler:market_setcorner2",
+            description: "Setzt die zweite Ecke des Marktplatzes auf deine aktuelle Position.",
+            mandatoryParameters: [
+                { type: CustomCommandParamType.String, name: "id" }
+            ]
+        },
+        (origin, args) => {
+            const player = playerOnly(origin);
+            if (!player) return { status: CustomCommandStatus.Failure };
+
+            const market = findMarket(String(args[0] ?? "").trim());
+            if (!market) {
+                reply(player, "§cMarktplatz wurde nicht gefunden.");
+                return { status: CustomCommandStatus.Failure };
+            }
+
+            market.max = {
+                x: Math.floor(player.location.x),
+                y: player.dimension.heightRange?.max ?? 319,
+                z: Math.floor(player.location.z)
+            };
+            market.dimension = player.dimension.id.replace(/^minecraft:/, "");
+
+            reply(player, `§aEcke 2 von '${market.id}' gesetzt.`);
+            reply(player, `§7${formatBounds(market)}`);
             return { status: CustomCommandStatus.Success };
         }
     );
@@ -221,5 +219,5 @@ system.beforeEvents.startup.subscribe((event) => {
         }
     );
 
-    console.info("§a[Market] Commands registered");
+    console.info("§a[Market] Rectangular market commands registered");
 });
