@@ -2,27 +2,22 @@ import { system, world } from "@minecraft/server";
 import { SOLDIERS, SOLDIER_CONFIG, SOLDIER_TYPES } from "./config.js";
 import { getPlayerTeam, getSoldierTeam } from "../teams/index.js";
 import { getTeamRelation, TEAM_RELATION } from "../teams/relations.js";
+import { SOLDIER_COMMANDS, getSoldierCommand, clearSoldierCommand } from "./command_manager.js";
 
 const SOLDIER_ID = "siedler:soldier";
 const TICK_MS = 50;
-
 let aiStarted = false;
 
 export function startSoldierAI() {
     if (aiStarted) return;
-
     aiStarted = true;
-
     if (!SOLDIER_CONFIG.enabled) {
         console.info("[Soldier AI] Disabled");
         return;
     }
-
-    // Re-register soldiers after a script/world restart.
     system.runTimeout(discoverSoldiers, 1);
     system.runInterval(discoverSoldiers, 40);
     system.runInterval(updateSoldiers, SOLDIER_CONFIG.AI_INTERVAL);
-
     console.info("[Soldier AI] Started");
 }
 
@@ -68,9 +63,7 @@ function registerExistingSoldier(entity) {
 function updateSoldiers() {
     for (const [id, soldier] of SOLDIERS) {
         try {
-            if (!updateSoldier(soldier, Date.now())) {
-                SOLDIERS.delete(id);
-            }
+            if (!updateSoldier(soldier, Date.now())) SOLDIERS.delete(id);
         } catch (error) {
             debug(`Update failed for ${id}: ${formatError(error)}`);
         }
@@ -83,11 +76,101 @@ function updateSoldier(soldier, now) {
 
     synchronize(soldier);
 
-    if (soldier.targetId) {
-        const current = findEntityById(entity, soldier.targetId);
-        if (!current || !isEnemy(soldier, current)) {
+    const command = getSoldierCommand(soldier);
+    if (command) {
+        if (executeCommand(soldier, command, now)) return true;
+    }
+
+    return runAutonomousAI(soldier, now);
+}
+
+function executeCommand(soldier, command, now) {
+    const entity = soldier.entity;
+
+    switch (command.type) {
+        case SOLDIER_COMMANDS.STOP:
             soldier.targetId = null;
+            setState(soldier, SOLDIER_CONFIG.STATES.IDLE);
+            clearSoldierCommand(soldier);
+            return true;
+
+        case SOLDIER_COMMANDS.STAY:
+            soldier.targetId = null;
+            setState(soldier, SOLDIER_CONFIG.STATES.IDLE);
+            if (command.position && now >= soldier.nextMovement) {
+                moveToPosition(entity, command.position);
+                soldier.nextMovement = now + ticksToMs(SOLDIER_CONFIG.MOVEMENT_INTERVAL);
+            }
+            return true;
+
+        case SOLDIER_COMMANDS.MOVE:
+            if (!command.position) {
+                clearSoldierCommand(soldier);
+                return false;
+            }
+            soldier.targetId = null;
+            if (distanceBetween(entity.location, command.position) <= 1.25) {
+                setState(soldier, SOLDIER_CONFIG.STATES.IDLE);
+                clearSoldierCommand(soldier);
+                return true;
+            }
+            setState(soldier, SOLDIER_CONFIG.STATES.MOVE);
+            if (now >= soldier.nextMovement) {
+                moveToPosition(entity, command.position);
+                soldier.nextMovement = now + ticksToMs(SOLDIER_CONFIG.MOVEMENT_INTERVAL);
+            }
+            return true;
+
+        case SOLDIER_COMMANDS.FOLLOW: {
+            const owner = getOwner(entity);
+            if (!owner) return true;
+            soldier.targetId = null;
+            const distance = distanceBetween(entity.location, owner.location);
+            if (distance <= 3) {
+                setState(soldier, SOLDIER_CONFIG.STATES.IDLE);
+                return true;
+            }
+            setState(soldier, SOLDIER_CONFIG.STATES.MOVE);
+            if (now >= soldier.nextMovement) {
+                moveToPosition(entity, owner.location);
+                soldier.nextMovement = now + ticksToMs(SOLDIER_CONFIG.MOVEMENT_INTERVAL);
+            }
+            return true;
         }
+
+        case SOLDIER_COMMANDS.ATTACK: {
+            const target = findEntityById(entity, command.targetId);
+            if (!target || !isValid(target) || isDead(target)) {
+                clearSoldierCommand(soldier);
+                return false;
+            }
+            if (!isEnemy(soldier, target)) {
+                clearSoldierCommand(soldier);
+                return false;
+            }
+            soldier.targetId = target.id;
+            return fightTarget(soldier, target, now);
+        }
+
+        case SOLDIER_COMMANDS.DEFEND:
+            return defendPosition(soldier, command, now);
+
+        case SOLDIER_COMMANDS.PATROL:
+            return patrolPosition(soldier, command, now);
+
+        case SOLDIER_COMMANDS.IDLE:
+            return false;
+
+        default:
+            clearSoldierCommand(soldier);
+            return false;
+    }
+}
+
+function runAutonomousAI(soldier, now) {
+    if (soldier.targetId) {
+        const current = findEntityById(soldier.entity, soldier.targetId);
+        if (!current || !isEnemy(soldier, current)) soldier.targetId = null;
     }
 
     if (!soldier.targetId && now >= soldier.nextTargetSearch) {
@@ -101,59 +184,98 @@ function updateSoldier(soldier, now) {
         return true;
     }
 
-    const target = findEntityById(entity, soldier.targetId);
+    const target = findEntityById(soldier.entity, soldier.targetId);
     if (!target || !isEnemy(soldier, target) || isDead(target)) {
         soldier.targetId = null;
         return true;
     }
 
+    return fightTarget(soldier, target, now);
+}
+
+function fightTarget(soldier, target, now) {
+    const entity = soldier.entity;
     const distance = distanceBetween(entity.location, target.location);
     const range = getDynamicNumber(entity, "soldier:attackRange", SOLDIER_CONFIG.DEFAULT_ATTACK_RANGE);
 
     if (distance <= range + SOLDIER_CONFIG.ATTACK_DISTANCE_PADDING) {
         setState(soldier, SOLDIER_CONFIG.STATES.ATTACK);
-
         if (now >= soldier.nextAttack) {
             attack(soldier, target);
             soldier.nextAttack = now + getAttackCooldown(soldier);
         }
     } else {
         setState(soldier, SOLDIER_CONFIG.STATES.MOVE);
-
         if (now >= soldier.nextMovement) {
-            moveTowards(entity, target);
+            moveToPosition(entity, target.location);
             soldier.nextMovement = now + ticksToMs(SOLDIER_CONFIG.MOVEMENT_INTERVAL);
         }
     }
-
     return true;
 }
 
-function synchronize(soldier) {
-    if (!Number.isFinite(soldier.nextAttack)) soldier.nextAttack = 0;
-    if (!Number.isFinite(soldier.nextTargetSearch)) soldier.nextTargetSearch = 0;
-    if (!Number.isFinite(soldier.nextMovement)) soldier.nextMovement = 0;
-    if (!soldier.phase) soldier.phase = SOLDIER_CONFIG.STATES.IDLE;
+function defendPosition(soldier, command, now) {
+    const entity = soldier.entity;
+    const position = command.position;
+    const radius = Number(command.radius ?? 8);
+
+    if (!position) {
+        clearSoldierCommand(soldier);
+        return false;
+    }
+
+    const distance = distanceBetween(entity.location, position);
+    if (distance > radius && now >= soldier.nextMovement) {
+        setState(soldier, SOLDIER_CONFIG.STATES.MOVE);
+        moveToPosition(entity, position);
+        soldier.nextMovement = now + ticksToMs(SOLDIER_CONFIG.MOVEMENT_INTERVAL);
+        return true;
+    }
+
+    const target = findTarget(soldier);
+    if (target && distanceBetween(target.location, position) <= radius) {
+        return fightTarget(soldier, target, now);
+    }
+
+    soldier.targetId = null;
+    setState(soldier, SOLDIER_CONFIG.STATES.IDLE);
+    return true;
+}
+
+function patrolPosition(soldier, command, now) {
+    const positions = command.positions;
+    if (!Array.isArray(positions) || positions.length < 2) {
+        clearSoldierCommand(soldier);
+        return false;
+    }
+
+    const index = Math.min(command.patrolIndex ?? 0, positions.length - 1);
+    const position = positions[index];
+
+    if (distanceBetween(soldier.entity.location, position) <= 1.5) {
+        command.patrolIndex = (index + 1) % positions.length;
+        return true;
+    }
+
+    setState(soldier, SOLDIER_CONFIG.STATES.MOVE);
+    if (now >= soldier.nextMovement) {
+        moveToPosition(soldier.entity, position);
+        soldier.nextMovement = now + ticksToMs(SOLDIER_CONFIG.MOVEMENT_INTERVAL);
+    }
+    return true;
 }
 
 function findTarget(soldier) {
     const entity = soldier.entity;
-    const soldierTeam = getSoldierTeam(soldier);
-    if (!soldierTeam) return null;
-
+    if (!getSoldierTeam(soldier)) return null;
     let best = null;
     let bestDistance = Infinity;
 
     try {
-        const entities = entity.dimension.getEntities({
-            location: entity.location,
-            maxDistance: SOLDIER_CONFIG.SEARCH_RADIUS
-        });
-
+        const entities = entity.dimension.getEntities({ location: entity.location, maxDistance: SOLDIER_CONFIG.SEARCH_RADIUS });
         for (const candidate of entities) {
             if (!isValid(candidate) || candidate.id === entity.id || isDead(candidate)) continue;
             if (!isEnemy(soldier, candidate)) continue;
-
             const distance = distanceSquared(entity.location, candidate.location);
             if (distance < bestDistance) {
                 best = candidate;
@@ -163,29 +285,24 @@ function findTarget(soldier) {
     } catch (error) {
         debug(`Target search failed: ${formatError(error)}`);
     }
-
     return best;
 }
 
 function isEnemy(soldier, target) {
     if (!isValid(target)) return false;
-
     const soldierTeam = getSoldierTeam(soldier);
     if (!soldierTeam) return false;
 
     if (target.typeId === "minecraft:player") {
         const targetTeam = getPlayerTeam(target);
-        if (!targetTeam) return false;
-        return getTeamRelation(soldierTeam, targetTeam) === TEAM_RELATION.HOSTILE;
+        return !!targetTeam && getTeamRelation(soldierTeam, targetTeam) === TEAM_RELATION.HOSTILE;
     }
 
     if (target.typeId === SOLDIER_ID || target.hasTag?.("soldier")) {
         const targetSoldier = SOLDIERS.get(target.id);
         const targetTeam = targetSoldier ? getSoldierTeam(targetSoldier) : getSoldierTeamFromEntity(target);
-        if (!targetTeam) return false;
-        return getTeamRelation(soldierTeam, targetTeam) === TEAM_RELATION.HOSTILE;
+        return !!targetTeam && getTeamRelation(soldierTeam, targetTeam) === TEAM_RELATION.HOSTILE;
     }
-
     return false;
 }
 
@@ -193,8 +310,18 @@ function getSoldierTeamFromEntity(entity) {
     try {
         const ownerId = entity.getDynamicProperty("soldier:ownerId");
         if (!ownerId) return null;
-        const player = world.getPlayers().find(p => p.id === ownerId);
+        const player = world.getPlayers().find(player => player.id === ownerId);
         return player ? getPlayerTeam(player) : null;
+    } catch {
+        return null;
+    }
+}
+
+function getOwner(entity) {
+    try {
+        const ownerId = entity.getDynamicProperty("soldier:ownerId");
+        if (!ownerId) return null;
+        return world.getPlayers().find(player => player.id === ownerId) ?? null;
     } catch {
         return null;
     }
@@ -203,9 +330,7 @@ function getSoldierTeamFromEntity(entity) {
 function attack(soldier, target) {
     const entity = soldier.entity;
     if (!isValid(entity) || !isValid(target) || !isEnemy(soldier, target)) return;
-
     const damage = getDynamicNumber(entity, "soldier:damage", SOLDIER_CONFIG.DEFAULT_DAMAGE);
-
     try {
         target.applyDamage(damage);
         debug(`${entity.id} attacked ${target.id} for ${damage}`);
@@ -215,24 +340,16 @@ function attack(soldier, target) {
     }
 }
 
-function moveTowards(entity, target) {
-    if (!isValid(entity) || !isValid(target)) return;
-
+function moveToPosition(entity, position) {
+    if (!isValid(entity) || !isValidPosition(position)) return;
     try {
-        const dx = target.location.x - entity.location.x;
-        const dz = target.location.z - entity.location.z;
+        const dx = position.x - entity.location.x;
+        const dz = position.z - entity.location.z;
         const distance = Math.sqrt(dx * dx + dz * dz);
         if (distance < 0.05) return;
-
         const speed = getDynamicNumber(entity, "soldier:speed", SOLDIER_CONFIG.DEFAULT_SPEED);
-        entity.lookAt(target.location);
-
-        // Impulse movement is deliberately small; repeated impulses create smooth movement.
-        entity.applyImpulse({
-            x: (dx / distance) * speed,
-            y: 0.04,
-            z: (dz / distance) * speed
-        });
+        entity.lookAt({ x: position.x, y: entity.location.y, z: position.z });
+        entity.applyImpulse({ x: (dx / distance) * speed, y: 0.04, z: (dz / distance) * speed });
     } catch (error) {
         debug(`Movement failed: ${formatError(error)}`);
     }
@@ -240,12 +357,8 @@ function moveTowards(entity, target) {
 
 function findEntityById(reference, id) {
     if (!id || !isValid(reference)) return null;
-
     try {
-        return reference.dimension.getEntities({
-            location: reference.location,
-            maxDistance: SOLDIER_CONFIG.SEARCH_RADIUS + 4
-        }).find(entity => entity.id === id) ?? null;
+        return reference.dimension.getEntities({ location: reference.location, maxDistance: SOLDIER_CONFIG.SEARCH_RADIUS + 4 }).find(entity => entity.id === id) ?? null;
     } catch {
         return null;
     }
@@ -265,6 +378,14 @@ function setState(soldier, state) {
     debug(`${soldier.entity?.id ?? "unknown"} -> ${state}`);
 }
 
+function synchronize(soldier) {
+    if (!Number.isFinite(soldier.nextAttack)) soldier.nextAttack = 0;
+    if (!Number.isFinite(soldier.nextTargetSearch)) soldier.nextTargetSearch = 0;
+    if (!Number.isFinite(soldier.nextMovement)) soldier.nextMovement = 0;
+    if (!soldier.phase) soldier.phase = SOLDIER_CONFIG.STATES.IDLE;
+    if (!Object.prototype.hasOwnProperty.call(soldier, "command")) soldier.command = null;
+}
+
 function isDead(entity) {
     try {
         const health = entity.getComponent("minecraft:health");
@@ -275,37 +396,29 @@ function isDead(entity) {
 }
 
 function isValid(entity) {
-    try {
-        return !!entity && entity.isValid === true;
-    } catch {
-        return false;
-    }
+    try { return !!entity && entity.isValid === true; } catch { return false; }
+}
+
+function isValidPosition(position) {
+    return position && Number.isFinite(Number(position.x)) && Number.isFinite(Number(position.y)) && Number.isFinite(Number(position.z));
 }
 
 function getDynamicNumber(entity, property, fallback) {
     try {
         const value = Number(entity.getDynamicProperty(property));
         return Number.isFinite(value) && value > 0 ? value : fallback;
-    } catch {
-        return fallback;
-    }
+    } catch { return fallback; }
 }
 
 function getDynamicString(entity, property, fallback) {
     try {
         const value = entity.getDynamicProperty(property);
         return typeof value === "string" && value.length ? value : fallback;
-    } catch {
-        return fallback;
-    }
+    } catch { return fallback; }
 }
 
 function getTaggedValue(entity, prefix) {
-    try {
-        return entity.getTags().find(tag => tag.startsWith(prefix))?.slice(prefix.length) ?? null;
-    } catch {
-        return null;
-    }
+    try { return entity.getTags().find(tag => tag.startsWith(prefix))?.slice(prefix.length) ?? null; } catch { return null; }
 }
 
 function distanceSquared(a, b) {
@@ -324,11 +437,11 @@ function ticksToMs(ticks) {
 }
 
 function getDimensions() {
-    return [
-        world.getDimension("overworld"),
-        world.getDimension("nether"),
-        world.getDimension("the_end")
-    ];
+    return [world.getDimension("overworld"), world.getDimension("nether"), world.getDimension("the_end")];
+}
+
+function formatError(error) {
+    return error instanceof Error ? error.message : String(error);
 }
 
 function debug(message) {
