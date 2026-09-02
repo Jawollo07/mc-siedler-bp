@@ -6,7 +6,7 @@
 
 Das Projekt soll sich von einer Sammlung einzelner Server-Systeme zu einem zusammenhängenden Siedler-System entwickeln:
 
-**Siedlung → Wirtschaft → Logistik → Bevölkerung → Militär → Territorium → Diplomatie → Krieg**
+**Siedlung → Wirtschaft  → Bevölkerung → Militär → Territorium → Diplomatie → Krieg**
 
 Bestehende Systeme wie Teams, Claims, Steuern, Monster/Pillager und das Soldier-System sollen dabei miteinander verbunden werden, statt isolierte Features zu bleiben.
 
