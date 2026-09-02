@@ -1,8 +1,6 @@
 import {
     system,
-    world,
-    ItemStack,
-    EquipmentSlot
+    world
 } from "@minecraft/server";
 
 import {
@@ -10,7 +8,9 @@ import {
     SOLDIER_CONFIG,
     SOLDIERS
 } from "./config.js";
+
 const DEBUG = true;
+
 /**
  * Spawns a soldier and registers it for the script AI.
  *
@@ -136,7 +136,8 @@ export function spawnSoldier(
         );
 
         /*
-         * Equipment is applied one tick later.
+         * Equipment is applied one tick later so the entity
+         * is fully initialized before its equipment slots are changed.
          */
         if (levelData.equipment) {
             system.runTimeout(() => {
@@ -173,6 +174,7 @@ export function spawnSoldier(
             nextTargetSearch: 0,
             nextMovement: 0
         });
+
         return entity;
     } catch (error) {
         console.warn(
@@ -217,12 +219,6 @@ function setSoldierHealth(entity, value) {
             return;
         }
 
-        /*
-         * @minecraft/server 2.9.0
-         *
-         * setCurrentValue() is available on
-         * EntityHealthComponent.
-         */
         if (
             typeof health.setCurrentValue ===
             "function"
@@ -231,9 +227,6 @@ function setSoldierHealth(entity, value) {
             return;
         }
 
-        /*
-         * Fallback for unexpected API differences.
-         */
         health.resetToMaxValue();
 
         const maxHealth =
@@ -252,16 +245,16 @@ function setSoldierHealth(entity, value) {
 }
 
 /**
- * Applies soldier equipment using the entity inventory.
+ * Applies equipment to the soldier.
  *
- * Inventory layout:
+ * Custom Bedrock entities on the current dedicated-server runtime do not
+ * expose minecraft:equippable through Entity.getComponent(). The entity
+ * component itself remains in soldier.json for Bedrock's equipment system,
+ * but Script API equipment access is not reliable for this custom mob.
  *
- * 0 = Mainhand
- * 1 = Offhand
- * 2 = Helmet
- * 3 = Chestplate
- * 4 = Leggings
- * 5 = Boots
+ * Therefore the script uses /replaceitem for the actual equipment slots.
+ * This targets the real entity equipment slots and works for non-player
+ * entities as well.
  *
  * @param {Entity} entity
  * @param {Object} equipment
@@ -271,123 +264,55 @@ function applyEquipment(entity, equipment) {
         return;
     }
 
-    try {
-        const equippable = entity.getComponent("minecraft:equippable");
+    const slotMap = {
+        mainhand: "slot.weapon.mainhand",
+        offhand: "slot.weapon.offhand",
+        helmet: "slot.armor.head",
+        chestplate: "slot.armor.chest",
+        leggings: "slot.armor.legs",
+        boots: "slot.armor.feet"
+    };
 
-        if (!equippable) {
-            console.warn(
-                "[Soldier] Entity has no equippable component."
-            );
-            return;
+    for (const [slotName, data] of Object.entries(equipment)) {
+        if (!data?.item) {
+            continue;
         }
 
-        const slotMap = {
-            mainhand: EquipmentSlot.Mainhand,
-            offhand: EquipmentSlot.Offhand,
-            helmet: EquipmentSlot.Head,
-            chestplate: EquipmentSlot.Chest,
-            leggings: EquipmentSlot.Legs,
-            boots: EquipmentSlot.Feet
-        };
+        const slotType = slotMap[slotName];
 
-        for (const [slotName, data] of Object.entries(equipment)) {
-            if (!data?.item) {
-                continue;
-            }
+        if (!slotType) {
+            console.warn(
+                `[Soldier] Unknown equipment slot: ${slotName}`
+            );
+            continue;
+        }
 
-            const equipmentSlot = slotMap[slotName];
+        try {
+            const amount = Math.max(
+                1,
+                Math.min(64, Number(data.amount ?? 1))
+            );
 
-            if (!equipmentSlot) {
-                console.warn(
-                    `[Soldier] Unknown equipment slot: ${slotName}`
-                );
-                continue;
-            }
+            const command =
+                `replaceitem entity @s ${slotType} 0 ${data.item} ${amount}`;
 
-            try {
-                const itemStack = new ItemStack(
-                    data.item,
-                    data.amount ?? 1
-                );
+            const result = entity.runCommand(command);
 
-                applyEnchantments(
-                    itemStack,
-                    data.enchantments
-                );
-
-                equippable.setEquipment(
-                    equipmentSlot,
-                    itemStack
-                );
-
+            if (DEBUG) {
                 console.log(
                     `[Soldier] Equipped ${data.item} on ${slotName}`
                 );
-            } catch (error) {
+            }
+
+            if (!result) {
                 console.warn(
-                    `[Soldier] Failed to equip ${slotName}: ${error}`
+                    `[Soldier] No command result while equipping ${slotName}`
                 );
             }
-        }
-    } catch (error) {
-        console.warn(
-            `[Soldier] Equipment initialization failed: ${error}`
-        );
-    }
-}
-/**
- * Applies enchantments to an ItemStack.
- *
- * @param {ItemStack} itemStack
- * @param {Array} enchantments
- */
-function applyEnchantments(
-    itemStack,
-    enchantments
-) {
-    if (
-        !itemStack ||
-        !Array.isArray(enchantments)
-    ) {
-        return;
-    }
-
-    try {
-        const enchantable =
-            itemStack.getComponent(
-                "minecraft:enchantable"
+        } catch (error) {
+            console.warn(
+                `[Soldier] Failed to equip ${slotName}: ${error}`
             );
-
-        if (!enchantable) {
-            return;
         }
-
-        for (
-            const enchantment
-            of enchantments
-        ) {
-            if (
-                !enchantment?.id ||
-                typeof enchantment.level !==
-                    "number"
-            ) {
-                continue;
-            }
-
-            try {
-                enchantable.addEnchantment({
-                    type: enchantment.id,
-                    level: enchantment.level
-                });
-            } catch (error) {
-                console.warn(
-                    `[Soldier] Failed to enchant ${itemStack.typeId}: ${error}`
-                );
-            }
-        }
-    } catch (error) {
-        console.warn(
-            `[Soldier] Enchantment setup failed: ${error}`
-        );
     }
 }
