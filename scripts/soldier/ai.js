@@ -58,7 +58,8 @@ function registerExistingSoldier(entity) {
         createdAt: world.getAbsoluteTime(),
         nextAttack: 0,
         nextTargetSearch: 0,
-        nextMovement: 0
+        nextMovement: 0,
+        command: null
     });
 
     debug(`Registered existing soldier ${entity.id}`);

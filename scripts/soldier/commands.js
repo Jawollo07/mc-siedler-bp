@@ -5,6 +5,15 @@ import {
     CustomCommandStatus,
     CommandPermissionLevel
 } from "@minecraft/server";
+import {
+    commandMove,
+    commandFollow,
+    commandStay,
+    commandAttack,
+    commandDefend,
+    commandPatrol,
+    commandStop
+} from "./soldier_commands.js";
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
@@ -26,6 +35,36 @@ function playerOnly(origin) {
 }
 
 function registerSoldierCommands(registry) {
+    registry.registerCommand(
+        {
+            name: "siedler:move",
+            description: "Bewegt den Soldaten zu einem Zielort",
+            permissionLevel: CommandPermissionLevel.GameDirectors,
+            cheatsRequired: false,
+            mandatoryParameters: [
+                { type: CustomCommandParamType.Vector3, name: "Target" }
+            ]
+        },
+        commandMove
+    );
+    registry.registerCommand(
+        {
+            name: "siedler:follow",
+            description: "Lässt den Soldaten einem Spieler folgen",
+            permissionLevel: CommandPermissionLevel.GameDirectors,
+            cheatsRequired: false
+        },
+        commandFollow
+    );
+    registry.registerCommand(
+        {
+            name: "siedler:stay",
+            description: "Lässt den Soldaten an Ort und Stelle bleiben",
+            permissionLevel: CommandPermissionLevel.GameDirectors,
+            cheatsRequired: false
+        },
+        commandStay
+    );
     registry.registerCommand(
         {
             name: "siedler:spawn_soldier",

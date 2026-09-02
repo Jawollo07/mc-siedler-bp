@@ -19,6 +19,7 @@ const DEBUG = true;
  * @param {string} type
  * @param {number} level
  * @param {Player | null} owner
+ * @param {string} command
  * @returns {Entity | null}
  */
 export function spawnSoldier(
@@ -172,7 +173,8 @@ export function spawnSoldier(
                 world.getAbsoluteTime(),
             nextAttack: 0,
             nextTargetSearch: 0,
-            nextMovement: 0
+            nextMovement: 0,
+            command: null
         });
 
         return entity;
