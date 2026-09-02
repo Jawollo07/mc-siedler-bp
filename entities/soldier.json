@@ -50,7 +50,8 @@
         }
       },
 
-      "minecraft:persistent": {}
+      "minecraft:persistent": {},
+      "minecraft:equippable": {}
     }
   }
 }

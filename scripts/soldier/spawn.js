@@ -2,6 +2,7 @@ import {
     system,
     world,
     ItemStack,
+    EquipmentSlot
 } from "@minecraft/server";
 
 import {
@@ -271,41 +272,35 @@ function applyEquipment(entity, equipment) {
     }
 
     try {
-        const inventory =
-            entity.getComponent("minecraft:inventory");
+        const equippable = entity.getComponent("minecraft:equippable");
 
-        if (!inventory?.container) {
+        if (!equippable) {
             console.warn(
-                "[Soldier] Entity has no usable inventory."
+                "[Soldier] Entity has no equippable component."
             );
-
             return;
         }
 
         const slotMap = {
-            mainhand: 0,
-            offhand: 1,
-            helmet: 2,
-            chestplate: 3,
-            leggings: 4,
-            boots: 5
+            mainhand: EquipmentSlot.Mainhand,
+            offhand: EquipmentSlot.Offhand,
+            helmet: EquipmentSlot.Head,
+            chestplate: EquipmentSlot.Chest,
+            leggings: EquipmentSlot.Legs,
+            boots: EquipmentSlot.Feet
         };
 
-        for (
-            const [slotName, data]
-            of Object.entries(equipment)
-        ) {
+        for (const [slotName, data] of Object.entries(equipment)) {
             if (!data?.item) {
                 continue;
             }
 
-            const slot = slotMap[slotName];
+            const equipmentSlot = slotMap[slotName];
 
-            if (slot === undefined) {
+            if (!equipmentSlot) {
                 console.warn(
                     `[Soldier] Unknown equipment slot: ${slotName}`
                 );
-
                 continue;
             }
 
@@ -315,11 +310,13 @@ function applyEquipment(entity, equipment) {
                     data.amount ?? 1
                 );
 
-                /*
-                 * Put the item into the soldier inventory.
-                 */
-                inventory.container.setItem(
-                    slot,
+                applyEnchantments(
+                    itemStack,
+                    data.enchantments
+                );
+
+                equippable.setEquipment(
+                    equipmentSlot,
                     itemStack
                 );
 
