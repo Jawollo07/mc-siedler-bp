@@ -17,6 +17,7 @@ Aktuelle Systeme:
 - 🏪 Marktplätze und spezialisierte Händler
 - ⚔️ Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
 - 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
+- 🐎 Infanterie, Bogenschützen und Kavallerie
 - 👹 Monster, Pillager-Trupps, Außenposten und Belagerungen
 - 🧰 Essentials, Homes, TPA und Spieler-Dashboard
 - 💾 persistente World Dynamic Properties
@@ -37,13 +38,15 @@ Händler werden als `siedler:trader` gespawnt.
 
 ### ⚔️ Soldatenhändler
 
-Der `soldiers`-Händler öffnet beim Interagieren eine eigene UI. Der Spieler kann Infanterie direkt gegen Emeralds rekrutieren.
+Der `soldiers`-Händler öffnet beim Interagieren eine eigene UI. Dort können die aktuell verfügbaren Einheitentypen gegen Emeralds rekrutiert werden:
 
-| Einheit | Level | Kosten |
-|---|---:|---:|
-| Rekrut | 1 | 8 Emeralds |
-| Veteran | 2 | 18 Emeralds |
-| Elite | 3 | 35 Emeralds |
+| Einheit | Level 1 | Level 2 | Level 3 |
+|---|---:|---:|---:|
+| Infanterie | 8 | 18 | 35 |
+| Bogenschütze | 10 | 22 | 40 |
+| Kavallerie | 14 | 28 | 48 |
+
+Die Preise sind in Emeralds angegeben. Höhere Level besitzen bessere Werte und Ausrüstung. Kavallerie wird beim Spawn zusätzlich auf einem Pferd erzeugt.
 
 Der gekaufte Soldat wird über das bestehende `spawnSoldier()`-System erstellt und automatisch dem kaufenden Spieler über `player.id` zugeordnet. Bei einem fehlgeschlagenen Spawn werden die Emeralds zurückerstattet.
 
@@ -64,18 +67,27 @@ scripts/soldier/trader.js
 
 Das Soldaten-System stellt steuerbare `siedler:soldier`-Einheiten bereit.
 
+### Einheitentypen
+
+- **Infanterie** – robuster Nahkämpfer mit Schild und schwerer Rüstung
+- **Bogenschütze** – Fernkampfeinheit mit hoher Angriffsreichweite und Bogen
+- **Kavallerie** – mobiler Nahkämpfer mit Pferd und erhöhter Geschwindigkeit
+
+Alle Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird über Konfiguration, Tags und Dynamic Properties festgelegt. Die Kavallerie erhält beim Spawn ein `minecraft:horse`-Reittier.
+
+Gemeinsame Funktionen:
+
 - Besitzerzuordnung über `player.id`
 - Zielsuche und Kampf-KI
 - Team-/Feinderkennung
 - `idle`, `attack`, `follow`, `move`, `retreat`
 - Move, Follow und Stay
-- Infanterie
 - Level 1–7
 - Soldaten-XP
 - XP abhängig vom verursachten Kampfschaden
 - Bonus-XP für Kills abhängig von der Gegnerstärke
-- unterschiedliche HP, Geschwindigkeit und Schaden
-- stufenweise bessere Waffen, Schilde und Rüstung
+- unterschiedliche HP, Geschwindigkeit, Schaden und Reichweite
+- stufenweise bessere Waffen und Rüstung
 - Fähigkeiten auf höheren Stufen
 - direkte Rekrutierung über den Soldatenhändler
 
@@ -83,19 +95,19 @@ Das Soldaten-System stellt steuerbare `siedler:soldier`-Einheiten bereit.
 
 Soldaten starten auf Level 1 und sammeln dauerhaft XP. Ab bestimmten Gesamt-XP steigen sie automatisch auf das nächste Level auf. Dabei werden Werte, Ausrüstung und Fähigkeiten aktualisiert.
 
-| Level | Bezeichnung | benötigte Gesamt-XP | HP | Schaden | Geschwindigkeit |
-|---:|---|---:|---:|---:|---:|
-| 1 | Rekrut | 0 | 30 | 4 | 0,25 |
-| 2 | Veteran | 150 | 40 | 6 | 0,28 |
-| 3 | Elite | 400 | 55 | 8 | 0,32 |
-| 4 | Hauptmann | 800 | 65 | 10 | 0,34 |
-| 5 | Kriegsveteran | 1.400 | 75 | 12 | 0,36 |
-| 6 | Kriegsherr | 2.200 | 85 | 14 | 0,38 |
-| 7 | Marschall | 3.500 | 100 | 16 | 0,40 |
+| Level | Bezeichnung | benötigte Gesamt-XP |
+|---:|---|---:|
+| 1 | Rekrut | 0 |
+| 2 | Veteran | 150 |
+| 3 | Elite | 400 |
+| 4 | Hauptmann | 800 |
+| 5 | Kriegsveteran | 1.400 |
+| 6 | Kriegsherr | 2.200 |
+| 7 | Marschall | 3.500 |
 
 ### ⚔️ XP durch Kampf
 
-XP wird nicht mehr pauschal pro Treffer vergeben, sondern anhand des tatsächlich verursachten Schadens. Der letzte Treffer eines Gegners wird als Kill gewertet und erhält keine zusätzliche Treffer-XP.
+XP wird anhand des tatsächlich verursachten Schadens und der Gegnerstärke vergeben.
 
 | Ereignis | XP |
 |---|---:|
@@ -107,15 +119,17 @@ XP wird nicht mehr pauschal pro Treffer vergeben, sondern anhand des tatsächlic
 | Kill eines starken Gegners | 50–75 XP |
 | Kill eines sehr starken Gegners/Bosses | 75–100 XP |
 
-Starke Gegner werden unter anderem über Vindicator, Evoker, Ravager, Warden, Elder Guardian und Piglin Brute erkannt. Ender Dragon und Wither gelten als Bosse. Zusätzlich können eigene Entities über die Tags `soldier_xp_strong`, `strong`, `soldier_xp_boss`, `boss` oder `very_strong` klassifiziert werden. Als Fallback wird die maximale Lebenspunktzahl berücksichtigt.
-
 Die XP wird persistent als Dynamic Property `soldier:xp` gespeichert.
 
 Konfiguration und Logik:
 
 ```text
 scripts/soldier/config.js
+scripts/soldier/archer.js
+scripts/soldier/cavalry.js
 scripts/soldier/level.js
+scripts/soldier/spawn.js
+scripts/soldier/trader.js
 ```
 
 ## 💰 Wirtschaft & Handel
@@ -139,7 +153,7 @@ Claims arbeiten auf Chunk-Basis. Teams werden persistent gespeichert und besitze
 
 ## 👹 Monster & Bedrohungen
 
-Das Monster-System unterstützt unter anderem Spawn-Konfiguration, Nacht-Multiplikator, Monster-Tokens, Pillager-Trupps, Captains, Vindicators, Ravager, Außenposten-Raids, Belagerungen und Marktplatz-Schutz.
+Das Monster-System unterstützt Spawn-Konfiguration, Nacht-Multiplikator, Monster-Tokens, Pillager-Trupps, Captains, Vindicators, Ravager, Außenposten-Raids, Belagerungen und Marktplatz-Schutz.
 
 ## 📦 Installation
 
@@ -170,6 +184,8 @@ scripts/core/main.js
 └── Soldier
     ├── index.js
     ├── ai.js
+    ├── archer.js
+    ├── cavalry.js
     ├── commands.js
     ├── command_manager.js
     ├── config.js
@@ -197,6 +213,8 @@ scripts/core/main.js
 /siedler:follow
 /siedler:stay
 ```
+
+Für die Einheitentypen können unter anderem `infantry`, `archer` und `cavalry` verwendet werden.
 
 ## 🛠️ Entwicklung
 
