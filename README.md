@@ -13,7 +13,7 @@ Aktuelle Systeme:
 
 - 👥 Teams, Team-Chat, Farben und Beziehungen
 - 🏠 Claims und visuelle Claim-Grenzen
-- 💰 Emerald-basierte Wirtschaft, Steuern und TaxBonus-System
+- 💰 Emerald-basierte Wirtschaft, Steuern und Monster-Token-TaxBonus
 - 🏪 Marktplätze und spezialisierte Händler
 - ⚔️ Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
 - 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
@@ -22,41 +22,41 @@ Aktuelle Systeme:
 - 🧰 Essentials, Homes, TPA und Spieler-Dashboard
 - 💾 persistente World Dynamic Properties
 
-## 💰 Steuern & TaxBonus
+## 💰 Steuern & Monster-Token-TaxBonus
 
-Jedes Team kann eine Steuerkiste besitzen. Die tägliche Steuer besteht aus der Bevölkerung des Teams und einem kontrollierten Bonus:
+Jedes Team kann eine Steuerkiste besitzen. Die normale Tagessteuer wird anhand der Dorfbewohner in den Team-Claims berechnet:
 
-`Tagessteuer = Dorfbewohner + fester TaxBonus + Bevölkerungsbonus`
+`Tagessteuer = Dorfbewohner + gespeicherter Monster-Token-Bonus`
 
-Der **feste TaxBonus** wird pro Team gespeichert und kann von `0` bis `64` Emeralds pro Tag gesetzt werden. Zusätzlich erhalten größere Siedlungen einen kleinen automatischen **Bevölkerungsbonus**:
+Der **TaxBonus kann ausschließlich durch das Besiegen eines Monster-Tokens** entstehen. Für jeden von einem Spieler besiegten Token-Mob werden aktuell **8 Emeralds TaxBonus** dem Team des Spielers gutgeschrieben.
 
-| Dorfbewohner | Bevölkerungsbonus |
-|---:|---:|
-| 0–4 | +0 |
-| 5–9 | +2 |
-| 10–19 | +5 |
-| 20–39 | +10 |
-| 40+ | +15 |
+Der Bonus wird persistent im Team gespeichert und kann bis maximal **64 Emeralds** angesammelt werden. Er wird bei der nächsten erfolgreichen täglichen Steuerzahlung vollständig verwendet und anschließend auf `0` zurückgesetzt.
 
-Der gesamte Bonus ist auf **64 Emeralds pro Tag** begrenzt. Die komplette Tagesauszahlung eines Teams ist auf **256 Emeralds** begrenzt. Dadurch bleibt die Steuer für große Siedlungen attraktiv, ohne die Emerald-Wirtschaft unkontrolliert wachsen zu lassen.
+Es gibt **keinen automatischen Bevölkerungsbonus** und keinen normalen Admin-Bonus mehr. Dadurch ist der TaxBonus direkt an das Monster-Token-System gekoppelt.
 
-Die Auszahlung wird außerdem über den Weltzustand gegen doppelte Auszahlungen nach Server-Neustarts abgesichert.
+Die komplette Tagesauszahlung eines Teams ist auf **256 Emeralds** begrenzt. Ist die Steuerkiste teilweise voll, werden eingelagerten und neben der Kiste abgelegten Emeralds getrennt erfasst.
 
 ### TaxBonus-Commands
 
-Alle Steuer-Commands benötigen Game-Director-Rechte:
-
 ```text
-/siedler:settax <team> <x> <y> <z>
-/siedler:settaxbonus <team> <bonus>
-/siedler:addtaxbonus <team> <betrag>
 /siedler:taxinfo <team>
+/siedler:settax <team> <x> <y> <z>
 /siedler:countvillagers <team>
 ```
 
-`settaxbonus` ersetzt den festen Bonus. `addtaxbonus` erhöht oder verringert ihn und hält ihn automatisch innerhalb des erlaubten Bereichs. `taxinfo` zeigt die vollständige aktuelle Berechnung einschließlich Bevölkerungsbonus und Steuerkiste.
+`taxinfo` zeigt den aktuell angesammelten Monster-Token-Bonus und die daraus resultierende Tagessteuer. Die Bonusvergabe selbst erfolgt automatisch beim Besiegen eines Token-Mobs.
 
-Die TaxBonus-Konfiguration befindet sich zentral in `scripts/taxes/config.js`.
+Die Konfiguration befindet sich zentral in `scripts/taxes/config.js`.
+
+## 🧟 Monster-Tokens
+
+Monster-Tokens sind besondere Monster, die über das Token-System erzeugt werden. Wird ein Token-Mob von einem Spieler besiegt, wird dessen Team automatisch mit TaxBonus belohnt.
+
+- 1 besiegter Token-Mob → +8 TaxBonus
+- maximal 64 gespeicherter TaxBonus pro Team
+- Bonus wird nur dem Team des tatsächlichen Spielerkillers gutgeschrieben
+- Spieler ohne Team erhalten keinen Bonus
+- Bonus wird bei der nächsten erfolgreichen Steuerzahlung verbraucht
 
 ## 🧑‍🌾 Händler
 
@@ -131,10 +131,14 @@ scripts/core/main.js
 
 ```text
 /siedler:settax <team> <x> <y> <z>
-/siedler:settaxbonus <team> <bonus>
-/siedler:addtaxbonus <team> <betrag>
 /siedler:taxinfo <team>
 /siedler:countvillagers <team>
+```
+
+### Monster-Tokens
+
+```text
+/siedler:token
 ```
 
 ### Händler
