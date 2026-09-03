@@ -2,7 +2,6 @@ import { system, CustomCommandParamType, CustomCommandStatus, CommandPermissionL
 
 const TRADER_TYPE = "siedler:trader";
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
-const TRADER_VARIANT_TAGS = ["trader_food", "trader_building", "trader_resources", "trader_tools", "trader_weapons", "trader_supplies", "trader_soldiers"];
 
 const TRADER_TYPES = {
     food: { event: "siedler:set_food", name: "§aLebensmittelhändler", tag: "trader_food" },
@@ -11,7 +10,7 @@ const TRADER_TYPES = {
     tools: { event: "siedler:set_tools", name: "§bWerkzeughändler", tag: "trader_tools" },
     weapons: { event: "siedler:set_weapons", name: "§cWaffenhändler", tag: "trader_weapons" },
     supplies: { event: "siedler:set_supplies", name: "§dVersorgungshändler", tag: "trader_supplies" },
-    soldiers: { event: null, name: "§cSoldatenhändler", tag: "soldier_trader", variantTag: "trader_soldiers" }
+    soldiers: { event: "siedler:set_soldiers", name: "§cSoldatenhändler", tag: "soldier_trader" }
 };
 
 function playerOnly(origin) {
@@ -25,13 +24,6 @@ function reply(player, message) {
     try { player.sendMessage(`§8[§bHändler§8]§r ${message}`); } catch {}
 }
 
-function setTraderVariant(trader, config) {
-    for (const tag of TRADER_VARIANT_TAGS) {
-        try { if (trader.hasTag(tag)) trader.removeTag(tag); } catch {}
-    }
-    try { trader.addTag(config.variantTag ?? config.tag); } catch {}
-}
-
 function spawnTrader(player, type, location) {
     const config = TRADER_TYPES[type];
     if (!config) {
@@ -43,7 +35,7 @@ function spawnTrader(player, type, location) {
     try {
         const trader = player.dimension.spawnEntity(TRADER_TYPE, location);
         if (config.event) trader.triggerEvent(config.event);
-        setTraderVariant(trader, config);
+        if (config.tag) trader.addTag(config.tag);
         try { trader.nameTag = config.name; } catch {}
         reply(player, `§a${config.name} §agespawnt.`);
     } catch (error) {
