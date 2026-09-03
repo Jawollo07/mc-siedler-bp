@@ -13,6 +13,7 @@
 - [x] Zentraler, fehlertoleranter Loader
 - [x] World Dynamic Properties
 - [x] Teams, Team-Chat, Farben und Beziehungen
+- [x] Teams mit persistentem `taxBonus` inklusive Migration bestehender Teams
 - [x] Chunk-Claims und Claim-Grenzanzeige
 - [x] Steuern und Emerald-Wirtschaft
 - [x] Permanenter TaxBonus ausschließlich durch besiegte Monster-Tokens
@@ -160,6 +161,8 @@
 - [x] Tagesauszahlung von maximal 256 Emeralds
 - [x] persistenter Schutz gegen doppelte Auszahlung
 - [x] `/siedler:taxinfo`
+- [x] bestehende Teams erhalten automatisch `taxBonus: 0`, falls die Variable fehlt
+- [x] neue Teams werden mit `taxBonus: 0` angelegt
 - [ ] Steuerhistorie
 - [ ] wirtschaftliche Ereignisse mit temporären Boni
 
@@ -180,6 +183,8 @@ Nach einem weiteren besiegten Monster-Token:
 `10 Dorfbewohner + 2 TaxBonus = 12 Emeralds/Tag`
 
 Der TaxBonus wird bei der täglichen Steuerzahlung **nicht zurückgesetzt**. Er stellt einen dauerhaften wirtschaftlichen Fortschritt des Teams durch das Besiegen von Monster-Tokens dar.
+
+Die Team-Migration stellt sicher, dass ältere Spielwelten ebenfalls das Feld `taxBonus` besitzen. Ein fehlender oder ungültiger Wert wird auf `0` gesetzt und in den World Dynamic Properties gespeichert.
 
 ---
 
