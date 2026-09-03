@@ -15,9 +15,9 @@
 - [x] Teams, Team-Chat, Farben und Beziehungen
 - [x] Chunk-Claims und Claim-Grenzanzeige
 - [x] Steuern und Emerald-Wirtschaft
-- [x] TaxBonus mit festem Team-Bonus und automatischem Bevölkerungsbonus
-- [x] konfigurierbare TaxBonus-Grenzen
-- [x] maximale Tagesauszahlung
+- [x] TaxBonus ausschließlich durch besiegte Monster-Tokens
+- [x] TaxBonus-Limit von 64 Emeralds
+- [x] TaxBonus wird bei der nächsten Steuerzahlung verbraucht
 - [x] persistenter Schutz gegen doppelte Tagesauszahlung nach Neustarts
 - [x] Steuer-Informations-Command
 - [x] Marktplätze und spezialisierte Händler
@@ -148,32 +148,29 @@
 - [x] Steuern pro Dorfbewohner
 - [x] Emerald-Währung
 - [x] Team-Kasse
-- [x] fester TaxBonus pro Team
-- [x] automatischer Bevölkerungsbonus
-- [x] Bonus-Limit von 64 Emeralds/Tag
+- [x] TaxBonus durch besiegte Monster-Tokens
+- [x] 8 Emeralds TaxBonus pro besiegtem Token
+- [x] maximal 64 gespeicherte Bonus-Emeralds pro Team
+- [x] Bonus nur für das Team des Spielerkillers
+- [x] Spieler ohne Team erhalten keinen Bonus
+- [x] Bonus wird bei erfolgreicher Tagessteuer vollständig verbraucht
 - [x] Tagesauszahlung von maximal 256 Emeralds
-- [x] Eingabevalidierung und Normalisierung
-- [x] `/siedler:settaxbonus`
-- [x] `/siedler:addtaxbonus`
+- [x] persistenter Schutz gegen doppelte Auszahlung
 - [x] `/siedler:taxinfo`
-- [x] persistenter Auszahlungsschutz über World Dynamic Property
 - [ ] Steuerhistorie
-- [ ] Wirtschaftliche Ereignisse mit temporären Boni
-- [ ] Bonus abhängig von Siedlungsstufe/Wohlstand
+- [ ] wirtschaftliche Ereignisse mit temporären Boni
 
 ### Aktuelles TaxBonus-Modell
 
-`Tagessteuer = Dorfbewohner + fester TaxBonus + Bevölkerungsbonus`
+Der TaxBonus stammt **ausschließlich aus Monster-Tokens**.
 
-| Dorfbewohner | Bevölkerungsbonus |
-|---:|---:|
-| 0–4 | +0 |
-| 5–9 | +2 |
-| 10–19 | +5 |
-| 20–39 | +10 |
-| 40+ | +15 |
+`Monster-Token besiegt → +8 TaxBonus für das Team des Killers`
 
-Der feste Bonus kann zwischen `0` und `64` liegen. Der kombinierte Bonus ist ebenfalls auf `64` begrenzt. Die komplette Tagesauszahlung eines Teams ist auf `256` Emeralds begrenzt.
+`Tagessteuer = Dorfbewohner + gespeicherter TaxBonus`
+
+Der Bonus wird bis maximal `64` Emeralds gesammelt. Bei der nächsten erfolgreichen Tagesauszahlung wird der gespeicherte Bonus vollständig verwendet und anschließend auf `0` gesetzt.
+
+Es gibt **keinen automatischen Bevölkerungsbonus** und keinen regulären manuellen TaxBonus mehr.
 
 ---
 
@@ -217,6 +214,7 @@ Der feste Bonus kann zwischen `0` und `64` liegen. Der kombinierte Bonus ist ebe
 - [x] Spawnraten
 - [x] Nacht-Multiplikator
 - [x] Monster-Tokens
+- [x] Token-Belohnung über TaxBonus
 - [x] Pillager-Trupps
 - [x] Captains
 - [x] Vindicators/Ravager
