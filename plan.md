@@ -2,7 +2,7 @@
 
 > Aktueller Entwicklungsplan für `mc-siedler-bp`. Ziel ist ein zusammenhängendes Minecraft-Bedrock-Siedler-System mit Wirtschaft, Bevölkerung, Territorium, Handel und Militär.
 
-**Stand:** 02.09.2026  
+**Stand:** 03.09.2026  
 **Behavior Pack:** `mc-siedler-bp`  
 **Resource Pack:** `mc-siedler-rp`
 
@@ -23,6 +23,8 @@
 - [x] Steuern und Emerald-Wirtschaft
 - [x] Marktplätze und spezialisierte Händler
 - [x] Rohstofforientierte Händlerangebote
+- [x] Sieben vordefinierte Händlerrollen
+- [x] Persistente Händler-Variant-Tags für das Resource Pack
 - [x] Soldatenhändler mit Rekrutierungs-UI
 - [x] Soldaten-Entity und Spawn-System
 - [x] Soldier-Zuordnung über `player.id`
@@ -112,16 +114,6 @@
 - [ ] maximale Armeegröße
 - [ ] Unterhaltskosten
 
-### Einheitentypen
-
-| Typ | Rolle | Besonderheit |
-|---|---|---|
-| Infanterie | Nahkampf | Schild und starke Rüstung |
-| Bogenschütze | Fernkampf | Bogen und hohe Reichweite |
-| Kavallerie | Mobiler Nahkampf | Pferd und erhöhte Geschwindigkeit |
-
-Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird über Konfiguration, Tags und Dynamic Properties festgelegt. Die Kavallerie erhält beim Spawn zusätzlich ein `minecraft:horse`-Reittier.
-
 ## 2.3 Bewegung & KI
 
 - [x] grundlegende Zielsuche
@@ -202,6 +194,7 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [ ] Diplomatie-UI
 - [ ] Claims berücksichtigen Diplomatie
 - [ ] Soldiers berücksichtigen Diplomatie
+
 ---
 
 # 🟡 Phase 5 – Wirtschaft & Ressourcen
@@ -235,10 +228,11 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [x] Monster-Schutz
 - [x] konfigurierbare Marktgebiete
 - [x] Händler-NPCs
-- [x] spezialisierte Händler
+- [x] sieben spezialisierte Händlerrollen
 - [x] Rohstoff-/Samenangebote
 - [x] Soldatenhändler
 - [x] Soldaten-Rekrutierungs-UI
+- [x] Händler-Variant-Tags für das Resource Pack
 - [x] Commands zum Spawnen und Entfernen
 
 ## Ausbau
@@ -260,40 +254,6 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 
 ---
 
-# 🟡 Phase 7 – Siedlungen & Bevölkerung
-
-- [ ] Siedlungen
-- [x] Einwohnerzahl
-- [ ] Bevölkerung wächst durch Nahrung/Wirtschaft
-- [ ] Wohngebäude
-- [ ] Bevölkerungsgrenzen
-
-### Zielmodell
-
-`Lager → Dorf → Siedlung → Stadt → Großsiedlung`
-
----
-
-# 🟢 Phase 8 – Spieler-UI
-
-- [x] `/siedler:stats`
-- [x] Spieler-/Siedlungs-Dashboard
-- [x] Teaminformationen
-- [x] Claiminformationen
-- [x] Steuer-/Wirtschaftsinformationen
-- [x] Soldaten-Rekrutierungs-UI
-- [ ] Militärübersicht
-- [ ] Soldatenliste
-- [ ] Soldatenauswahl vollständig ausbauen
-- [x] Gruppenverwaltung
-- [ ] Diplomatie-Menü
-- [ ] Handelsübersicht
-- [ ] Ressourcenübersicht
-- [ ] Bevölkerungsübersicht
-- [ ] Angriffs-/Ereigniswarnungen
-
----
-
 # 🟢 Phase 9 – Resource Pack & Custom Entities
 
 - [ ] `siedler:soldier` zuverlässig sichtbar
@@ -301,15 +261,16 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [ ] Geometrien validieren
 - [ ] Render Controller validieren
 - [ ] Texturen validieren
-- [ ] Animationen verbessern
+- [x] Animationen verbessern
 - [ ] Ausrüstung korrekt darstellen
-- [ ] Soldier-Typen visuell unterscheiden
-- [ ] Kavallerie visuell als berittene Einheit darstellen
+- [x] Soldier-Typen visuell unterscheiden
+- [x] Kavallerie visuell als berittene Einheit vorbereiten
 - [ ] Level visuell darstellen
 - [ ] Teamfarbe darstellen
-- [ ] Kampfanimationen
-- [ ] Bewegungsanimationen
-- [ ] Idle-Animationen
+- [ ] Kampfanimationen weiter ausbauen
+- [x] individuelle Bewegungsanimationen
+- [ ] Idle-Animationen weiter verfeinern
+- [x] Händler-Typen visuell unterscheiden
 
 ---
 
@@ -326,6 +287,7 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 - [x] Belagerungsgrundlage
 - [x] gezielte Angriffe auf Siedlungen
 - [x] Verteidigungswarnungen
+
 ---
 
 # 🔵 Phase 11 – Siedler-3-Spielgefühl
@@ -341,18 +303,3 @@ Die drei Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird �
 ### Leitprinzip
 
 > **Nicht möglichst viele Features hinzufügen, sondern die vorhandenen Systeme zu einem funktionierenden Wirtschafts-, Siedlungs- und Strategiespiel verbinden.**
-
----
-
-# 📌 Aktueller Schwerpunkt
-
-1. **Soldatensteuerung und Kampf natürlicher machen**
-2. **Bogenschützen mit echter Projektil-/Sichtlinienlogik ausbauen**
-3. **Kavallerie mit Sturmangriff und zuverlässiger Reitlogik ausbauen**
-4. **Soldatengruppen und Auswahl vollständig ausbauen**
-5. **Soldatenversorgung und Unterhalt hinzufügen**
-6. **Rohstoffwirtschaft mit echten Produktionsketten verbinden**
-7. **Siedlungen und Bevölkerung implementieren**
-8. **Diplomatie mit Claims, Handel und Militär verbinden**
-9. **Resource-Pack-Darstellung stabilisieren**
-10. **Soldier-XP im Multiplayer und mit unterschiedlichen Gegnerstärken testen**
