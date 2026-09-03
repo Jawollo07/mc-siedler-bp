@@ -11,6 +11,13 @@ import {
 
 const DEBUG = true;
 
+/** Client entity used by the resource pack for each soldier type. */
+const SOLDIER_ENTITY_IDS = Object.freeze({
+    infantry: "siedler:infantry",
+    archer: "siedler:archer",
+    cavalry: "siedler:cavalry"
+});
+
 export function spawnSoldier(
     dimension,
     location,
@@ -35,9 +42,10 @@ export function spawnSoldier(
     let entity;
     let mount;
     try {
-        entity = dimension.spawnEntity("siedler:soldier", location);
+        const entityId = SOLDIER_ENTITY_IDS[type] ?? "siedler:infantry";
+        entity = dimension.spawnEntity(entityId, location);
     } catch (error) {
-        console.warn(`[Soldier] Spawn failed: ${error}`);
+        console.warn(`[Soldier] Spawn failed for ${type}: ${error}`);
         return null;
     }
 
