@@ -24,17 +24,21 @@ Aktuelle Systeme:
 
 ## 🧑‍🌾 Händler
 
-Händler werden als `siedler:trader` gespawnt.
+Händler werden als `siedler:trader` gespawnt. Es gibt sieben vordefinierte Rollen:
 
-| Typ | Händler |
-|---|---|
-| `food` | Lebensmittelhändler |
-| `building` | Baustoffhändler |
-| `resources` | Rohstoffhändler |
-| `tools` | Werkzeughändler |
-| `weapons` | Waffenhändler |
-| `supplies` | Versorgungshändler |
-| `soldiers` | Soldatenhändler |
+| Typ | Händler | Visual-Tag |
+|---|---|---|
+| `food` | Lebensmittelhändler | `trader_food` |
+| `building` | Baustoffhändler | `trader_building` |
+| `resources` | Rohstoffhändler | `trader_resources` |
+| `tools` | Werkzeughändler | `trader_tools` |
+| `weapons` | Waffenhändler | `trader_weapons` |
+| `supplies` | Versorgungshändler | `trader_supplies` |
+| `soldiers` | Soldatenhändler | `trader_soldiers` |
+
+Beim Spawnen wird der Variant-Tag automatisch gesetzt. Das Resource Pack verwendet ihn, um die passende Händlerdarstellung auszuwählen.
+
+Die Händler sind nach dem Siedler-3-Prinzip spezialisiert: unverarbeitete Rohstoffe und Versorgungsgüter werden über unterschiedliche Händler gehandelt, während Waffen und Soldaten getrennte militärische Angebote bilden. **Emeralds** sind die Standardwährung.
 
 ### ⚔️ Soldatenhändler
 
@@ -63,17 +67,30 @@ Die Rekrutierungslogik liegt in:
 scripts/soldier/trader.js
 ```
 
+## 💰 Wirtschaft & Handel
+
+**Emeralds** sind die Standardwährung. Die Handelstabellen sind zunehmend auf unverarbeitete Waren ausgerichtet:
+
+- Holz und Baumaterialien
+- Stein, Cobblestone, Sand, Gravel und Lehm
+- Kohle und Erze
+- Getreide, Gemüse und Lebensmittel
+- Samen und landwirtschaftliche Rohstoffe
+- Leder, Wolle, Federn, Eier und weitere Tierprodukte
+
+Ziel der Wirtschaft ist eine Siedler-3-artige Kette:
+
+`Rohstoff → Produktion → Verarbeitung → Handel → Militär / Ausbau`
+
 ## ⚔️ Soldaten
 
-Das Soldaten-System stellt steuerbare `siedler:soldier`-Einheiten bereit.
+Das Soldaten-System stellt steuerbare Einheiten bereit.
 
 ### Einheitentypen
 
 - **Infanterie** – robuster Nahkämpfer mit Schild und schwerer Rüstung
 - **Bogenschütze** – Fernkampfeinheit mit hoher Angriffsreichweite und Bogen
 - **Kavallerie** – mobiler Nahkämpfer mit Pferd und erhöhter Geschwindigkeit
-
-Alle Typen verwenden die gemeinsame `siedler:soldier`-Entity. Der Typ wird über Konfiguration, Tags und Dynamic Properties festgelegt. Die Kavallerie erhält beim Spawn ein `minecraft:horse`-Reittier.
 
 Gemeinsame Funktionen:
 
@@ -91,69 +108,9 @@ Gemeinsame Funktionen:
 - Fähigkeiten auf höheren Stufen
 - direkte Rekrutierung über den Soldatenhändler
 
-### Level-System
-
-Soldaten starten auf Level 1 und sammeln dauerhaft XP. Ab bestimmten Gesamt-XP steigen sie automatisch auf das nächste Level auf. Dabei werden Werte, Ausrüstung und Fähigkeiten aktualisiert.
-
-| Level | Bezeichnung | benötigte Gesamt-XP |
-|---:|---|---:|
-| 1 | Rekrut | 0 |
-| 2 | Veteran | 150 |
-| 3 | Elite | 400 |
-| 4 | Hauptmann | 800 |
-| 5 | Kriegsveteran | 1.400 |
-| 6 | Kriegsherr | 2.200 |
-| 7 | Marschall | 3.500 |
-
-### ⚔️ XP durch Kampf
-
-XP wird anhand des tatsächlich verursachten Schadens und der Gegnerstärke vergeben.
-
-| Ereignis | XP |
-|---|---:|
-| 1–2 Schaden | 1 XP |
-| 3–5 Schaden | 2–4 XP |
-| 6–10 Schaden | 5–7 XP |
-| 11+ Schaden | 1–8 XP, maximal 8 |
-| Kill eines normalen Gegners | 25–50 XP |
-| Kill eines starken Gegners | 50–75 XP |
-| Kill eines sehr starken Gegners/Bosses | 75–100 XP |
-
-Die XP wird persistent als Dynamic Property `soldier:xp` gespeichert.
-
-Konfiguration und Logik:
-
-```text
-scripts/soldier/config.js
-scripts/soldier/archer.js
-scripts/soldier/cavalry.js
-scripts/soldier/level.js
-scripts/soldier/spawn.js
-scripts/soldier/trader.js
-```
-
-## 💰 Wirtschaft & Handel
-
-**Emeralds** sind die Standardwährung. Die Handelstabellen sind zunehmend auf unverarbeitete Waren ausgerichtet:
-
-- Holz und Baumaterialien
-- Stein, Cobblestone, Sand, Gravel und Lehm
-- Kohle und Erze
-- Getreide, Gemüse und Lebensmittel
-- Samen und landwirtschaftliche Rohstoffe
-- Leder, Wolle, Federn, Eier und weitere Tierprodukte
-
-Ziel der Wirtschaft ist eine Siedler-3-artige Kette:
-
-`Rohstoff → Produktion → Verarbeitung → Handel → Militär / Ausbau`
-
 ## 🏠 Claims & Teams
 
-Claims arbeiten auf Chunk-Basis. Teams werden persistent gespeichert und besitzen die Beziehungen `friendly`, `neutral` und `hostile`. Diese Beziehungen bilden die Grundlage für zukünftige Diplomatie und militärische Entscheidungen.
-
-## 👹 Monster & Bedrohungen
-
-Das Monster-System unterstützt Spawn-Konfiguration, Nacht-Multiplikator, Monster-Tokens, Pillager-Trupps, Captains, Vindicators, Ravager, Außenposten-Raids, Belagerungen und Marktplatz-Schutz.
+Claims arbeiten auf Chunk-Basis. Teams werden persistent gespeichert und besitzen die Beziehungen `friendly`, `neutral` und `hostile`.
 
 ## 📦 Installation
 
@@ -205,6 +162,8 @@ scripts/core/main.js
 /siedler:trader_remove
 ```
 
+Verfügbare Typen: `food`, `building`, `resources`, `tools`, `weapons`, `supplies`, `soldiers`.
+
 ### Soldaten
 
 ```text
@@ -213,8 +172,6 @@ scripts/core/main.js
 /siedler:follow
 /siedler:stay
 ```
-
-Für die Einheitentypen können unter anderem `infantry`, `archer` und `cavalry` verwendet werden.
 
 ## 🛠️ Entwicklung
 
