@@ -6,11 +6,7 @@ import {
     CustomCommandStatus
 } from "@minecraft/server";
 import { addTaxes } from "./taxes.js";
-import {
-    TAX_BONUS_CONFIG,
-    calculateTax,
-    normalizeTaxBonus
-} from "./config.js";
+import { TAX_BONUS_CONFIG, calculateTax, normalizeTaxBonus } from "./config.js";
 import { getTeams, saveTeams } from "../teams/index.js";
 import { countVillagersInTeamClaims } from "../claims/utils.js";
 
@@ -65,11 +61,7 @@ function setLastPaidDay(day) {
 
 function payTaxesOncePerDay(currentDay) {
     if (getLastPaidDay() === currentDay) return;
-
-    // Mark the day before processing so a server restart cannot pay the same
-    // daily tax twice. Individual team failures are handled independently.
     if (!setLastPaidDay(currentDay)) return;
-
     payAllTeamTaxes();
 }
 
@@ -86,29 +78,32 @@ function payAllTeamTaxes() {
 
             if (tax.total <= 0) continue;
 
-            const success = addTaxes(data.taxChest, tax.total, teamName);
-            if (!success) continue;
+            const result = addTaxes(data.taxChest, tax.total, teamName);
+            if (!result?.success) continue;
 
             paidCount++;
-            notifyTeamMembers(teamName, data, tax);
+            data.taxBonus = 0;
+            notifyTeamMembers(teamName, data, tax, result);
         } catch (error) {
             console.error(`[Steuern] Fehler für Team "${teamName}": ${error}`);
         }
     }
 
     if (paidCount > 0) {
+        saveTeams(teams);
         console.info(`[Steuern] ${paidCount} Team(s) haben ihre Tagessteuer erhalten.`);
     }
 }
 
-function notifyTeamMembers(teamName, teamData, tax) {
+function notifyTeamMembers(teamName, teamData, tax, result) {
     const color = teamData.color || "§f";
-    const bonusText = tax.totalBonus > 0
-        ? ` §7(+${tax.totalBonus} Bonus)`
+    const storageText = result.dropped > 0
+        ? ` §7(${result.inserted} in Kiste, ${result.dropped} daneben abgelegt)`
         : "";
+
     const message =
-        `§a[Steuern] ${color}${teamName}§a erhält §e${tax.total} Emeralds§a ` +
-        `§7(${tax.villagers} Dorfbewohner${bonusText})`;
+        `§a[Steuern] ${color}${teamName}§a erhielt §e${tax.total} Emeralds§a ` +
+        `§7(${tax.villagers} Dorfbewohner + ${tax.bonus} Token-Bonus)${storageText}`;
 
     for (const player of world.getAllPlayers()) {
         if (Array.isArray(teamData.players) && teamData.players.includes(player.id)) {
@@ -135,9 +130,7 @@ function registerTaxCommands(registry) {
         description: "Zählt Dorfbewohner in den Claims eines Teams",
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
-        mandatoryParameters: [
-            { type: CustomCommandParamType.String, name: "team" }
-        ]
+        mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }]
     }, (origin, team) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
@@ -195,86 +188,11 @@ function registerTaxCommands(registry) {
     });
 
     registry.registerCommand({
-        name: "siedler:settaxbonus",
-        description: `Setzt den festen TaxBonus (0-${TAX_BONUS_CONFIG.MAX_FIXED_BONUS})`,
-        permissionLevel: OP_PERMISSION,
-        cheatsRequired: false,
-        mandatoryParameters: [
-            { type: CustomCommandParamType.String, name: "team" },
-            { type: CustomCommandParamType.Float, name: "bonus" }
-        ]
-    }, (origin, team, bonus) => {
-        const player = playerOnly(origin);
-        if (!player) return { status: CustomCommandStatus.Failure };
-
-        const teamName = String(team ?? "").trim();
-        system.run(() => {
-            const result = getTeamOrTell(player, teamName);
-            if (!result) return;
-
-            const value = Number(bonus);
-            if (!Number.isFinite(value) || value < 0) {
-                player.sendMessage("§cDer Bonus muss eine Zahl ab 0 sein.");
-                return;
-            }
-
-            result.teamData.taxBonus = normalizeTaxBonus(value);
-
-            player.sendMessage(
-                saveTeams(result.teams)
-                    ? `§aFester TaxBonus für "${result.teamData.color || "§f"}${teamName}§a": §e${result.teamData.taxBonus} Emeralds/Tag§a.`
-                    : "§cDer TaxBonus konnte nicht gespeichert werden."
-            );
-        });
-
-        return { status: CustomCommandStatus.Success };
-    });
-
-    registry.registerCommand({
-        name: "siedler:addtaxbonus",
-        description: "Erhöht den festen TaxBonus eines Teams",
-        permissionLevel: OP_PERMISSION,
-        cheatsRequired: false,
-        mandatoryParameters: [
-            { type: CustomCommandParamType.String, name: "team" },
-            { type: CustomCommandParamType.Float, name: "betrag" }
-        ]
-    }, (origin, team, amount) => {
-        const player = playerOnly(origin);
-        if (!player) return { status: CustomCommandStatus.Failure };
-
-        const teamName = String(team ?? "").trim();
-        system.run(() => {
-            const result = getTeamOrTell(player, teamName);
-            if (!result) return;
-
-            const value = Number(amount);
-            if (!Number.isFinite(value)) {
-                player.sendMessage("§cDer Betrag muss eine gültige Zahl sein.");
-                return;
-            }
-
-            const current = normalizeTaxBonus(result.teamData.taxBonus);
-            result.teamData.taxBonus = normalizeTaxBonus(current + Math.floor(value));
-
-            player.sendMessage(
-                saveTeams(result.teams)
-                    ? `§aTaxBonus von "${result.teamData.color || "§f"}${teamName}§a": §e${result.teamData.taxBonus} Emeralds/Tag§a.`
-                    : "§cDer TaxBonus konnte nicht gespeichert werden."
-            );
-        });
-
-        return { status: CustomCommandStatus.Success };
-    });
-
-    registry.registerCommand({
         name: "siedler:taxinfo",
-        description: "Zeigt die aktuelle Steuer- und Bonusberechnung eines Teams",
+        description: "Zeigt Steuer und angesammelten Monster-Token-Bonus",
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
-        mandatoryParameters: [
-            { type: CustomCommandParamType.String, name: "team" }
-        ]
+        mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }]
     }, (origin, team) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
@@ -284,17 +202,15 @@ function registerTaxCommands(registry) {
             const result = getTeamOrTell(player, teamName);
             if (!result) return;
 
-            const villagerCount = countVillagersInTeamClaims(teamName, "villager");
-            const tax = calculateTax(villagerCount, result.teamData.taxBonus);
-            const chest = result.teamData.taxChest;
+            const villagers = countVillagersInTeamClaims(teamName, "villager");
+            const bonus = normalizeTaxBonus(result.teamData.taxBonus);
+            const tax = calculateTax(villagers, bonus);
 
             player.sendMessage(`§6--- Steuerinfo: ${result.teamData.color || "§f"}${teamName}§6 ---`);
             player.sendMessage(`§7Dorfbewohner: §e${tax.villagers}`);
-            player.sendMessage(`§7Fester TaxBonus: §e+${tax.fixedBonus}`);
-            player.sendMessage(`§7Bevölkerungsbonus: §e+${tax.populationBonus}`);
-            player.sendMessage(`§7Gesamtbonus: §e+${tax.totalBonus}`);
+            player.sendMessage(`§7Monster-Token-Bonus: §e+${tax.bonus} Emeralds`);
             player.sendMessage(`§7Tagessteuer: §e${tax.total} Emeralds`);
-            player.sendMessage(`§7Steuerkiste: ${chest ? `§a${chest.x} ${chest.y} ${chest.z}` : "§cnicht gesetzt"}`);
+            player.sendMessage(`§7Bonusquelle: §6Monster-Tokens`);
         });
 
         return { status: CustomCommandStatus.Success };
