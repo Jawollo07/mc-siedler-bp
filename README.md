@@ -13,7 +13,7 @@ Aktuelle Systeme:
 
 - 👥 Teams, Team-Chat, Farben und Beziehungen
 - 🏠 Claims und visuelle Claim-Grenzen
-- 💰 Emerald-basierte Wirtschaft, Steuern und Monster-Token-TaxBonus
+- 💰 Emerald-basierte Wirtschaft, Steuern und permanenter Monster-Token-TaxBonus
 - 🏪 Marktplätze und spezialisierte Händler
 - ⚔️ Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
 - 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
@@ -22,19 +22,25 @@ Aktuelle Systeme:
 - 🧰 Essentials, Homes, TPA und Spieler-Dashboard
 - 💾 persistente World Dynamic Properties
 
-## 💰 Steuern & Monster-Token-TaxBonus
+## 💰 Steuern & permanenter Monster-Token-TaxBonus
 
-Jedes Team kann eine Steuerkiste besitzen. Die normale Tagessteuer wird anhand der Dorfbewohner in den Team-Claims berechnet:
+Jedes Team kann eine Steuerkiste besitzen. Die tägliche Steuer wird aus der Bevölkerung und einem **permanenten TaxBonus** berechnet:
 
-`Tagessteuer = Dorfbewohner + gespeicherter Monster-Token-Bonus`
+`Tagessteuer = Dorfbewohner + TaxBonus`
 
-Der **TaxBonus kann ausschließlich durch das Besiegen eines Monster-Tokens** entstehen. Für jeden von einem Spieler besiegten Token-Mob werden aktuell **8 Emeralds TaxBonus** dem Team des Spielers gutgeschrieben.
+Der TaxBonus entsteht **ausschließlich durch besiegte Monster-Tokens**. Jeder besiegte Monster-Token erhöht den täglichen TaxBonus des Teams des Spielerkillers um **+1 Emerald**.
 
-Der Bonus wird persistent im Team gespeichert und kann bis maximal **64 Emeralds** angesammelt werden. Er wird bei der nächsten erfolgreichen täglichen Steuerzahlung vollständig verwendet und anschließend auf `0` zurückgesetzt.
+Beispiel:
 
-Es gibt **keinen automatischen Bevölkerungsbonus** und keinen normalen Admin-Bonus mehr. Dadurch ist der TaxBonus direkt an das Monster-Token-System gekoppelt.
+`Team 1: 10 Dorfbewohner + 1 TaxBonus = 11 Emeralds pro Tag`
 
-Die komplette Tagesauszahlung eines Teams ist auf **256 Emeralds** begrenzt. Ist die Steuerkiste teilweise voll, werden eingelagerten und neben der Kiste abgelegten Emeralds getrennt erfasst.
+Wird später ein weiterer Monster-Token besiegt:
+
+`Team 1: 10 Dorfbewohner + 2 TaxBonus = 12 Emeralds pro Tag`
+
+Der Bonus bleibt dauerhaft bestehen und wird **nicht** bei der täglichen Auszahlung verbraucht. Maximal können **64 Emeralds/Tag** TaxBonus aufgebaut werden. Die komplette Tagesauszahlung bleibt auf **256 Emeralds** begrenzt.
+
+Es gibt keinen automatischen Bevölkerungsbonus und keinen normalen manuellen TaxBonus.
 
 ### TaxBonus-Commands
 
@@ -44,19 +50,16 @@ Die komplette Tagesauszahlung eines Teams ist auf **256 Emeralds** begrenzt. Ist
 /siedler:countvillagers <team>
 ```
 
-`taxinfo` zeigt den aktuell angesammelten Monster-Token-Bonus und die daraus resultierende Tagessteuer. Die Bonusvergabe selbst erfolgt automatisch beim Besiegen eines Token-Mobs.
-
-Die Konfiguration befindet sich zentral in `scripts/taxes/config.js`.
+`taxinfo` zeigt Dorfbewohner, permanenten TaxBonus und die daraus berechnete tägliche Steuer.
 
 ## 🧟 Monster-Tokens
 
-Monster-Tokens sind besondere Monster, die über das Token-System erzeugt werden. Wird ein Token-Mob von einem Spieler besiegt, wird dessen Team automatisch mit TaxBonus belohnt.
-
-- 1 besiegter Token-Mob → +8 TaxBonus
-- maximal 64 gespeicherter TaxBonus pro Team
+- 1 besiegter Monster-Token → **+1 Emerald/Tag dauerhaft**
+- jeder weitere Token erhöht den täglichen Bonus um weitere +1
+- maximal +64 Emeralds/Tag TaxBonus pro Team
 - Bonus wird nur dem Team des tatsächlichen Spielerkillers gutgeschrieben
 - Spieler ohne Team erhalten keinen Bonus
-- Bonus wird bei der nächsten erfolgreichen Steuerzahlung verbraucht
+- der Bonus bleibt auch nach der täglichen Steuerzahlung erhalten
 
 ## 🧑‍🌾 Händler
 
