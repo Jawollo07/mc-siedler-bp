@@ -32,7 +32,10 @@
 - [x] Kavallerie mit Pferd
 - [x] Ausrüstungssystem
 - [x] Monster-/Pillager-System und Belagerungsgrundlage
-- [x] Essentials, Homes, TPA und Dashboard
+- [x] Essentials, Homes, TPA und erweitertes Spieler-Dashboard
+- [x] Live-Team-Rangliste im Dashboard
+- [x] Soldaten- und XP-Auswertung im Dashboard
+- [x] Server-Statistiken über alle drei Dimensionen
 - [x] Separates Resource Pack
 
 ---
@@ -194,6 +197,28 @@ Der TaxBonus wird bei der täglichen Steuerzahlung **nicht zurückgesetzt**. Er 
 - [ ] Handelsaufträge
 - [ ] Ressourcenpreise
 - [ ] Angebot/Nachfrage
+
+---
+
+# 🟢 Phase 7 – Dashboard & Statistiken
+
+- [x] `/siedler:stats`
+- [x] Spieler-Profil
+- [x] Live-Teamdaten
+- [x] Team-Rangliste
+- [x] Claim- und Bevölkerungsübersicht
+- [x] Steuer-/TaxBonus-Übersicht
+- [x] persönliche Soldatenstatistik
+- [x] Team-Soldatenstatistik
+- [x] Soldaten nach Typ aufgeschlüsselt
+- [x] Soldaten-XP und Durchschnittslevel
+- [x] Serverstatistiken
+- [x] Statistiken über Overworld, Nether und End
+- [x] Dashboard-Aktualisierung
+- [ ] persistente historische Spielerstatistiken
+- [ ] persistente historische Teamstatistiken
+- [ ] Tages-/Wochen-/Monatsauswertungen
+- [ ] Leaderboards für Kills, XP, Wirtschaft und Militär
 
 ---
 
