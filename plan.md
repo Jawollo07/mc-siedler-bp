@@ -1,16 +1,10 @@
 # 🏘️ Siedler Logic – Entwicklungsplan
 
-> Aktueller Entwicklungsplan für `mc-siedler-bp`. Ziel ist ein zusammenhängendes Minecraft-Bedrock-Siedler-System mit Wirtschaft, Bevölkerung, Territorium, Handel und Militär.
+> Aktueller Entwicklungsplan für `mc-siedler-bp`.
 
 **Stand:** 03.09.2026  
 **Behavior Pack:** `mc-siedler-bp`  
 **Resource Pack:** `mc-siedler-rp`
-
----
-
-# 🎯 Gesamtziel
-
-**Siedlung → Ressourcen → Wirtschaft → Bevölkerung → Handel → Territorium → Diplomatie → Militär → Krieg**
 
 ---
 
@@ -21,65 +15,25 @@
 - [x] Teams, Team-Chat, Farben und Beziehungen
 - [x] Chunk-Claims und Claim-Grenzanzeige
 - [x] Steuern und Emerald-Wirtschaft
-- [x] TaxBonus mit persistenter Konfiguration und Admin-Commands
+- [x] TaxBonus mit festem Team-Bonus und automatischem Bevölkerungsbonus
+- [x] konfigurierbare TaxBonus-Grenzen
+- [x] maximale Tagesauszahlung
+- [x] persistenter Schutz gegen doppelte Tagesauszahlung nach Neustarts
+- [x] Steuer-Informations-Command
 - [x] Marktplätze und spezialisierte Händler
-- [x] Rohstofforientierte Händlerangebote
-- [x] Sieben vordefinierte Händlerrollen
-- [x] Persistente Händler-Variant-Tags für das Resource Pack
+- [x] sieben vordefinierte Händlerrollen
 - [x] Soldatenhändler mit Rekrutierungs-UI
 - [x] Soldaten-Entity und Spawn-System
 - [x] Soldier-Zuordnung über `player.id`
 - [x] Soldier-KI-Grundsystem und Befehle
 - [x] Soldier-Level 1–7 und persistentes XP-System
-- [x] Schaden- und Gegnerstärke-basierte XP
 - [x] Infanterie
 - [x] Bogenschütze
-- [x] Kavallerie mit Pferd als Reittier
-- [x] Ausrüstungssystem und Grundlage für Fähigkeiten
+- [x] Kavallerie mit Pferd
+- [x] Ausrüstungssystem
 - [x] Monster-/Pillager-System und Belagerungsgrundlage
 - [x] Essentials, Homes, TPA und Dashboard
 - [x] Separates Resource Pack
-
----
-
-# 🟡 Phase 5 – Wirtschaft & Ressourcen
-
-## Ressourcen
-
-- [x] Emeralds als Standardwährung
-- [x] Holz
-- [x] Stein/Cobblestone
-- [x] Sand/Gravel/Lehm
-- [x] Kohle
-- [x] Erze
-- [x] Getreide und Gemüse
-- [x] Samen
-- [x] Tierprodukte
-- [ ] weitere unverarbeitete Rohstoffe
-
-## Wirtschaft
-
-- [x] Steuern pro Dorfbewohner
-- [x] Emerald-Währung
-- [x] Team-Kasse
-- [x] TaxBonus als zusätzlicher Tagesbetrag
-- [x] TaxBonus-Limit und Eingabevalidierung
-- [x] Steuerinformationen per Command
-- [x] sichere Verarbeitung voller Steuerkisten
-- [ ] automatische Bonusmodelle anhand von Siedlungsstufe/Wohlstand
-- [ ] Wirtschaftliche Ereignisse, die TaxBonus zeitweise verändern
-
-### TaxBonus
-
-Der tägliche Steuerbetrag wird nach dem Schema `Dorfbewohner + TaxBonus` berechnet. Der TaxBonus ist persistent und auf 64 Emeralds pro Team und Tag begrenzt. Die Auszahlung verarbeitet maximal 256 Emeralds pro Tag. Bei einer vollen Steuerkiste werden eingelagerten und abgelegten Emeralds getrennt erfasst.
-
-Commands:
-
-- `/siedler:settax <team> <x> <y> <z>`
-- `/siedler:settaxbonus <team> <bonus>`
-- `/siedler:addtaxbonus <team> <betrag>`
-- `/siedler:taxinfo <team>`
-- `/siedler:countvillagers <team>`
 
 ---
 
@@ -92,7 +46,6 @@ Commands:
 - [ ] Einheitliches Logging-System
 - [ ] zentrale Fehler-/Diagnosefunktionen
 - [ ] automatische Konfigurationsvalidierung
-- [ ] saubere Behandlung von World-/Dimension-Wechseln
 - [ ] Performance-Prüfung aller `runInterval`-Systeme
 
 ---
@@ -104,87 +57,47 @@ Commands:
 - [x] Infanterie
 - [x] Bogenschütze
 - [x] Kavallerie
-- [x] Kavallerie-Reittier (`minecraft:horse`)
-- [x] Level 1–7 für die Einheitentypen
+- [x] Level 1–7
 - [x] unterschiedliche HP, Schaden, Reichweite und Geschwindigkeit
 - [x] unterschiedliche Ausrüstung
-- [x] XP-/Level-System mit persistentem XP-Fortschritt
-- [x] automatische Beförderung anhand der XP
+- [x] persistentes XP-System
+- [x] automatische Beförderung
 - [x] Rekrutierung über Soldatenhändler
 - [ ] Schwerer Soldat
 - [ ] Spezialeinheiten
-- [ ] weitere Einheitentypen
-- [ ] Beförderungen mit zusätzlichen Rängen/Abzeichen
 - [ ] Unterhalt pro Einheit
 
-## 2.2 Rekrutierung
-
-- [x] Soldatenhändler
-- [x] eigene Rekrutierungs-UI
-- [x] Infanterie Level 1–3 im Händler
-- [x] Bogenschütze Level 1–3 im Händler
-- [x] Kavallerie Level 1–3 im Händler
-- [x] Zahlung aus Spielerinventar
-- [x] automatische Besitzerzuordnung über `player.id`
-- [x] Rückerstattung bei fehlgeschlagenem Spawn
-- [ ] Rekrutierung abhängig von Siedlungsstufe
-- [ ] Bevölkerung als Voraussetzung
-- [ ] maximale Armeegröße
-- [ ] Unterhaltskosten
-
-## 2.3 Bewegung & KI
+## 2.2 Bewegung & KI
 
 - [x] grundlegende Zielsuche
 - [x] Team-/Feinderkennung
-- [x] Follow
-- [x] Move
-- [x] Stay
-- [x] Attack-Grundlogik
-- [x] Retreat-Grundlage
-- [ ] natürlichere Beschleunigung und Abbremsung
+- [x] Follow / Move / Stay / Attack / Retreat
 - [ ] bessere Wegfindung
 - [ ] Hinderniserkennung
-- [ ] sinnvollen Abstand zum Ziel halten
 - [ ] Gruppenbewegung
 - [ ] Formation
-- [ ] Vermeidung gegenseitiger Blockierung
-- [ ] Schutz verletzter Einheiten
-- [ ] intelligenter Rückzug
-- [ ] Zielprioritäten
+- [ ] intelligente Zielprioritäten
 - [ ] Sichtlinie
 
-## 2.4 Kampf
+## 2.3 Kampf
 
 - [ ] natürliches Annähern
 - [ ] realistische Angriffsintervalle
 - [ ] Attack-Animationen mit RP abstimmen
-- [ ] kein hektisches Hin-und-her-Laufen
-- [ ] bessere Kollision/Abstände
-- [ ] unterschiedliches Kampfverhalten je Einheitentyp
 - [ ] echte Projektil-/Bogenschützenlogik
-- [ ] Kavallerie-Sturmangriff als eigene Kampfmechanik
+- [ ] Kavallerie-Sturmangriff
 - [ ] Fokusfeuer
-- [ ] sinnvoller Zielwechsel
 - [ ] Kampfmoral
-- [ ] Formation im Kampf
 - [ ] Garnisons-/Belagerungsverhalten
 
-## 2.5 Befehle & Gruppen
+## 2.4 Befehle & Gruppen
 
-- [x] `/siedler:spawn_soldier`
-- [x] `/siedler:move`
-- [x] `/siedler:follow`
-- [x] `/siedler:stay`
-- [x] `/siedler:attack`
-- [x] `/siedler:defend`
-- [x] `/siedler:patrol`
-- [x] `/siedler:stop`
-- [x] Soldatenauswahl-Grundlage
+- [x] Soldier Commands
+- [x] Soldatenauswahl
 - [x] Soldatengruppen
 - [x] Gruppenverwaltung
 - [x] Formationsgrundlage
 - [ ] mehrere komplexe Gruppen gleichzeitig befehligen
-- [ ] Zielpositionen markieren
 - [ ] Garnisonen erstellen
 
 ---
@@ -215,9 +128,56 @@ Commands:
 
 ---
 
-# 🟡 Phase 6 – Handel & Märkte
+# 🟡 Phase 5 – Wirtschaft & Ressourcen
 
-## Vorhanden
+## Ressourcen
+
+- [x] Emeralds als Standardwährung
+- [x] Holz
+- [x] Stein/Cobblestone
+- [x] Sand/Gravel/Lehm
+- [x] Kohle
+- [x] Erze
+- [x] Getreide und Gemüse
+- [x] Samen
+- [x] Tierprodukte
+- [ ] weitere unverarbeitete Rohstoffe
+
+## Steuern & TaxBonus
+
+- [x] Steuern pro Dorfbewohner
+- [x] Emerald-Währung
+- [x] Team-Kasse
+- [x] fester TaxBonus pro Team
+- [x] automatischer Bevölkerungsbonus
+- [x] Bonus-Limit von 64 Emeralds/Tag
+- [x] Tagesauszahlung von maximal 256 Emeralds
+- [x] Eingabevalidierung und Normalisierung
+- [x] `/siedler:settaxbonus`
+- [x] `/siedler:addtaxbonus`
+- [x] `/siedler:taxinfo`
+- [x] persistenter Auszahlungsschutz über World Dynamic Property
+- [ ] Steuerhistorie
+- [ ] Wirtschaftliche Ereignisse mit temporären Boni
+- [ ] Bonus abhängig von Siedlungsstufe/Wohlstand
+
+### Aktuelles TaxBonus-Modell
+
+`Tagessteuer = Dorfbewohner + fester TaxBonus + Bevölkerungsbonus`
+
+| Dorfbewohner | Bevölkerungsbonus |
+|---:|---:|
+| 0–4 | +0 |
+| 5–9 | +2 |
+| 10–19 | +5 |
+| 20–39 | +10 |
+| 40+ | +15 |
+
+Der feste Bonus kann zwischen `0` und `64` liegen. Der kombinierte Bonus ist ebenfalls auf `64` begrenzt. Die komplette Tagesauszahlung eines Teams ist auf `256` Emeralds begrenzt.
+
+---
+
+# 🟡 Phase 6 – Handel & Märkte
 
 - [x] rechteckige Marktplätze
 - [x] Monster-Schutz
@@ -226,12 +186,7 @@ Commands:
 - [x] sieben spezialisierte Händlerrollen
 - [x] Rohstoff-/Samenangebote
 - [x] Soldatenhändler
-- [x] Soldaten-Rekrutierungs-UI
-- [x] Händler-Variant-Tags für das Resource Pack
-- [x] Commands zum Spawnen und Entfernen
-
-## Ausbau
-
+- [x] Händler-Variant-Tags
 - [ ] echte Handelsangebote zwischen Spielern/Teams
 - [ ] Handelsaufträge
 - [ ] Ressourcenpreise
@@ -245,15 +200,12 @@ Commands:
 - [ ] `siedler:trader` zuverlässig sichtbar
 - [ ] Geometrien validieren
 - [ ] Render Controller validieren
-- [ ] Texturen validieren
-- [x] Animationen verbessern
 - [ ] Ausrüstung korrekt darstellen
 - [x] Soldier-Typen visuell unterscheiden
-- [x] Kavallerie visuell als berittene Einheit vorbereiten
+- [x] individuelle Bewegungsanimationen
 - [ ] Level visuell darstellen
 - [ ] Teamfarbe darstellen
 - [ ] Kampfanimationen weiter ausbauen
-- [x] individuelle Bewegungsanimationen
 - [ ] Idle-Animationen weiter verfeinern
 - [x] Händler-Typen visuell unterscheiden
 
