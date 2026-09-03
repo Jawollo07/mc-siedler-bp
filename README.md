@@ -56,6 +56,8 @@ Wird später ein weiterer Monster-Token besiegt:
 
 Der Bonus bleibt dauerhaft bestehen und wird **nicht** bei der täglichen Auszahlung verbraucht. Maximal können **64 Emeralds/Tag** TaxBonus aufgebaut werden. Die komplette Tagesauszahlung bleibt auf **256 Emeralds** begrenzt.
 
+Alle Teams besitzen die Variable `taxBonus`. Bereits vorhandene Teams werden beim Laden automatisch migriert; fehlt `taxBonus`, wird sie dauerhaft mit `0` initialisiert. Neue Teams erhalten `taxBonus: 0` direkt bei der Erstellung.
+
 Es gibt keinen automatischen Bevölkerungsbonus und keinen normalen manuellen TaxBonus.
 
 ### TaxBonus-Commands
@@ -114,6 +116,8 @@ Gemeinsame Funktionen:
 ## 🏠 Claims & Teams
 
 Claims arbeiten auf Chunk-Basis. Teams werden persistent gespeichert und besitzen die Beziehungen `friendly`, `neutral` und `hostile`.
+
+Teamdaten enthalten mindestens `color`, `players`, `taxChest` und `taxBonus`. Die Team-Migration sorgt dafür, dass auch ältere gespeicherte Teams die neue `taxBonus`-Variable erhalten.
 
 ## 📦 Installation
 
