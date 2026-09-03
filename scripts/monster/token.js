@@ -1,88 +1,84 @@
-import { system, world, CustomCommandParamType, CustomCommandStatus } from "@minecraft/server";
+import { system, world, CustomCommandStatus } from "@minecraft/server";
 import { MONSTER_CONFIG } from "./index.js";
+import { getTeams, saveTeams } from "../teams/index.js";
+import { addTokenTaxBonus, TAX_BONUS_CONFIG } from "../taxes/config.js";
 
 const CONFIG = MONSTER_CONFIG?.token ?? null;
-
 const OVERWORLD_ID = "minecraft:overworld";
 
 function hasConfig() {
     if (!CONFIG) {
-        console.error(
-            "[Token] MONSTER_CONFIG.token ist nicht verfügbar. Das Token-System wurde deaktiviert."
-        );
-
+        console.error("[Token] MONSTER_CONFIG.token ist nicht verfügbar. Das Token-System wurde deaktiviert.");
         return false;
     }
-
     return true;
 }
 
-/**
- * Gibt die Overworld zurück.
- */
 function getOverworld() {
     return world.getDimension(OVERWORLD_ID);
 }
 
-/**
- * Gibt alle aktuell existierenden Token-Mobs zurück.
- */
 function getTokenMobs() {
-    if (!hasConfig()) {
-        return [];
-    }
-
+    if (!hasConfig()) return [];
     try {
-        return getOverworld().getEntities({
-            tags: [CONFIG.mobTag]
-        });
+        return getOverworld().getEntities({ tags: [CONFIG.mobTag] });
     } catch (error) {
-        console.error(
-            `[Token] Token-Mobs konnten nicht abgefragt werden: ${error}`
-        );
-
+        console.error(`[Token] Token-Mobs konnten nicht abgefragt werden: ${error}`);
         return [];
     }
 }
 
-/**
- * Prüft, ob das Entity ein Spieler ist.
- */
 function isPlayer(entity) {
-    if (!entity) {
-        return false;
-    }
-
-    return entity.typeId === "minecraft:player";
+    return entity?.typeId === "minecraft:player";
 }
 
-/**
- * Ermittelt den Spieler, der den Schaden verursacht hat.
- */
 function getKillingPlayer(damageSource) {
-    if (!damageSource) {
-        return null;
-    }
-
+    if (!damageSource) return null;
     const candidates = [
         damageSource.damagingEntity,
         damageSource.sourceEntity,
         damageSource.entity,
         damageSource.source
     ];
-
-    for (const entity of candidates) {
-        if (isPlayer(entity)) {
-            return entity;
-        }
-    }
-
-    return null;
+    return candidates.find(isPlayer) ?? null;
 }
 
-/**
- * Prüft, ob ein Block/Standort grundsätzlich brauchbar ist.
- */
+function addMonsterTokenTaxBonus(player) {
+    if (!player) return;
+
+    const teams = getTeams();
+    const teamEntry = Object.entries(teams).find(([, data]) =>
+        Array.isArray(data?.players) && data.players.includes(player.id)
+    );
+
+    if (!teamEntry) {
+        player.sendMessage("§7[Token] Du bist keinem Team zugeordnet. Es wurde kein TaxBonus vergeben.");
+        return;
+    }
+
+    const [teamName, teamData] = teamEntry;
+    const before = Number(teamData.taxBonus) || 0;
+    const after = addTokenTaxBonus(teamData, TAX_BONUS_CONFIG.TOKEN_REWARD);
+
+    if (!saveTeams(teams)) {
+        player.sendMessage("§c[Token] Der TaxBonus konnte nicht gespeichert werden.");
+        return;
+    }
+
+    const gained = after - before;
+    if (gained > 0) {
+        player.sendMessage(
+            `§6[Token] §a+${gained} Emeralds TaxBonus für Team ${teamData.color || "§f"}${teamName}§a! §7Gespeichert: ${after}/${TAX_BONUS_CONFIG.MAX_BONUS}`
+        );
+    } else {
+        player.sendMessage(
+            `§6[Token] §eDer TaxBonus von Team ${teamData.color || "§f"}${teamName}§e ist bereits voll (${TAX_BONUS_CONFIG.MAX_BONUS}).`
+        );
+    }
+
+    console.info(`[Token] Team "${teamName}" erhielt ${gained} TaxBonus durch einen besiegten Token.`);
+}
+
 function isValidSpawnLocation(dimension, location) {
     try {
         const block = dimension.getBlock({
@@ -90,175 +86,70 @@ function isValidSpawnLocation(dimension, location) {
             y: Math.floor(location.y),
             z: Math.floor(location.z)
         });
-
-        if (!block) {
-            return false;
-        }
-
-        // Kein Spawn in Flüssigkeiten.
-        if (
-            block.typeId === "minecraft:water" ||
-            block.typeId === "minecraft:lava"
-        ) {
-            return false;
-        }
-
-        return true;
+        if (!block) return false;
+        return block.typeId !== "minecraft:water" && block.typeId !== "minecraft:lava";
     } catch {
         return false;
     }
 }
 
-/**
- * Erzeugt eine zufällige Spawnposition rund um den Spieler.
- */
 function findSpawnPosition(dimension, center) {
-    const {
-        radius,
-        minDistance,
-        maxAttempts
-    } = CONFIG.spawn;
+    const { radius, minDistance, maxAttempts } = CONFIG.spawn;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const angle = Math.random() * Math.PI * 2;
-
-        const distance =
-            minDistance +
-            Math.random() * Math.max(0, radius - minDistance);
-
-        const x = Math.floor(
-            center.x + Math.cos(angle) * distance
-        ) + 0.5;
-
-        const z = Math.floor(
-            center.z + Math.sin(angle) * distance
-        ) + 0.5;
-
-        const y = Math.floor(center.y);
-
+        const distance = minDistance + Math.random() * Math.max(0, radius - minDistance);
         const position = {
-            x,
-            y,
-            z
+            x: Math.floor(center.x + Math.cos(angle) * distance) + 0.5,
+            y: Math.floor(center.y),
+            z: Math.floor(center.z + Math.sin(angle) * distance) + 0.5
         };
-
-        if (isValidSpawnLocation(dimension, position)) {
-            return position;
-        }
+        if (isValidSpawnLocation(dimension, position)) return position;
     }
 
-    // Fallback direkt neben dem Spieler.
-    return {
-        x: center.x + 1,
-        y: center.y,
-        z: center.z + 1
-    };
+    return { x: center.x + 1, y: center.y, z: center.z + 1 };
 }
 
-/**
- * Spawnt einen Token-Mob.
- */
 function spawnTokenMob(player) {
-    if (!player || !hasConfig()) {
-        return null;
-    }
-
+    if (!player || !hasConfig()) return null;
     const dimension = player.dimension;
-
-    const currentMobs = dimension.getEntities({
-        tags: [CONFIG.mobTag]
-    });
+    const currentMobs = dimension.getEntities({ tags: [CONFIG.mobTag] });
 
     if (currentMobs.length >= CONFIG.maxMobs) {
-        player.sendMessage(
-            `§cEs existieren bereits die maximalen §e${CONFIG.maxMobs} §cToken-Mobs.`
-        );
-
+        player.sendMessage(`§cEs existieren bereits die maximalen §e${CONFIG.maxMobs} §cToken-Mobs.`);
         return null;
     }
-
-    const spawnPosition = findSpawnPosition(
-        dimension,
-        player.location
-    );
 
     try {
-        const entity = dimension.spawnEntity(
-            CONFIG.mobType,
-            spawnPosition
-        );
-
+        const entity = dimension.spawnEntity(CONFIG.mobType, findSpawnPosition(dimension, player.location));
         entity.addTag(CONFIG.mobTag);
         entity.nameTag = CONFIG.mobName;
-
-        player.sendMessage(
-            `§aToken-Mob gespawnt! §7(${currentMobs.length + 1}/${CONFIG.maxMobs})`
-        );
-
-        console.info(
-            `[Token] ${player.name} hat einen Token-Mob gespawnt.`
-        );
-
+        player.sendMessage(`§aToken-Mob gespawnt! §7(${currentMobs.length + 1}/${CONFIG.maxMobs})`);
+        console.info(`[Token] ${player.name} hat einen Token-Mob gespawnt.`);
         return entity;
     } catch (error) {
-        console.error(
-            `[Token] Fehler beim Spawnen des Token-Mobs: ${error}`
-        );
-
-        player.sendMessage(
-            "§cDer Token-Mob konnte nicht gespawnt werden."
-        );
-
+        console.error(`[Token] Fehler beim Spawnen des Token-Mobs: ${error}`);
+        player.sendMessage("§cDer Token-Mob konnte nicht gespawnt werden.");
         return null;
     }
 }
 
-/**
- * Wird aufgerufen, wenn alle Token-Mobs von Spielern getötet wurden.
- */
 function handleAllTokenMobsDefeated(killer = null) {
-    console.info(
-        "[Token] Alle Token-Mobs wurden von Spielern besiegt!"
-    );
-    if (killer) {
-        killer.sendMessage(
-            "§6§lAlle Token-Mobs wurden besiegt!"
-        );
-    }
+    if (killer) killer.sendMessage("§6§lAlle Token-Mobs wurden besiegt!");
     disableAllMonsters();
 }
+
 function disableAllMonsters() {
-    const dimension = getOverworld();
-
-    const allMonsters = dimension.getEntities({
-        type: "minecraft:monster"
-    });
-
-    for (const monster of allMonsters) {
-        try {
-            monster.remove();
-        } catch (error) {
-            console.warn(
-                `[Token] Monster konnte nicht entfernt werden (${monster.typeId}): ${error}`
-            );
+    for (const monster of getOverworld().getEntities({ type: "minecraft:monster" })) {
+        try { monster.remove(); } catch (error) {
+            if (CONFIG?.debug) console.warn(`[Token] Monster konnte nicht entfernt werden: ${error}`);
         }
     }
-
-    console.info(
-        "[Token] Alle Monster wurden entfernt."
-    );
 }
-/**
- * Registriert den Token-Custom-Command.
- */
+
 system.beforeEvents.startup.subscribe((event) => {
-    if (!hasConfig()) {
-        return;
-    }
-
-    const registry = event.customCommandRegistry;
-
-    registry.registerCommand(
+    if (!hasConfig()) return;
+    event.customCommandRegistry.registerCommand(
         {
             name: CONFIG.command.name,
             description: CONFIG.command.description,
@@ -267,79 +158,33 @@ system.beforeEvents.startup.subscribe((event) => {
         },
         (origin) => {
             const player = origin.sourceEntity;
-
-            if (!isPlayer(player)) {
-                return {
-                    status: CustomCommandStatus.Failure
-                };
-            }
-
-            system.run(() => {
-                spawnTokenMob(player);
-            });
-
-            return {
-                status: CustomCommandStatus.Success
-            };
+            if (!isPlayer(player)) return { status: CustomCommandStatus.Failure };
+            system.run(() => spawnTokenMob(player));
+            return { status: CustomCommandStatus.Success };
         }
     );
 });
 
-/**
- * Erkennt den Tod eines Token-Mobs.
- */
 world.afterEvents.entityDie.subscribe((event) => {
-    if (!hasConfig()) {
-        return;
-    }
-
+    if (!hasConfig()) return;
     const deadEntity = event.deadEntity;
-
     if (!deadEntity) return;
 
-    // Some platforms may provide an entity reference that is already invalid/removed.
-    // Guard calls like hasTag() which throw InvalidEntityError when the entity is invalid.
     try {
-        if (!deadEntity.isValid) return;
+        if (!deadEntity.isValid || !deadEntity.hasTag(CONFIG.mobTag)) return;
     } catch {
         return;
     }
 
-    // Nur unsere Token-Mobs behandeln.
-    try {
-        if (!deadEntity.hasTag(CONFIG.mobTag)) return;
-    } catch (error) {
-        // Entity became invalid between the event and our check.
-        if (CONFIG?.debug) console.warn(`[Token] Ignoring invalid deadEntity: ${error}`);
-        return;
-    }
+    const killer = getKillingPlayer(event.damageSource);
 
-    const damageSource = event.damageSource;
-    const killer = getKillingPlayer(damageSource);
+    // Every player-killed token grants its killer's team a TaxBonus.
+    if (killer) addMonsterTokenTaxBonus(killer);
 
-    console.info(
-        `[Token] ${killer ? killer.name : "<unknown>"} hat einen Token-Mob getötet.`
-    );
-
-    /*
-     * entityDie wird verarbeitet, bevor garantiert ist,
-     * dass getEntities() bereits ohne das tote Entity arbeitet.
-     *
-     * Deshalb einen Tick warten.
-     */
     system.run(() => {
         const remainingMobs = getTokenMobs();
-
-        console.info(
-            `[Token] Verbleibende Token-Mobs: ${remainingMobs.length}`
-        );
-
-        if (remainingMobs.length === 0) {
-            handleAllTokenMobsDefeated(killer);
-        }
+        if (remainingMobs.length === 0) handleAllTokenMobsDefeated(killer);
     });
 });
 
-console.info(
-    "§a[Token] Token-Mob-System geladen."
-);
+console.info("§a[Token] Token-Mob-System geladen.");
