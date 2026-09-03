@@ -24,13 +24,27 @@ Aktuelle Systeme:
 
 ## 💰 Steuern & TaxBonus
 
-Jedes Team kann eine Steuerkiste besitzen. Die tägliche Steuer wird aus der Zahl der Dorfbewohner in den Team-Claims berechnet:
+Jedes Team kann eine Steuerkiste besitzen. Die tägliche Steuer besteht aus der Bevölkerung des Teams und einem kontrollierten Bonus:
 
-`Tagessteuer = Dorfbewohner + TaxBonus`
+`Tagessteuer = Dorfbewohner + fester TaxBonus + Bevölkerungsbonus`
 
-Der **TaxBonus** ist ein zusätzlicher, dauerhaft gespeicherter täglicher Emerald-Betrag. Er ist auf 64 Emeralds pro Tag begrenzt. Dadurch können Server-Events, Belohnungen oder wirtschaftliche Vorteile einen kontrollierten Bonus auf die normale Bevölkerungssteuer geben.
+Der **feste TaxBonus** wird pro Team gespeichert und kann von `0` bis `64` Emeralds pro Tag gesetzt werden. Zusätzlich erhalten größere Siedlungen einen kleinen automatischen **Bevölkerungsbonus**:
 
-Verfügbare Commands (Game Directors):
+| Dorfbewohner | Bevölkerungsbonus |
+|---:|---:|
+| 0–4 | +0 |
+| 5–9 | +2 |
+| 10–19 | +5 |
+| 20–39 | +10 |
+| 40+ | +15 |
+
+Der gesamte Bonus ist auf **64 Emeralds pro Tag** begrenzt. Die komplette Tagesauszahlung eines Teams ist auf **256 Emeralds** begrenzt. Dadurch bleibt die Steuer für große Siedlungen attraktiv, ohne die Emerald-Wirtschaft unkontrolliert wachsen zu lassen.
+
+Die Auszahlung wird außerdem über den Weltzustand gegen doppelte Auszahlungen nach Server-Neustarts abgesichert.
+
+### TaxBonus-Commands
+
+Alle Steuer-Commands benötigen Game-Director-Rechte:
 
 ```text
 /siedler:settax <team> <x> <y> <z>
@@ -40,7 +54,9 @@ Verfügbare Commands (Game Directors):
 /siedler:countvillagers <team>
 ```
 
-Die Auszahlung behandelt volle Steuerkisten sicher: Eingelagerte und neben der Kiste abgelegte Emeralds werden getrennt erfasst und den Teammitgliedern angezeigt. Pro Tagesauszahlung werden maximal 256 Emeralds verarbeitet.
+`settaxbonus` ersetzt den festen Bonus. `addtaxbonus` erhöht oder verringert ihn und hält ihn automatisch innerhalb des erlaubten Bereichs. `taxinfo` zeigt die vollständige aktuelle Berechnung einschließlich Bevölkerungsbonus und Steuerkiste.
+
+Die TaxBonus-Konfiguration befindet sich zentral in `scripts/taxes/config.js`.
 
 ## 🧑‍🌾 Händler
 
@@ -100,6 +116,7 @@ scripts/core/main.js
 ├── Teams
 ├── Taxes
 │   ├── index.js
+│   ├── config.js
 │   └── taxes.js
 ├── Claims
 ├── Market
