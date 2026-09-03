@@ -17,7 +17,8 @@ const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
  *     TeamName: {
  *         color: "§c",
  *         players: ["player-id"],
- *         taxChest: null
+ *         taxChest: null,
+ *         taxBonus: null
  *     }
  * }
  */
@@ -214,7 +215,8 @@ function registerTeamCommands(registry) {
             teams[teamName] = {
                 color,
                 players: [],
-                taxChest: null
+                taxChest: null,
+                taxBonus: null
             };
 
             player.sendMessage(

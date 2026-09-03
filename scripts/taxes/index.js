@@ -5,6 +5,7 @@ import { countVillagersInTeamClaims } from "../claims/utils.js";
 
 const MORNING_START = 0;
 const MORNING_WINDOW = 200;
+
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
 let dayStarted = false;
@@ -38,10 +39,11 @@ function payAllTeamTaxes() {
 
     for (const [teamName, data] of Object.entries(teams)) {
         if (!data?.taxChest) continue;
-
         const villagerCount = countVillagersInTeamClaims(teamName, "villager");
         const amount = Math.max(0, Math.floor(villagerCount));
-
+        if (data.taxBonus) {
+            amount += data.taxBonus;
+        }
         if (amount <= 0) continue;
 
         const success = addTaxes(data.taxChest, amount, teamName);
