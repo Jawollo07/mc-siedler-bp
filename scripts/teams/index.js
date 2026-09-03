@@ -12,13 +12,17 @@ const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 /**
  * Loads all teams from world dynamic properties.
  *
+ * Existing teams are automatically migrated so that every team has a
+ * persistent numeric taxBonus property. Older teams without taxBonus are
+ * initialized with 0 Emeralds/day.
+ *
  * Team structure:
  * {
  *     TeamName: {
  *         color: "§c",
  *         players: ["player-id"],
  *         taxChest: null,
- *         taxBonus: null
+ *         taxBonus: 0
  *     }
  * }
  */
@@ -32,11 +36,44 @@ export function getTeams() {
     try {
         const parsed = JSON.parse(rawData);
 
-        return parsed &&
-            typeof parsed === "object" &&
-            !Array.isArray(parsed)
-            ? parsed
-            : {};
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            return {};
+        }
+
+        let migrated = false;
+
+        for (const teamData of Object.values(parsed)) {
+            if (!teamData || typeof teamData !== "object" || Array.isArray(teamData)) {
+                continue;
+            }
+
+            if (!Object.prototype.hasOwnProperty.call(teamData, "taxBonus")) {
+                teamData.taxBonus = 0;
+                migrated = true;
+                continue;
+            }
+
+            const numericBonus = Number(teamData.taxBonus);
+            if (!Number.isFinite(numericBonus) || numericBonus < 0) {
+                teamData.taxBonus = 0;
+                migrated = true;
+            } else if (teamData.taxBonus !== Math.floor(numericBonus)) {
+                teamData.taxBonus = Math.floor(numericBonus);
+                migrated = true;
+            }
+        }
+
+        // Persist the migration once so existing teams also receive the field
+        // in the world dynamic property, not only in the returned object.
+        if (migrated) {
+            try {
+                world.setDynamicProperty("teams", JSON.stringify(parsed));
+            } catch (error) {
+                console.error(`[Teams] TaxBonus-Migration konnte nicht gespeichert werden: ${error}`);
+            }
+        }
+
+        return parsed;
     } catch (error) {
         console.error(`[Teams] Ungültige Team-Daten: ${error}`);
         return {};
@@ -216,7 +253,7 @@ function registerTeamCommands(registry) {
                 color,
                 players: [],
                 taxChest: null,
-                taxBonus: null
+                taxBonus: 0
             };
 
             player.sendMessage(
