@@ -21,6 +21,7 @@
 - [x] Teams, Team-Chat, Farben und Beziehungen
 - [x] Chunk-Claims und Claim-Grenzanzeige
 - [x] Steuern und Emerald-Wirtschaft
+- [x] TaxBonus mit persistenter Konfiguration und Admin-Commands
 - [x] Marktplätze und spezialisierte Händler
 - [x] Rohstofforientierte Händlerangebote
 - [x] Sieben vordefinierte Händlerrollen
@@ -38,6 +39,47 @@
 - [x] Monster-/Pillager-System und Belagerungsgrundlage
 - [x] Essentials, Homes, TPA und Dashboard
 - [x] Separates Resource Pack
+
+---
+
+# 🟡 Phase 5 – Wirtschaft & Ressourcen
+
+## Ressourcen
+
+- [x] Emeralds als Standardwährung
+- [x] Holz
+- [x] Stein/Cobblestone
+- [x] Sand/Gravel/Lehm
+- [x] Kohle
+- [x] Erze
+- [x] Getreide und Gemüse
+- [x] Samen
+- [x] Tierprodukte
+- [ ] weitere unverarbeitete Rohstoffe
+
+## Wirtschaft
+
+- [x] Steuern pro Dorfbewohner
+- [x] Emerald-Währung
+- [x] Team-Kasse
+- [x] TaxBonus als zusätzlicher Tagesbetrag
+- [x] TaxBonus-Limit und Eingabevalidierung
+- [x] Steuerinformationen per Command
+- [x] sichere Verarbeitung voller Steuerkisten
+- [ ] automatische Bonusmodelle anhand von Siedlungsstufe/Wohlstand
+- [ ] Wirtschaftliche Ereignisse, die TaxBonus zeitweise verändern
+
+### TaxBonus
+
+Der tägliche Steuerbetrag wird nach dem Schema `Dorfbewohner + TaxBonus` berechnet. Der TaxBonus ist persistent und auf 64 Emeralds pro Team und Tag begrenzt. Die Auszahlung verarbeitet maximal 256 Emeralds pro Tag. Bei einer vollen Steuerkiste werden eingelagerten und abgelegten Emeralds getrennt erfasst.
+
+Commands:
+
+- `/siedler:settax <team> <x> <y> <z>`
+- `/siedler:settaxbonus <team> <bonus>`
+- `/siedler:addtaxbonus <team> <betrag>`
+- `/siedler:taxinfo <team>`
+- `/siedler:countvillagers <team>`
 
 ---
 
@@ -74,30 +116,6 @@
 - [ ] weitere Einheitentypen
 - [ ] Beförderungen mit zusätzlichen Rängen/Abzeichen
 - [ ] Unterhalt pro Einheit
-
-### Aktuelle XP-Schwellen
-
-| Level | Rang | Gesamt-XP |
-|---:|---|---:|
-| 1 | Rekrut | 0 |
-| 2 | Veteran | 150 |
-| 3 | Elite | 400 |
-| 4 | Hauptmann | 800 |
-| 5 | Kriegsveteran | 1.400 |
-| 6 | Kriegsherr | 2.200 |
-| 7 | Marschall | 3.500 |
-
-### Aktuelle XP-Regeln
-
-| Ereignis | XP |
-|---|---:|
-| 1–2 verursachter Schaden | 1 XP |
-| 3–5 verursachter Schaden | 2–4 XP |
-| 6–10 verursachter Schaden | 5–7 XP |
-| 11+ verursachter Schaden | 1–8 XP, maximal 8 XP |
-| Kill eines normalen Gegners | 25–50 XP |
-| Kill eines starken Gegners | 50–75 XP |
-| Kill eines sehr starken Gegners/Bosses | 75–100 XP |
 
 ## 2.2 Rekrutierung
 
@@ -197,29 +215,6 @@
 
 ---
 
-# 🟡 Phase 5 – Wirtschaft & Ressourcen
-
-## Ressourcen
-
-- [x] Emeralds als Standardwährung
-- [x] Holz
-- [x] Stein/Cobblestone
-- [x] Sand/Gravel/Lehm
-- [x] Kohle
-- [x] Erze
-- [x] Getreide und Gemüse
-- [x] Samen
-- [x] Tierprodukte
-- [ ] weitere unverarbeitete Rohstoffe
-
-## Wirtschaft
-
-- [x] Steuern
-- [x] Emerald-Währung
-- [x] Team-Kasse
-
----
-
 # 🟡 Phase 6 – Handel & Märkte
 
 ## Vorhanden
@@ -241,16 +236,6 @@
 - [ ] Handelsaufträge
 - [ ] Ressourcenpreise
 - [ ] Angebot/Nachfrage
-
-### Aktuelle Händler
-
-- `food` – Lebensmittel
-- `building` – Baustoffe
-- `resources` – Rohstoffe
-- `tools` – Werkzeuge
-- `weapons` – Waffen
-- `supplies` – Versorgung
-- `soldiers` – Soldatenrekrutierung
 
 ---
 
