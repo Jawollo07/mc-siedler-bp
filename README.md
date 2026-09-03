@@ -19,8 +19,24 @@ Aktuelle Systeme:
 - 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
 - 🐎 Infanterie, Bogenschützen und Kavallerie
 - 👹 Monster, Pillager-Trupps, Außenposten und Belagerungen
-- 🧰 Essentials, Homes, TPA und Spieler-Dashboard
+- 🧰 Essentials, Homes, TPA und erweitertes Spieler-Dashboard
 - 💾 persistente World Dynamic Properties
+
+## 📊 Spieler-Dashboard
+
+Mit `/siedler:stats` öffnet sich das zentrale Siedler-Dashboard. Die Startseite zeigt die wichtigsten Live-Werte des Spielers und seines Teams.
+
+Das Dashboard umfasst:
+
+- 👤 **Mein Profil** – Position, Dimension, Team, eigene Soldaten, Soldaten-XP und durchschnittliches Soldatenlevel
+- 🛡️ **Team & Rangliste** – Teamdaten und eine Live-Rangliste der Teams nach Bevölkerung, Soldaten und Claims
+- 🏠 **Claims & Bevölkerung** – aktueller Chunk, Claim-Status, Team-Claims und Bevölkerung pro Claim
+- 💰 **Steuern & Wirtschaft** – Dorfbewohner, permanenter Monster-Token-TaxBonus und tatsächlich berechnete Tagessteuer
+- ⚔️ **Soldaten** – eigene und Team-Soldaten, Aufteilung nach Infanterie/Bogenschützen/Kavallerie, XP und Durchschnittslevel
+- 📊 **Server-Statistiken** – Online-Spieler, Teams, Claims, Dorfbewohner, Monster und Soldaten über alle drei Dimensionen
+- 🔄 **Aktualisieren** – öffnet das Dashboard mit aktuellen Live-Daten erneut
+
+Die Soldatenstatistiken verwenden die persistenten `soldier:ownerId`, `soldier:type`, `soldier:level` und `soldier:xp` Daten. Dadurch bleiben Owner, Typ, Level und XP unabhängig von der UI-Auswahl auswertbar.
 
 ## 💰 Steuern & permanenter Monster-Token-TaxBonus
 
@@ -125,10 +141,18 @@ scripts/core/main.js
 ├── Market
 ├── Monster
 ├── Essentials
+│   ├── index.js
+│   └── player_stats.js
 └── Soldier
 ```
 
 ## 🎮 Wichtige Commands
+
+### Dashboard
+
+```text
+/siedler:stats
+```
 
 ### Steuern
 
