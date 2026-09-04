@@ -202,7 +202,9 @@ async function openGroupMenu(player) {
 
 async function createGroup(player) {
     const soldiers=ownedSoldiers(player); if(!soldiers.length){player.sendMessage("§cKeine Soldaten vorhanden.");return openGroupMenu(player);}
-    const form=new ModalFormData().title("§aGruppe erstellen").textField("Name","z.B. Erste Garde","Gruppe 1").slider("Soldatenradius",2,32,2,16);
+    const form=new ModalFormData().title("§aGruppe erstellen")
+        .textField("Name","z.B. Erste Garde",{ defaultValue: "Gruppe 1" })
+        .slider("Soldatenradius",2,32,{ valueStep: 2, defaultValue: 16 });
     const r=await show(form,player); if(r.canceled)return openGroupMenu(player);
     const name=String(r.formValues?.[0]||`Gruppe ${ownedGroups(player).length+1}`).trim(); const radius=Number(r.formValues?.[1]??16); const r2=radius*radius;
     const selected=soldiers.filter(s=>{const p=s.entity.location,dx=p.x-player.location.x,dy=p.y-player.location.y,dz=p.z-player.location.z;return dx*dx+dy*dy+dz*dz<=r2;});
