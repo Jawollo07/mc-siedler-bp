@@ -1,11 +1,10 @@
-import { system } from "@minecraft/server";
+import { system, world } from "@minecraft/server";
 import { SOLDIERS, SOLDIER_CONFIG } from "./config.js";
 import { getPlayerTeam, getSoldierTeam } from "../teams/index.js";
 import { getTeamRelation, TEAM_RELATION } from "../teams/relations.js";
 
 const ARROW_ID = "minecraft:arrow";
 const ARCHER_MIN_RANGE = 5.5;
-const ARCHER_STANDOFF = 9.0;
 const ARROW_SPEED = 2.8;
 const AIM_HEIGHT = 0.95;
 const ARROW_GRAVITY = 0.05;
@@ -41,8 +40,8 @@ function updateArcher(soldier, now) {
         soldier.targetId = target?.id ?? null;
     }
 
-    // The normal Soldier AI is melee-oriented. Archer AI takes over the combat
-    // state after the normal AI tick so an archer never runs into its target.
+    // Ranged AI takes over after the normal Soldier AI tick. This prevents
+    // archers from using the melee applyDamage attack and makes them fire real arrows.
     if (!target) {
         cancelMovement(soldier);
         return;
@@ -62,12 +61,11 @@ function updateArcher(soldier, now) {
     });
 
     if (distance < ARCHER_MIN_RANGE) {
-        // Back away from melee attackers while keeping the target selected.
         soldier.phase = SOLDIER_CONFIG.STATES.MOVE;
         soldier.desiredDirection.x = -nx;
         soldier.desiredDirection.z = -nz;
-        soldier.velocity.x = Math.max(-0.08, Math.min(0.08, -nx * 0.08));
-        soldier.velocity.z = Math.max(-0.08, Math.min(0.08, -nz * 0.08));
+        soldier.velocity.x = -nx * 0.08;
+        soldier.velocity.z = -nz * 0.08;
         soldier.attack = null;
         return;
     }
@@ -113,6 +111,8 @@ function shootArrow(soldier, target) {
         const dy = targetY - spawn.y + 0.5 * ARROW_GRAVITY * travelTime * travelTime;
         const length = Math.hypot(dx, dy, dz);
 
+        // Setting the projectile owner makes the arrow behave like a real
+        // projectile fired by this soldier, including proper hit attribution.
         projectile.owner = shooter;
         projectile.shoot({
             x: dx / length * ARROW_SPEED,
@@ -191,8 +191,8 @@ function getSoldierTeamFromEntity(entity) {
     try {
         const ownerId = entity.getDynamicProperty("soldier:ownerId");
         if (!ownerId) return null;
-        return getPlayerTeam(entity.dimension.getEntities({ type: "minecraft:player", maxDistance: 256 })
-            .find(player => player.id === ownerId)) ?? null;
+        const player = world.getPlayers().find(candidate => candidate.id === ownerId);
+        return player ? getPlayerTeam(player) : null;
     } catch {
         return null;
     }
