@@ -1425,8 +1425,6 @@ function getShotCooldown(
 }
 
 
-actionPlaceholder = null;
-
 function distanceSquared(
     a,
     b
