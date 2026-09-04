@@ -10,6 +10,7 @@ import {
 } from "./config.js";
 
 const DEBUG = false;
+const CAVALRY_MOUNT_ID = "siedler:cavalry_horse";
 
 const SOLDIER_ENTITY_IDS = Object.freeze({
     infantry: "siedler:infantry",
@@ -72,16 +73,13 @@ export function spawnSoldier(
             try {
                 mount = spawnCavalryMount(dimension, location, owner, level);
 
-                // startRiding() was removed/unavailable in the current Script API.
-                // Riding is now controlled through the mount's rideable component.
                 const rideable = mount.getComponent("minecraft:rideable");
                 if (!rideable || typeof rideable.addRider !== "function") {
                     throw new Error("minecraft:rideable.addRider() is unavailable");
                 }
 
-                const added = rideable.addRider(entity);
-                if (!added) {
-                    throw new Error("minecraft:rideable.addRider() returned false");
+                if (!rideable.addRider(entity)) {
+                    throw new Error("Cavalry soldier is not accepted by the mount's rideable family_types");
                 }
 
                 mount.setDynamicProperty("soldier:riderId", entity.id);
@@ -134,45 +132,19 @@ export function spawnSoldier(
 }
 
 function spawnCavalryMount(dimension, location, owner, level) {
-    const mount = dimension.spawnEntity("minecraft:horse", {
+    const mount = dimension.spawnEntity(CAVALRY_MOUNT_ID, {
         x: location.x,
         y: location.y,
         z: location.z
     });
 
-    if (!mount?.isValid) throw new Error("Horse entity is invalid after spawn");
+    if (!mount?.isValid) throw new Error("Cavalry mount is invalid after spawn");
 
     mount.addTag("soldier_mount");
     mount.addTag("cavalry_mount");
     mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
     mount.setDynamicProperty("soldier:level", level);
-
-    // Force an adult horse. Do this immediately and once again on the next tick
-    // because vanilla ageable initialization can otherwise overwrite the state.
-    growHorseUp(mount);
-    system.runTimeout(() => {
-        if (mount?.isValid) growHorseUp(mount);
-    }, 1);
-
-    if (owner) {
-        try {
-            const tameable = mount.getComponent("minecraft:tameable");
-            tameable?.tame(owner);
-        } catch (error) {
-            if (DEBUG) console.warn(`[Soldier] Horse taming failed: ${error}`);
-        }
-    }
-
     return mount;
-}
-
-function growHorseUp(mount) {
-    if (!mount?.isValid) return;
-    try {
-        mount.triggerEvent("minecraft:ageable_grow_up");
-    } catch (error) {
-        if (DEBUG) console.warn(`[Soldier] Could not force horse to adult: ${error}`);
-    }
 }
 
 export function setSoldierHealth(entity, value) {
