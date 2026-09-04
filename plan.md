@@ -88,8 +88,6 @@
 - [x] Chunk-Claims
 - [x] Claim-Grenzen
 - [x] Claim-Informationen
-- [ ] Gebäude-/Siedlungszonen
-- [ ] Militärzonen
 
 ## 🟠 Phase 4 – Diplomatie
 
