@@ -21,8 +21,9 @@ const ARCHER_MIN_RANGE = 6;
 const ARCHER_PREFERRED_RANGE = 12;
 const ARCHER_MAX_RANGE = 40;
 
-// Projectile physics used by the ballistic solver and shoot call.
-const ARROW_SPEED = 3.2;
+// Bedrock's projectile shoot speed is kept at 6.0 for the intended
+// soldier bow range. The ballistic solver uses the exact same value.
+const ARROW_SPEED = 6.0;
 const ARROW_GRAVITY = 0.05;
 const ARROW_DRAG = 0.99;
 const MAX_ARROW_FLIGHT_TICKS = 120;
@@ -368,7 +369,6 @@ function calculateArrowDirection(origin, target, horizontalDistance) {
     const horizontalX = dx / horizontalDistance;
     const horizontalZ = dz / horizontalDistance;
 
-    // Find the first ballistic solution: this gives the flatter, more useful arc.
     const minAngle = -0.25;
     const maxAngle = 1.05;
     const samples = 52;
