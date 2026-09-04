@@ -10,8 +10,9 @@ const ARROW_SPEED = 2.8;
 const AIM_HEIGHT = 0.95;
 const ARROW_GRAVITY = 0.05;
 const DEFAULT_SHOT_COOLDOWN = 1200;
-const VISIBILITY_STEP = 0.35;
-const VISIBILITY_MARGIN = 0.18;
+const VISIBILITY_MARGIN = 0.05;
+const ARROW_TRACK_INTERVAL = 1;
+const trackedArrows = new Map();
 
 let started = false;
 
@@ -19,6 +20,7 @@ export function startRangedAI() {
     if (started) return;
     started = true;
     system.runInterval(updateArchers, 2);
+    system.runInterval(updateTrackedArrows, ARROW_TRACK_INTERVAL);
     console.info("[Soldier Ranged] Archer projectile AI started");
 }
 
@@ -59,12 +61,10 @@ function updateArcher(soldier, now) {
         y: Math.atan2(-dx, dz) * 180 / Math.PI
     });
 
-    // A target behind a solid block cannot be attacked. This check is done
-    // before both retreat logic and shooting, so archers never shoot through walls.
-    if (!hasLineOfSight(entity, targetAim)) {
+    // Do not fire at a target that is hidden behind a solid block.
+    if (!hasLineOfSight(entity, target)) {
         soldier.attack = null;
         soldier.phase = SOLDIER_CONFIG.STATES.MOVE;
-        // Move toward the target until the normal Minecraft ray is unobstructed.
         soldier.desiredDirection.x = nx;
         soldier.desiredDirection.z = nz;
         return;
@@ -88,27 +88,28 @@ function updateArcher(soldier, now) {
     if (!Number.isFinite(soldier.rangedNextShot)) soldier.rangedNextShot = 0;
     if (now < soldier.rangedNextShot) return;
 
-    if (shootArrow(soldier, target, targetAim)) soldier.rangedNextShot = now + cooldown;
+    if (shootArrow(soldier, target)) soldier.rangedNextShot = now + cooldown;
     else soldier.rangedNextShot = now + 250;
 }
 
-function shootArrow(soldier, target, targetAim) {
+function shootArrow(soldier, target) {
     const shooter = soldier.entity;
+    const targetAim = { x: target.location.x, y: target.location.y + AIM_HEIGHT, z: target.location.z };
     const dx = targetAim.x - shooter.location.x;
-    const dyTarget = targetAim.y - shooter.location.y;
     const dz = targetAim.z - shooter.location.z;
     const horizontalDistance = Math.hypot(dx, dz);
-    if (horizontalDistance <= 0.01 || !hasLineOfSight(shooter, targetAim)) return false;
+    const launch = { x: shooter.location.x, y: shooter.location.y + 1.45, z: shooter.location.z };
 
+    if (horizontalDistance <= 0.01 || !hasLineOfSight(shooter, target)) return false;
+
+    // The actual launch point must also be clear. This prevents spawning an arrow
+    // inside/behind a wall when the soldier is standing directly beside cover.
     const spawn = {
-        x: shooter.location.x + dx / horizontalDistance * 0.55,
-        y: shooter.location.y + 1.45,
-        z: shooter.location.z + dz / horizontalDistance * 0.55
+        x: launch.x + dx / horizontalDistance * 0.65,
+        y: launch.y,
+        z: launch.z + dz / horizontalDistance * 0.65
     };
-
-    // Check the actual arrow origin as well. This prevents a projectile from
-    // spawning on the wrong side of a thin wall or clipping through a block.
-    if (!hasLineOfSight(shooter, { ...targetAim, from: spawn })) return false;
+    if (hasBlockingRay(shooter.dimension, launch, spawn)) return false;
 
     try {
         const arrow = shooter.dimension.spawnEntity(ARROW_ID, spawn);
@@ -119,6 +120,7 @@ function shootArrow(soldier, target, targetAim) {
         }
 
         const travelTime = horizontalDistance / ARROW_SPEED;
+        const dyTarget = targetAim.y - launch.y;
         const dy = dyTarget + 0.5 * ARROW_GRAVITY * travelTime * travelTime;
         const length = Math.hypot(dx, dy, dz);
 
@@ -135,6 +137,8 @@ function shootArrow(soldier, target, targetAim) {
             arrow.setDynamicProperty("siedler:level", Number(soldier.level) || 1);
         } catch {}
 
+        trackedArrows.set(arrow.id, { arrow, previous: { ...spawn } });
+
         try { shooter.dimension.playSound("bow", shooter.location); } catch {}
         if (SOLDIER_CONFIG.debug) console.info(`[Soldier Ranged] ${shooter.id} fired arrow at ${target.id}`);
         return true;
@@ -144,32 +148,80 @@ function shootArrow(soldier, target, targetAim) {
     }
 }
 
-function hasLineOfSight(entity, targetLocation) {
-    if (!isValid(entity) || !targetLocation) return false;
-    try {
-        const from = targetLocation.from ?? {
-            x: entity.location.x,
-            y: entity.location.y + 1.45,
-            z: entity.location.z
+function updateTrackedArrows() {
+    for (const [id, entry] of trackedArrows) {
+        const arrow = entry.arrow;
+        if (!isValid(arrow)) {
+            trackedArrows.delete(id);
+            continue;
+        }
+
+        try {
+            const current = { x: arrow.location.x, y: arrow.location.y, z: arrow.location.z };
+            const moved = Math.hypot(
+                current.x - entry.previous.x,
+                current.y - entry.previous.y,
+                current.z - entry.previous.z
+            );
+
+            if (moved > 0.001 && hasBlockingRay(arrow.dimension, entry.previous, current)) {
+                // Vanilla projectile collision should stop normal arrows too.
+                // This explicit segment collision additionally prevents tunnelling
+                // through thin walls between Script API ticks.
+                arrow.remove();
+                trackedArrows.delete(id);
+                continue;
+            }
+
+            entry.previous = current;
+        } catch {
+            trackedArrows.delete(id);
+        }
+    }
+}
+
+function hasLineOfSight(entity, target) {
+    if (!isValid(entity) || !isValid(target)) return false;
+
+    const from = {
+        x: entity.location.x,
+        y: entity.location.y + 1.45,
+        z: entity.location.z
+    };
+
+    // All three rays must be clear. A target is considered hidden if every
+    // sampled body point is behind a solid block.
+    const heights = [0.25, 0.95, 1.55];
+    for (const height of heights) {
+        const to = {
+            x: target.location.x,
+            y: target.location.y + height,
+            z: target.location.z
         };
-        const to = targetLocation;
+        if (!hasBlockingRay(entity.dimension, from, to)) return true;
+    }
+    return false;
+}
+
+function hasBlockingRay(dimension, from, to) {
+    try {
         const dx = to.x - from.x;
         const dy = to.y - from.y;
         const dz = to.z - from.z;
         const distance = Math.hypot(dx, dy, dz);
-        if (distance <= 0.05) return true;
+        if (distance <= 0.05) return false;
 
         const direction = { x: dx / distance, y: dy / distance, z: dz / distance };
-        const hit = entity.dimension.getBlockFromRay(from, direction, {
-            maxDistance: distance - VISIBILITY_MARGIN,
+        const hit = dimension.getBlockFromRay(from, direction, {
+            maxDistance: Math.max(0.05, distance - VISIBILITY_MARGIN),
             includeLiquidBlocks: true,
             includePassableBlocks: false
         });
-        return !hit;
+        return !!hit;
     } catch (error) {
-        // Never allow a failed visibility query to turn into a wall-piercing shot.
-        if (SOLDIER_CONFIG.debug) console.warn(`[Soldier Ranged] Visibility check failed: ${error}`);
-        return false;
+        // Fail closed: an unavailable raycast must never allow a wall-piercing arrow.
+        if (SOLDIER_CONFIG.debug) console.warn(`[Soldier Ranged] Visibility ray failed: ${error}`);
+        return true;
     }
 }
 
