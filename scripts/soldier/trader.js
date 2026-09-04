@@ -39,9 +39,14 @@ function removeEmeralds(player, amount) {
             const item = inventory.getItem(i);
             if (!item || item.typeId !== EMERALD) continue;
             const remove = Math.min(item.amount, remaining);
-            item.amount -= remove;
+            const remainingInStack = item.amount - remove;
             remaining -= remove;
-            inventory.setItem(i, item.amount > 0 ? item : undefined);
+            if (remainingInStack > 0) {
+                item.amount = remainingInStack;
+                inventory.setItem(i, item);
+            } else {
+                inventory.setItem(i, undefined);
+            }
         }
         return remaining === 0;
     } catch (error) {
