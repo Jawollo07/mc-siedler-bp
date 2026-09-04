@@ -21,8 +21,6 @@ const ARCHER_MIN_RANGE = 6;
 const ARCHER_PREFERRED_RANGE = 12;
 const ARCHER_MAX_RANGE = 40;
 
-// Bedrock's projectile shoot speed is kept at 6.0 for the intended
-// soldier bow range. The ballistic solver uses the exact same value.
 const ARROW_SPEED = 6.0;
 const ARROW_GRAVITY = 0.05;
 const ARROW_DRAG = 0.99;
@@ -307,8 +305,15 @@ function shootArrow(soldier, target, now) {
 
         try { projectile.owner = entity; } catch {}
 
-        projectile.shoot(direction, {
-            speed: ARROW_SPEED,
+        // Pass the complete velocity vector. This avoids version-dependent
+        // interpretation of the shoot() speed option.
+        const velocity = {
+            x: direction.x * ARROW_SPEED,
+            y: direction.y * ARROW_SPEED,
+            z: direction.z * ARROW_SPEED
+        };
+
+        projectile.shoot(velocity, {
             uncertainty: 0
         });
 
