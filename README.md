@@ -37,6 +37,7 @@ Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infa
 - zielen auf das Ziel,
 - spawnen echte `minecraft:arrow`-Projektile,
 - setzen den Bogenschützen als Projectile-Owner,
+- übergeben dem Projektil einen vollständigen Geschwindigkeitsvektor statt sich auf die optionale `shoot()`-Geschwindigkeitsinterpretation zu verlassen,
 - verwenden eine diskrete ballistische Flugbahnberechnung mit Gravitation und Luftwiderstand,
 - wählen bevorzugt eine flache gültige Flugbahn statt einer unnötig hohen Flugkurve,
 - berücksichtigen die aktuelle Bewegung des Ziels durch vorausschauendes Zielen,
@@ -46,14 +47,14 @@ Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infa
 - schießen abhängig vom Soldaten-Level schneller,
 - besitzen eine mehrstufige Sichtlinienprüfung vor jedem Schuss,
 - überwachen die Flugbahn jedes erzeugten Pfeils,
-- verwenden eine Pfeilgeschwindigkeit von `6.0` mit `0.05` Gravitation und `0.99` Luftwiderstand,
+- verwenden eine Anfangsgeschwindigkeit von `6.0` mit `0.05` Gravitation und `0.99` Luftwiderstand,
 - können Ziele bis zu einer Entfernung von `40` Blöcken erfassen.
 
 ### 🏹 Pfeilphysik
 
-Die Pfeilgeschwindigkeit wurde auf `6.0` gesetzt, damit die Projektile die erwartete Fernkampfdistanz erreichen. Der ballistische Solver verwendet exakt denselben Geschwindigkeitswert wie `projectile.shoot()`. Dadurch bleibt die berechnete Flugkurve trotz der höheren Geschwindigkeit konsistent mit dem tatsächlich gestarteten Projektil.
+Die Pfeilgeschwindigkeit wird direkt als vollständiger initialer Velocity-Vektor an `projectile.shoot()` übergeben. Dadurch wird vermieden, dass unterschiedliche Bedrock-Versionen die optionale `speed`-Angabe anders interpretieren und der Pfeil dadurch deutlich zu kurz fliegt.
 
-Der Solver simuliert pro Tick horizontale Bewegung, Luftwiderstand und Gravitation und sucht anschließend numerisch nach einem passenden Abschusswinkel. Dadurch wird die Fallkurve bei kurzen und langen Schüssen konsistent berechnet.
+Der ballistische Solver verwendet denselben Geschwindigkeitswert `6.0` und simuliert pro Tick horizontale Bewegung, Luftwiderstand und Gravitation. Anschließend wird numerisch ein passender Abschusswinkel gesucht.
 
 Zusätzlich wird die voraussichtliche Flugzeit für bewegte Ziele geschätzt. Der Bogenschütze führt bis zu drei kurze Korrekturen der Zielposition durch, damit laufende Gegner nicht mehr ausschließlich auf ihre aktuelle Position beschossen werden.
 
