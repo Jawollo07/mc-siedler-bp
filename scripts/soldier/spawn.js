@@ -11,11 +11,12 @@ import {
 
 const DEBUG = true;
 
-/** Client entity used by the resource pack for each soldier type. */
+/** All soldier variants use the same registered entity definition and differentiate
+ * themselves via dynamic properties and tags. */
 const SOLDIER_ENTITY_IDS = Object.freeze({
-    infantry: "siedler:infantry",
-    archer: "siedler:archer",
-    cavalry: "siedler:cavalry"
+    infantry: "siedler:soldier",
+    archer: "siedler:soldier",
+    cavalry: "siedler:soldier"
 });
 
 export function spawnSoldier(
@@ -42,7 +43,7 @@ export function spawnSoldier(
     let entity;
     let mount;
     try {
-        const entityId = SOLDIER_ENTITY_IDS[type] ?? "siedler:infantry";
+        const entityId = SOLDIER_ENTITY_IDS[type] ?? "siedler:soldier";
         entity = dimension.spawnEntity(entityId, location);
     } catch (error) {
         console.warn(`[Soldier] Spawn failed for ${type}: ${error}`);
