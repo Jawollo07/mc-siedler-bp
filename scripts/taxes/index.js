@@ -3,7 +3,7 @@ import { addTaxes } from "./taxes.js";
 import { calculateTax, normalizeTaxBonus } from "./config.js";
 import { getTeams, saveTeams } from "../teams/index.js";
 import { countVillagersInTeamClaims } from "../claims/utils.js";
-import showTaxStatsForm from "./stats.js";
+import { showTaxStatsForm } from "./stats.js";
 
 const MORNING_START = 0;
 const MORNING_WINDOW = 200;

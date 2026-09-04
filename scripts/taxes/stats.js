@@ -1,7 +1,7 @@
 import { ActionFormData } from "@minecraft/server-ui";
 import { getTeams } from "../teams/index.js";
 
-export function showTaxStatsForm(teamName) {
+export default function showTaxStatsForm(teamName) {
     const teams = getTeams();
     const teamData = teams[teamName];
     if (!teamData) return;
