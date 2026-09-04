@@ -27,6 +27,7 @@
 - [x] Soldaten-Entity und Spawn-System
 - [x] Soldier-Zuordnung über `player.id`
 - [x] Soldier-KI-Grundsystem und Befehle
+- [x] Soldier-Kampf-Reichweite gegen Entity-Collision-Stalls abgesichert
 - [x] Soldier-Level 1–7 und persistentes XP-System
 - [x] Infanterie
 - [x] Bogenschütze
@@ -69,6 +70,9 @@
 - [x] grundlegende Zielsuche
 - [x] Team-/Feinderkennung
 - [x] Follow / Move / Stay / Attack / Retreat
+- [x] erreichbare Nahkampf-Distanz trotz Entity-Collision
+- [x] Angriffswindup und Angriffscooldown
+- [x] Angriffsschaden wird über `applyDamage()` ausgeführt
 - [ ] bessere Wegfindung
 - [ ] Hinderniserkennung
 - [ ] Gruppenbewegung
