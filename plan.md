@@ -21,11 +21,12 @@
 - [x] Ballistisches Zielen, Gravitation, Drag, Predictive Aim und Swept-Ray
 - [x] Spieler-Dashboard und Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
-- [x] Kavallerie-Mount wird als `minecraft:horse` erzeugt
-- [x] Kavallerie-Mount wird per `minecraft:ageable_grow_up` auf erwachsen gesetzt
-- [x] Kavallerie-Mount wird bei vorhandenem Besitzer getamed
-- [x] Soldier und Mount werden stabil über `soldier.mount` verbunden
-- [x] Kavallerie-Bewegung wird über die zentrale Soldier-Bewegungsroutine ausgeführt
+- [x] Kavallerie verwendet ein eigenes `siedler:cavalry_horse`-Mount statt Vanilla-Horse
+- [x] Custom-Mount besitzt `minecraft:rideable` mit `family_types: ["soldier"]`
+- [x] Kavallerie-Soldat wird über `minecraft:rideable.addRider()` auf das Mount gesetzt
+- [x] Kein `Entity.startRiding()` mehr
+- [x] Custom-Mount wird im Resource Pack als Pferd gerendert
+- [x] Kavallerie-Bewegung wird über die zentrale Soldier-Bewegungsroutine auf das Mount ausgeführt
 - [x] Kavallerie setzt für Charge/Circle/Pass korrekt den `move`-Zustand
 - [x] Eigenes Kavallerie-Mount wird bei der Kavallerie-Zielsuche ausgeschlossen
 
@@ -49,7 +50,7 @@
 - [x] persistente XP
 - [x] automatische Level-Up-Logik
 - [x] Rekrutierung über Soldatenhändler
-- [x] erwachsenes Kavallerie-Mount
+- [x] eigenes Kavallerie-Mount
 - [x] stabile Soldier–Mount-Zuordnung
 
 ### 2.2 Bewegung & Kampf-KI
@@ -70,6 +71,7 @@
 - [x] Kavallerie-Movement-State mit `applyNaturalMovement()` synchronisiert
 - [x] Charge- und Pass-Manöver
 - [x] eigenes Mount wird nicht als Ziel gewählt
+- [x] Rider-Kompatibilität über Custom-Mount statt Vanilla-`family_types`
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
@@ -144,6 +146,7 @@
 - [x] individuelle Laufanimationen
 - [x] Idle-/Bewegungsanimationen
 - [x] Kampfzustand an RP übergeben
+- [x] Custom-Kavallerie-Mount als Pferd darstellen
 
 ## 🔵 Phase 9 – Monster & Bedrohungen
 
@@ -169,8 +172,9 @@
 8. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
 9. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
 10. Treffer- und Schadenszuordnung bei bewegten Zielen testen
-11. Kavallerie mit realen Ingame-Tests für Mount, Charge, Passieren und Hindernisse verifizieren
+11. Kavallerie-Mount, Rider-Verbindung, Charge, Passieren und Bewegung real testen
+12. Custom-Mount auf Hindernisse, Steigungen und Terrain-Wechsel testen
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem erwachsenen Mount reiten und dieses zuverlässig steuern.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem kompatiblen erwachsenen Mount reiten und dieses zuverlässig steuern.**
