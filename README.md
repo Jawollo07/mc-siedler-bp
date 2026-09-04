@@ -17,7 +17,7 @@ Aktuelle Systeme:
 - 🏪 Marktplätze und spezialisierte Händler
 - ⚔️ Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
 - 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
-- 🏹 Infanterie, echte Bogenschützen mit Pfeil-Projektilen und Kavallerie
+- 🏹 Infanterie, echte Bogenschützen mit ballistisch berechneten Pfeil-Projektilen und Kavallerie
 - 👹 Monster, Pillager-Trupps, Außenposten und Belagerungen
 - 🧰 Essentials und erweitertes Spieler-Dashboard
 
@@ -37,19 +37,29 @@ Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infa
 - zielen auf das Ziel,
 - spawnen echte `minecraft:arrow`-Projektile,
 - setzen den Bogenschützen als Projectile-Owner,
-- berechnen eine ballistische Flugbahn inklusive Fallkorrektur,
+- verwenden eine diskrete ballistische Flugbahnberechnung mit Gravitation und Luftwiderstand,
+- wählen bevorzugt eine flache gültige Flugbahn statt einer unnötig hohen Flugkurve,
+- berücksichtigen die aktuelle Bewegung des Ziels durch vorausschauendes Zielen,
+- starten Pfeile leicht vor dem Soldaten, damit sie nicht an der eigenen Entity kollidieren,
+- richten die sichtbare Pfeilrotation während des Fluges an der tatsächlichen Flugrichtung aus,
 - spielen beim Schuss den Bogenschuss-Sound,
 - schießen abhängig vom Soldaten-Level schneller,
 - besitzen eine mehrstufige Sichtlinienprüfung vor jedem Schuss,
 - überwachen die Flugbahn jedes erzeugten Pfeils,
-- verwenden eine erhöhte Pfeilgeschwindigkeit von `4.0`,
+- verwenden eine Pfeilgeschwindigkeit von `3.2` mit `0.05` Gravitation und `0.99` Luftwiderstand,
 - können Ziele bis zu einer Entfernung von `40` Blöcken erfassen.
+
+### 🏹 Pfeilphysik
+
+Die Pfeilphysik wurde auf eine langsamere, deutlich sichtbarere Flugbahn umgestellt. Der ballistische Solver simuliert pro Tick horizontale Bewegung, Luftwiderstand und Gravitation und sucht anschließend numerisch nach einem passenden Abschusswinkel. Dadurch wird die Fallkurve bei kurzen und langen Schüssen wesentlich konsistenter.
+
+Zusätzlich wird die voraussichtliche Flugzeit für bewegte Ziele geschätzt. Der Bogenschütze führt bis zu drei kurze Korrekturen der Zielposition durch, damit laufende Gegner nicht mehr ausschließlich auf ihre aktuelle Position beschossen werden.
+
+Die Pfeile werden außerdem zwischen ihrer letzten und aktuellen Position per Block-Ray geprüft. Dadurch werden schnelle Projektile gegen Tunneling durch dünne Blockflächen abgesichert. Wird ein Block auf der Flugstrecke erkannt, wird der Pfeil entfernt. Nach zehn Sekunden werden nicht mehr relevante Pfeile automatisch bereinigt.
 
 ### 👁️ Sichtweite & Hindernisse
 
-Fernkampfangriffe benötigen eine **freie Sichtlinie** zwischen Bogenschütze und Ziel. Vor dem Schuss wird per Block-Ray geprüft, ob ein nicht passierbarer Block die Schusslinie blockiert. Die Prüfung verwendet mehrere Zielhöhen, damit Teildeckung nicht einfach umgangen wird.
-
-Zusätzlich wird die tatsächliche Pfeilbewegung serverseitig überwacht. Zwischen der letzten und der aktuellen Pfeilposition wird eine Block-Ray-Prüfung durchgeführt. Wird dabei eine Blockfläche gekreuzt, wird der Pfeil sofort entfernt. Dadurch werden auch schnelle Pfeile abgesichert, die zwischen zwei Script-Ticks theoretisch durch eine Wand tunneln könnten.
+Fernkampfangriffe benötigen eine **freie Sichtlinie** zwischen Bogenschütze und Ziel. Vor dem Schuss wird per Block-Ray geprüft, ob ein nicht passierbarer Block die Schusslinie blockiert. Die Prüfung verwendet mehrere Zielhöhen, damit Teildeckung berücksichtigt wird.
 
 Die Sichtlinienprüfung und die Flugbahnprüfung sind bewusst **fail-closed**: Wenn eine Ray-Abfrage fehlschlägt, darf der Pfeil nicht weiterfliegen bzw. nicht abgeschossen werden.
 
