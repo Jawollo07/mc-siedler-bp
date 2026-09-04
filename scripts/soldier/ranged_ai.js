@@ -398,58 +398,81 @@ function updateArcher(soldier, now) {
 function findTarget(soldier) {
     const entity = soldier.entity;
 
-    let best = null;
-    let bestDistance = Infinity;
-
-    try {
-        const entities =
-            entity.dimension.getEntities({
-                location: entity.location,
-                maxDistance: ARCHER_MAX_RANGE
-            });
-
-        for (const candidate of entities) {
-            if (
-                !candidate ||
-                candidate.id === entity.id ||
-                !isValid(candidate) ||
-                isDead(candidate)
-            ) {
-                continue;
-            }
-
-            if (
-                !isEnemy(
-                    soldier,
-                    candidate
-                )
-            ) {
-                continue;
-            }
-
-            const distance =
-                distanceSquared(
-                    entity.location,
-                    candidate.location
-                );
-
-            if (
-                distance <
-                bestDistance
-            ) {
-                bestDistance = distance;
-                best = candidate;
-            }
-        }
-    } catch (error) {
-        console.warn(
-            `[Soldier Ranged AI] Target search failed: ${formatError(error)}`
-        );
+    if (!entity || !entity.isValid()) {
+        return null;
     }
 
-    return best;
-}
+    const soldierTeam = getSoldierTeam(entity);
 
+    const candidates = entity.dimension.getEntities({
+        location: entity.location,
+        maxDistance: ARCHER_MAX_RANGE
+    });
+
+    let bestTarget = null;
+    let bestDistance = Infinity;
+
+    for (const candidate of candidates) {
+        if (!candidate || !candidate.isValid()) {
+            continue;
+        }
+
+        // Sich selbst niemals angreifen
+        if (candidate.id === entity.id) {
+            continue;
+        }
+
+        // Tote Entities ignorieren
+        try {
+            const health = candidate.getComponent("minecraft:health");
+
+            if (health && health.currentValue <= 0) {
+                continue;
+            }
+        } catch {
+            continue;
+        }
+
+        /*
+         * Besitzer/Boss des Soldaten niemals angreifen.
+         *
+         * soldier.ownerId ist die primäre Quelle.
+         * Falls der Soldat diese Information nicht im Runtime-Objekt
+         * besitzt, versuchen wir sie aus der Dynamic Property zu lesen.
+         */
+        const ownerId =
+            soldier.ownerId ??
+            getDynamicString(
+                entity,
+                "soldier:ownerId",
+                null
+            );
+
+        if (
+            ownerId &&
+            candidate.id === ownerId
+        ) {
+            continue;
+        }
+
+        // Nur tatsächliche Gegner auswählen
+        if (!isEnemy(soldier, candidate)) {
+            continue;
+        }
+
+        const distance = distanceBetween(
+            entity.location,
+            candidate.location
+        );
+
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestTarget = candidate;
+        }
+    }
+
+    return bestTarget;
+}
 
 /* =========================================================
  * MOVEMENT
@@ -1053,38 +1076,60 @@ function hasBlockingRay(
  * TARGET / TEAM
  * ========================================================= */
 
-function isEnemy(
-    soldier,
-    entity
-) {
-    if (!isValid(entity)) {
+function isEnemy(soldier, entity) {
+    if (!entity || !entity.isValid()) {
         return false;
     }
 
+    const soldierEntity = soldier.entity;
+
+    if (
+        !soldierEntity ||
+        !soldierEntity.isValid()
+    ) {
+        return false;
+    }
+
+    // Niemals sich selbst angreifen
+    if (entity.id === soldierEntity.id) {
+        return false;
+    }
+
+    /*
+     * Besitzer/Boss immer freundlich behandeln.
+     */
     const ownerId =
         soldier.ownerId ??
         getDynamicString(
-            soldier.entity,
+            soldierEntity,
             "soldier:ownerId",
             null
         );
 
+    if (
+        ownerId &&
+        entity.id === ownerId
+    ) {
+        return false;
+    }
+
     const soldierTeam =
-        getSoldierTeam(
-            soldier.entity
-        );
+        getSoldierTeam(soldierEntity);
 
     /*
      * Spieler
+     *
+     * Ein Spieler ist NICHT automatisch feindlich.
+     * Nur wenn beide Seiten ein Team haben und dieses
+     * Team als HOSTILE eingestuft ist, darf der Bogenschütze
+     * den Spieler angreifen.
      */
     if (
         entity.typeId ===
         "minecraft:player"
     ) {
         const playerTeam =
-            getPlayerTeam(
-                entity
-            );
+            getPlayerTeam(entity);
 
         if (
             soldierTeam &&
@@ -1099,9 +1144,9 @@ function isEnemy(
             );
         }
 
-        return true;
+        // Kein Team = kein automatischer Feind
+        return false;
     }
-
 
     /*
      * Andere Soldaten
@@ -1111,9 +1156,7 @@ function isEnemy(
         "siedler:soldier"
     ) {
         const targetTeam =
-            getSoldierTeam(
-                entity
-            );
+            getSoldierTeam(entity);
 
         if (
             soldierTeam &&
@@ -1128,52 +1171,60 @@ function isEnemy(
             );
         }
 
+        // Unbekannter/kein Team -> nicht angreifen
         return false;
     }
 
-
     /*
-     * Monster / hostile entities
+     * Monster/NPCs
+     *
+     * Alles, was kein Spieler oder eigener Siedler-Soldat
+     * ist, wird anschließend über die Monster-/Hostile-Erkennung
+     * behandelt.
      */
-    const family =
-        getTypeFamily(
-            entity
-        );
+    const typeId = entity.typeId ?? "";
 
     if (
-        family.includes(
-            "monster"
-        )
+        typeId.startsWith("minecraft:")
     ) {
-        return true;
+        try {
+            const family =
+                entity.getComponent(
+                    "minecraft:type_family"
+                );
+
+            if (family) {
+                const families =
+                    family.getTypeFamilies();
+
+                if (
+                    families.includes("monster") ||
+                    families.includes("hostile")
+                ) {
+                    return true;
+                }
+            }
+        } catch {
+            // Falls die Family-Komponente nicht verfügbar ist
+        }
     }
 
     /*
-     * Explizit bekannte Gegner
+     * Siedler-eigene Monster können hier ebenfalls
+     * als feindlich erkannt werden.
      */
-    const hostileTypes = [
-        "minecraft:zombie",
-        "minecraft:husk",
-        "minecraft:drowned",
-        "minecraft:skeleton",
-        "minecraft:stray",
-        "minecraft:bogged",
-        "minecraft:spider",
-        "minecraft:cave_spider",
-        "minecraft:creeper",
-        "minecraft:enderman",
-        "minecraft:witch",
-        "minecraft:pillager",
-        "minecraft:vindicator",
-        "minecraft:evocation_illager",
-        "minecraft:ravager",
-        "minecraft:vex",
-        "minecraft:phantom"
-    ];
+    if (
+        typeId.startsWith("siedler:")
+    ) {
+        if (
+            typeId.includes("monster") ||
+            typeId.includes("pillager")
+        ) {
+            return true;
+        }
+    }
 
-    return hostileTypes.includes(
-        entity.typeId
-    );
+    return false;
 }
 
 
@@ -1224,19 +1275,24 @@ function getTypeFamily(
 
 function getDynamicString(
     entity,
-    id,
+    property,
     fallback = null
 ) {
     try {
         const value =
-            entity.getDynamicProperty(id);
+            entity.getDynamicProperty(property);
 
-        return typeof value === "string"
-            ? value
-            : fallback;
+        if (
+            typeof value === "string" &&
+            value.length > 0
+        ) {
+            return value;
+        }
     } catch {
-        return fallback;
+        // Property existiert nicht
     }
+
+    return fallback;
 }
 
 
@@ -1360,4 +1416,15 @@ function formatError(error) {
     return error instanceof Error
         ? error.message
         : String(error);
+}
+function distanceBetween(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    const dz = a.z - b.z;
+
+    return Math.sqrt(
+        dx * dx +
+        dy * dy +
+        dz * dz
+    );
 }
