@@ -25,7 +25,8 @@
 - [x] Bogenschützen mit echter `minecraft:arrow`-Projectile-KI
 - [x] Ballistisches Zielen inklusive diskreter Gravitation-/Drag-Simulation
 - [x] Projectile-Owner für korrekte Trefferzuordnung
-- [x] Pfeilgeschwindigkeit auf `6.0` korrigiert, damit die erwartete Fernkampfreichweite erreicht wird
+- [x] Pfeilgeschwindigkeit auf `6.0` korrigiert
+- [x] Vollständiger Velocity-Vektor direkt an `projectile.shoot()` übergeben, statt die optionale Speed-Angabe zu verwenden
 - [x] Vorausschauendes Zielen auf bewegte Ziele
 - [x] Pfeilstart mit sicherem Vorwärts-Offset gegen Selbstkollision
 - [x] Pfeilrotation wird während des Fluges an die Flugrichtung angepasst
@@ -80,14 +81,14 @@
 - [x] automatische Pfeil-Bereinigung nach langer Flugzeit
 - [x] automatische Bogenschützen-Schussintervalle nach Level
 - [x] erhöhte Zielreichweite
-- [x] Pfeilgeschwindigkeit mit `projectile.shoot()` und ballistischem Solver auf `6.0` synchronisiert
+- [x] Pfeilgeschwindigkeit mit vollständigem Velocity-Vektor und ballistischem Solver auf `6.0` synchronisiert
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
 - [ ] intelligente Zielprioritäten
 - [ ] Ausweich- und Blockverhalten
 - [ ] Pfeil-/Schadenswerte vollständig an Bogenverzauberungen und Soldier-Level koppeln
-- [ ] reale Ingame-Flugdistanz und Treffergenauigkeit nach Geschwindigkeitsanpassung testen
+- [ ] reale Ingame-Flugdistanz und Treffergenauigkeit nach Velocity-Korrektur testen
 
 ### 2.3 Gruppen & Formationen
 
@@ -181,7 +182,7 @@
 8. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
 9. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
 10. Treffer- und Schadenszuordnung bei bewegten Zielen testen
-11. Korrigierte Pfeilgeschwindigkeit von `6.0` auf reale Flugdistanz und Treffergenauigkeit testen
+11. Direkten Velocity-Vektor im echten Server testen und Flugdistanz bei 10/20/30 Blöcken verifizieren
 
 ### Leitprinzip
 
