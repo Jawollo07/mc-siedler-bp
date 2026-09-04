@@ -58,15 +58,18 @@ Fernkampfangriffe benötigen eine **freie Sichtlinie** zwischen Bogenschütze un
 
 ### 🐎 Kavallerie
 
-Kavallerie besitzt eine eigene Mount- und Charge-KI. Beim Spawn wird ein erwachsenes `minecraft:horse` als Mount erzeugt, mit dem Soldaten über `startRiding()` verbunden und – wenn ein Besitzer vorhanden ist – diesem Spieler zugeordnet. Das Mount erhält die Tags `soldier_mount` und `cavalry_mount`.
+Kavallerie besitzt eine eigene Mount- und Charge-KI. Sie verwendet **kein Vanilla-`minecraft:horse` mehr als Reittier**, weil dessen `minecraft:rideable.family_types` einen Soldier als Rider ablehnen kann und `EntityRideableComponent.addRider()` dann `false` liefert.
 
-Die Bewegung der Kavallerie wird zentral über die normale Soldier-Bewegungsroutine auf das Mount angewendet. Dadurch konkurrieren Charge-KI und Bewegungs-KI nicht mehr miteinander. Die Kavallerie:
+Stattdessen wird `siedler:cavalry_horse` als eigenes erwachsenes Mount gespawnt. Das Mount besitzt eine `minecraft:rideable`-Komponente mit `family_types: ["soldier"]`, sodass der Custom-Soldier zuverlässig als Reiter akzeptiert wird. Das Resource Pack rendert das Mount mit dem Vanilla-Horse-Modell und einer Pferdetextur.
+
+Die Bewegung der Kavallerie wird zentral über die normale Soldier-Bewegungsroutine auf das Mount angewendet. Dadurch konkurrieren Charge-KI und Bewegungs-KI nicht miteinander. Die Kavallerie:
 
 - bewegt sich auch außerhalb der direkten Nahkampfreichweite,
 - setzt den Bewegungszustand korrekt auf `move`,
 - führt Charge-Angriffe mit erhöhtem Schaden aus,
 - reitet beim Passieren des Ziels weiter statt sofort stehenzubleiben,
-- erkennt das eigene Mount niemals als Feindziel.
+- erkennt das eigene Mount niemals als Feindziel,
+- verwendet `minecraft:rideable.addRider()` statt des nicht verfügbaren `Entity.startRiding()`.
 
 ## 💰 Steuern & permanenter Monster-Token-TaxBonus
 
