@@ -26,7 +26,7 @@ const ARCHER_MIN_RANGE = 6;
 const ARCHER_PREFERRED_RANGE = 12;
 const ARCHER_MAX_RANGE = 40;
 
-const ARROW_SPEED = 4.0;
+const ARROW_SPEED = 6.0;
 const AIM_HEIGHT = 0.95;
 const ARROW_GRAVITY = 0.05;
 
