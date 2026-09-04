@@ -135,7 +135,7 @@ function setCavalryDirection(soldier, target, aggressive) {
     const multiplier = aggressive ? 1.15 : 0.9;
     try {
         mount.setRotation?.({ x: 0, y: Math.atan2(-dirX, dirZ) * 180 / Math.PI });
-        mount.applyImpulse({ x: dirX * speed * multiplier * 0.11, y: 0.025, z: dirZ * speed * multiplier * 0.11 });
+        mount.applyImpulse({ x: dirX * speed * multiplier * 0.11, y: 0, z: dirZ * speed * multiplier * 0.11 });
     } catch {}
 }
 
