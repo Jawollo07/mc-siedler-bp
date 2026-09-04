@@ -22,6 +22,9 @@
 - [x] Soldier-Nahkampfangriff über `applyDamage()`
 - [x] Soldier-Kampfposition korrigiert: kein vorzeitiger Stopp durch großen Arrival-Radius
 - [x] Praktische Mindest-Nahkampfreichweite gegen Entity-Collision-Probleme
+- [x] Bogenschützen mit echter `minecraft:arrow`-Projectile-KI
+- [x] Ballistisches Zielen inklusive Fallkorrektur
+- [x] Projectile-Owner für korrekte Trefferzuordnung
 - [x] Spieler-Dashboard und Soldatenstatistiken
 - [x] Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
@@ -59,11 +62,16 @@
 - [x] Kampf-Approach-Position korrigiert
 - [x] kleiner Arrival-Radius für die Kampfannäherung
 - [x] Soldat läuft nicht mehr dauerhaft zu einem unerreichbaren Zielpunkt
+- [x] eigener Fernkampf für Bogenschützen
+- [x] echte sichtbare `minecraft:arrow`-Projektile
+- [x] Zielgerichtetes ballistisches Schießen
+- [x] automatische Bogenschützen-Schussintervalle nach Level
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
 - [ ] intelligente Zielprioritäten
 - [ ] Ausweich- und Blockverhalten
+- [ ] Pfeil-/Schadenswerte vollständig an Bogenverzauberungen und Soldier-Level koppeln
 
 ### 2.3 Gruppen & Formationen
 
@@ -168,7 +176,8 @@
 5. Gruppenformationen stabilisieren
 6. Angriffe, Treffer und Animationen synchronisieren
 7. KI mit realen Serverlogs testen
+8. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben.**
