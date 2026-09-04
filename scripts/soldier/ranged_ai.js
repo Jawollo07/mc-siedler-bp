@@ -1,4 +1,4 @@
-import { system, world } from "@minecraft/server";
+import { system } from "@minecraft/server";
 
 import {
     SOLDIERS,
@@ -15,30 +15,26 @@ import {
     TEAM_RELATION
 } from "../teams/relations.js";
 
-
-/* =========================================================
- * CONFIG
- * ========================================================= */
-
 const ARROW_ID = "minecraft:arrow";
 
 const ARCHER_MIN_RANGE = 6;
 const ARCHER_PREFERRED_RANGE = 12;
 const ARCHER_MAX_RANGE = 40;
 
-const ARROW_SPEED = 6.0;
-const AIM_HEIGHT = 0.95;
+// Projectile physics used by the ballistic solver and shoot call.
+const ARROW_SPEED = 3.2;
 const ARROW_GRAVITY = 0.05;
 const ARROW_DRAG = 0.99;
-const MAX_ARROW_FLIGHT_TICKS = 80;
+const MAX_ARROW_FLIGHT_TICKS = 120;
+
+const AIM_HEIGHT = 0.95;
+const AIM_FORWARD_OFFSET = 0.35;
+const TARGET_LEAD_ITERATIONS = 3;
+const MAX_LEAD_TICKS = 20;
 
 const DEFAULT_SHOT_COOLDOWN = 1200;
-
 const TARGET_RECHECK_MS = 500;
-const TARGET_MEMORY_MS = 2500;
-
 const VISIBILITY_MARGIN = 0.05;
-
 const ARROW_TRACK_INTERVAL = 1;
 
 const RETREAT_SPEED = 0.20;
@@ -48,35 +44,17 @@ const STRAFE_INTERVAL = 1200;
 const STRAFE_DURATION = 650;
 const STRAFE_STRENGTH = 0.055;
 
-
-/* =========================================================
- * START
- * ========================================================= */
-
 let started = false;
 
 export function startRangedAI() {
     if (started) return;
-
     started = true;
 
-    system.runInterval(
-        updateArchers,
-        2
-    );
-
-    system.runInterval(
-        updateTrackedArrows,
-        ARROW_TRACK_INTERVAL
-    );
+    system.runInterval(updateArchers, 2);
+    system.runInterval(updateTrackedArrows, ARROW_TRACK_INTERVAL);
 
     console.info("[Soldier Ranged AI] Started");
 }
-
-
-/* =========================================================
- * ARCHER UPDATE
- * ========================================================= */
 
 function updateArchers() {
     const now = Date.now();
@@ -88,422 +66,121 @@ function updateArchers() {
                 continue;
             }
 
-            if (soldier.type !== "archer") {
-                continue;
-            }
-
-            updateArcher(
-                soldier,
-                now
-            );
+            if (soldier.type !== "archer") continue;
+            updateArcher(soldier, now);
         } catch (error) {
-            console.warn(
-                `[Soldier Ranged AI] Archer update failed: ${formatError(error)}`
-            );
+            console.warn(`[Soldier Ranged AI] Archer update failed: ${formatError(error)}`);
         }
     }
 }
 
-
-/* =========================================================
- * ARCHER LOGIC
- * ========================================================= */
-
 function updateArcher(soldier, now) {
     const entity = soldier.entity;
-
-    if (!isValid(entity)) {
-        return;
-    }
+    if (!isValid(entity)) return;
 
     let target = null;
 
-    // -----------------------------------------------------
-    // AKTUELLES ZIEL VALIDIEREN
-    // -----------------------------------------------------
-
     if (soldier.targetId) {
-        target = findEntityById(
-            entity,
-            soldier.targetId
-        );
+        target = findEntityById(entity, soldier.targetId);
 
-        if (
-            !target ||
-            !isValid(target) ||
-            isDead(target) ||
-            !isEnemy(soldier, target)
-        ) {
+        if (!target || !isValid(target) || isDead(target) || !isEnemy(soldier, target)) {
             soldier.targetId = null;
-            soldier.rangedTargetSince = 0;
             target = null;
         }
     }
 
-    // -----------------------------------------------------
-    // NEUES ZIEL SUCHEN
-    // -----------------------------------------------------
-
-    if (
-        !target &&
-        (
-            !soldier.rangedLastTargetSearch ||
-            now >= soldier.rangedLastTargetSearch
-        )
-    ) {
+    if (!target && (!soldier.rangedLastTargetSearch || now >= soldier.rangedLastTargetSearch)) {
         target = findTarget(soldier);
-
-        soldier.rangedLastTargetSearch =
-            now + TARGET_RECHECK_MS;
-
-        if (target) {
-            soldier.targetId = target.id;
-            soldier.rangedTargetSince = now;
-        }
+        soldier.rangedLastTargetSearch = now + TARGET_RECHECK_MS;
+        if (target) soldier.targetId = target.id;
     }
-
-    // -----------------------------------------------------
-    // KEIN ZIEL
-    // -----------------------------------------------------
 
     if (!target) {
         soldier.targetId = null;
-        soldier.rangedTargetSince = 0;
-
         cancelMovement(soldier);
-
-        soldier.phase =
-            SOLDIER_CONFIG.STATES.IDLE;
-
+        soldier.phase = SOLDIER_CONFIG.STATES.IDLE;
         return;
     }
 
-    // -----------------------------------------------------
-    // DISTANZ
-    // -----------------------------------------------------
-
-    const dx =
-        target.location.x -
-        entity.location.x;
-
-    const dz =
-        target.location.z -
-        entity.location.z;
-
-    const distance =
-        Math.hypot(dx, dz);
-
-    // -----------------------------------------------------
-    // ZIEL ZU WEIT ENTFERNT
-    // -----------------------------------------------------
+    const dx = target.location.x - entity.location.x;
+    const dz = target.location.z - entity.location.z;
+    const distance = Math.hypot(dx, dz);
 
     if (distance > ARCHER_MAX_RANGE) {
-        moveTowardTarget(
-            soldier,
-            target,
-            APPROACH_SPEED
-        );
-
-        faceTarget(
-            entity,
-            target
-        );
-
-        soldier.phase =
-            SOLDIER_CONFIG.STATES.MOVE;
-
+        moveTowardTarget(soldier, target, APPROACH_SPEED);
+        faceTarget(entity, target);
+        soldier.phase = SOLDIER_CONFIG.STATES.MOVE;
         return;
     }
-
-    // -----------------------------------------------------
-    // ZIEL ZU NAH
-    // -----------------------------------------------------
 
     if (distance < ARCHER_MIN_RANGE) {
-        moveAwayFromTarget(
-            soldier,
-            target,
-            RETREAT_SPEED
-        );
-
-        faceTarget(
-            entity,
-            target
-        );
-
-        soldier.phase =
-            SOLDIER_CONFIG.STATES.MOVE;
-
+        moveAwayFromTarget(soldier, target, RETREAT_SPEED);
+        faceTarget(entity, target);
+        soldier.phase = SOLDIER_CONFIG.STATES.MOVE;
         return;
     }
 
-    // -----------------------------------------------------
-    // LINE OF SIGHT
-    // -----------------------------------------------------
-
-    const visible =
-        hasLineOfSight(
-            entity,
-            target
-        );
-
-    if (!visible) {
-        /*
-         * Nicht blind auf den Gegner zulaufen.
-         *
-         * Wir bewegen uns nur langsam in Richtung
-         * Gegner und versuchen dadurch eine neue
-         * Schussposition zu bekommen.
-         */
-
-        moveTowardTarget(
-            soldier,
-            target,
-            APPROACH_SPEED * 0.65
-        );
-
-        faceTarget(
-            entity,
-            target
-        );
-
-        soldier.phase =
-            SOLDIER_CONFIG.STATES.MOVE;
-
+    if (!hasLineOfSight(entity, target)) {
+        moveTowardTarget(soldier, target, APPROACH_SPEED * 0.65);
+        faceTarget(entity, target);
+        soldier.phase = SOLDIER_CONFIG.STATES.MOVE;
         return;
     }
 
-    // -----------------------------------------------------
-    // KAMPFPOSITION
-    // -----------------------------------------------------
+    faceTarget(entity, target);
 
-    faceTarget(
-        entity,
-        target
-    );
-
-    /*
-     * Wenn wir deutlich weiter als unsere
-     * bevorzugte Distanz entfernt sind,
-     * nähern wir uns langsam.
-     */
-
-    if (
-        distance >
-        ARCHER_PREFERRED_RANGE + 2
-    ) {
-        moveTowardTarget(
-            soldier,
-            target,
-            APPROACH_SPEED * 0.55
-        );
-
-        soldier.phase =
-            SOLDIER_CONFIG.STATES.MOVE;
-
+    if (distance > ARCHER_PREFERRED_RANGE + 2) {
+        moveTowardTarget(soldier, target, APPROACH_SPEED * 0.55);
+        soldier.phase = SOLDIER_CONFIG.STATES.MOVE;
         return;
     }
 
-    /*
-     * Wenn wir etwas zu nah sind,
-     * ziehen wir uns zurück.
-     */
-
-    if (
-        distance <
-        ARCHER_PREFERRED_RANGE - 2
-    ) {
-        moveAwayFromTarget(
-            soldier,
-            target,
-            RETREAT_SPEED * 0.55
-        );
-
-        soldier.phase =
-            SOLDIER_CONFIG.STATES.MOVE;
-
+    if (distance < ARCHER_PREFERRED_RANGE - 2) {
+        moveAwayFromTarget(soldier, target, RETREAT_SPEED * 0.55);
+        soldier.phase = SOLDIER_CONFIG.STATES.MOVE;
         return;
     }
 
-    // -----------------------------------------------------
-    // IDEALE SCHUSSDISTANZ
-    // -----------------------------------------------------
+    soldier.phase = SOLDIER_CONFIG.STATES.ATTACK;
+    cancelMovement(soldier);
+    updateStrafe(soldier, target, now);
 
-    soldier.phase =
-        SOLDIER_CONFIG.STATES.ATTACK;
-
-    /*
-     * Grundbewegung stoppen.
-     *
-     * Strafe wird separat angewendet.
-     */
-
-    cancelMovement(
-        soldier
-    );
-
-    // -----------------------------------------------------
-    // STRAFING
-    // -----------------------------------------------------
-
-    updateStrafe(
-        soldier,
-        target,
-        now
-    );
-
-    // -----------------------------------------------------
-    // SCHIESSEN
-    // -----------------------------------------------------
-
-    if (
-        !soldier.rangedNextShot ||
-        now >= soldier.rangedNextShot
-    ) {
-        shootArrow(
-            soldier,
-            target,
-            now
-        );
+    if (!soldier.rangedNextShot || now >= soldier.rangedNextShot) {
+        shootArrow(soldier, target, now);
     }
 }
 
-/* =========================================================
- * TARGET SEARCH
- * ========================================================= */
-
 function findTarget(soldier) {
     const entity = soldier.entity;
+    if (!isValid(entity)) return null;
 
-    if (!isValid(entity)) {
-        return null;
-    }
-
-    const candidates =
-        entity.dimension.getEntities({
-            location: entity.location,
-            maxDistance: ARCHER_MAX_RANGE
-        });
+    const candidates = entity.dimension.getEntities({
+        location: entity.location,
+        maxDistance: ARCHER_MAX_RANGE
+    });
 
     let bestTarget = null;
     let bestScore = Infinity;
 
     for (const candidate of candidates) {
-        if (!isValid(candidate)) {
-            continue;
-        }
+        if (!isValid(candidate) || candidate.id === entity.id || isDead(candidate)) continue;
 
-        if (
-            candidate.id === entity.id
-        ) {
-            continue;
-        }
+        const ownerId = soldier.ownerId ?? getDynamicString(entity, "soldier:ownerId", null);
+        if (ownerId && candidate.id === ownerId) continue;
+        if (!isEnemy(soldier, candidate)) continue;
 
-        if (
-            isDead(candidate)
-        ) {
-            continue;
-        }
+        const distance = Math.sqrt(distanceSquared(entity.location, candidate.location));
+        let score = distance;
 
-        /*
-         * Besitzer immer ignorieren.
-         */
+        if (hasLineOfSight(entity, candidate)) score -= 5;
+        else score += 8;
 
-        const ownerId =
-            soldier.ownerId ??
-            getDynamicString(
-                entity,
-                "soldier:ownerId",
-                null
-            );
+        if (candidate.typeId === "minecraft:player") score -= 3;
+        if (candidate.typeId === "siedler:soldier") score -= 2;
 
-        if (
-            ownerId &&
-            candidate.id === ownerId
-        ) {
-            continue;
-        }
+        score += Math.abs(distance - ARCHER_PREFERRED_RANGE) * 0.25;
 
-        /*
-         * Wichtig:
-         * Erst Gegnerprüfung, dann Bewertung.
-         */
-
-        if (
-            !isEnemy(
-                soldier,
-                candidate
-            )
-        ) {
-            continue;
-        }
-
-        const distance =
-            Math.sqrt(
-                distanceSquared(
-                    entity.location,
-                    candidate.location
-                )
-            );
-
-        let score =
-            distance;
-
-        /*
-         * Direkte Sicht stark bevorzugen.
-         */
-
-        if (
-            hasLineOfSight(
-                entity,
-                candidate
-            )
-        ) {
-            score -= 5;
-        } else {
-            score += 8;
-        }
-
-        /*
-         * Spieler priorisieren.
-         */
-
-        if (
-            candidate.typeId ===
-            "minecraft:player"
-        ) {
-            score -= 3;
-        }
-
-        /*
-         * Feindliche Soldaten ebenfalls priorisieren.
-         */
-
-        if (
-            candidate.typeId ===
-            "siedler:soldier"
-        ) {
-            score -= 2;
-        }
-
-        /*
-         * Bevorzugte Bogenschützen-Distanz.
-         */
-
-        if (
-            distance >= ARCHER_MIN_RANGE &&
-            distance <= ARCHER_MAX_RANGE
-        ) {
-            score +=
-                Math.abs(
-                    distance -
-                    ARCHER_PREFERRED_RANGE
-                ) * 0.25;
-        }
-
-        if (
-            score < bestScore
-        ) {
+        if (score < bestScore) {
             bestScore = score;
             bestTarget = candidate;
         }
@@ -512,94 +189,38 @@ function findTarget(soldier) {
     return bestTarget;
 }
 
-/* =========================================================
- * MOVEMENT
- * ========================================================= */
-
-function moveTowardTarget(
-    soldier,
-    target,
-    speed
-) {
+function moveTowardTarget(soldier, target, speed) {
     const entity = soldier.entity;
-
-    const dx =
-        target.location.x -
-        entity.location.x;
-
-    const dz =
-        target.location.z -
-        entity.location.z;
-
-    const distance =
-        Math.hypot(
-            dx,
-            dz
-        );
+    const dx = target.location.x - entity.location.x;
+    const dz = target.location.z - entity.location.z;
+    const distance = Math.hypot(dx, dz);
 
     if (distance <= 0.01) {
-        cancelMovement(
-            soldier
-        );
-
+        cancelMovement(soldier);
         return;
     }
 
-    soldier.desiredDirection = {
-        x: dx / distance,
-        z: dz / distance
-    };
-
-    soldier.rangedMovementSpeed =
-        speed;
+    soldier.desiredDirection = { x: dx / distance, z: dz / distance };
+    soldier.rangedMovementSpeed = speed;
 }
 
-
-function moveAwayFromTarget(
-    soldier,
-    target,
-    speed
-) {
+function moveAwayFromTarget(soldier, target, speed) {
     const entity = soldier.entity;
-
-    const dx =
-        entity.location.x -
-        target.location.x;
-
-    const dz =
-        entity.location.z -
-        target.location.z;
-
-    const distance =
-        Math.hypot(
-            dx,
-            dz
-        );
+    const dx = entity.location.x - target.location.x;
+    const dz = entity.location.z - target.location.z;
+    const distance = Math.hypot(dx, dz);
 
     if (distance <= 0.01) {
-        cancelMovement(
-            soldier
-        );
-
+        cancelMovement(soldier);
         return;
     }
 
-    soldier.desiredDirection = {
-        x: dx / distance,
-        z: dz / distance
-    };
-
-    soldier.rangedMovementSpeed =
-        speed;
+    soldier.desiredDirection = { x: dx / distance, z: dz / distance };
+    soldier.rangedMovementSpeed = speed;
 }
-
 
 function cancelMovement(soldier) {
-    soldier.desiredDirection = {
-        x: 0,
-        z: 0
-    };
-
+    soldier.desiredDirection = { x: 0, z: 0 };
     soldier.rangedMovementSpeed = 0;
 
     if (soldier.velocity) {
@@ -608,127 +229,40 @@ function cancelMovement(soldier) {
     }
 }
 
-
-/* =========================================================
- * STRAFE
- * ========================================================= */
-
-function updateStrafe(
-    soldier,
-    target,
-    now
-) {
+function updateStrafe(soldier, target, now) {
     if (!soldier.rangedStrafe) {
-        soldier.rangedStrafe = {
-            x: 0,
-            z: 0,
-            until: 0,
-            next: now
-        };
+        soldier.rangedStrafe = { x: 0, z: 0, until: 0, next: now };
     }
 
-    const strafe =
-        soldier.rangedStrafe;
+    const strafe = soldier.rangedStrafe;
 
-    /*
-     * Neue Strafe-Richtung wählen.
-     */
+    if (now >= strafe.next) {
+        const dx = target.location.x - soldier.entity.location.x;
+        const dz = target.location.z - soldier.entity.location.z;
+        const distance = Math.hypot(dx, dz);
 
-    if (
-        now >= strafe.next
-    ) {
-        const dx =
-            target.location.x -
-            soldier.entity.location.x;
+        if (distance <= 0.01) return;
 
-        const dz =
-            target.location.z -
-            soldier.entity.location.z;
-
-        const distance =
-            Math.hypot(dx, dz);
-
-        if (distance <= 0.01) {
-            return;
-        }
-
-        const direction =
-            Math.random() < 0.5
-                ? -1
-                : 1;
-
-        /*
-         * Senkrechte zum Gegner.
-         */
-
-        strafe.x =
-            (-dz / distance) *
-            direction;
-
-        strafe.z =
-            (dx / distance) *
-            direction;
-
-        strafe.until =
-            now + STRAFE_DURATION;
-
-        strafe.next =
-            now + STRAFE_INTERVAL +
-            Math.random() * 500;
+        const side = Math.random() < 0.5 ? -1 : 1;
+        strafe.x = (-dz / distance) * side;
+        strafe.z = (dx / distance) * side;
+        strafe.until = now + STRAFE_DURATION;
+        strafe.next = now + STRAFE_INTERVAL + Math.random() * 500;
     }
 
-    /*
-     * Strafe ist noch aktiv.
-     */
-
-    if (
-        now < strafe.until
-    ) {
-        soldier.desiredDirection = {
-            x:
-                strafe.x *
-                STRAFE_STRENGTH,
-
-            z:
-                strafe.z *
-                STRAFE_STRENGTH
-        };
-
-        soldier.rangedMovementSpeed =
-            STRAFE_STRENGTH;
-
+    if (now < strafe.until) {
+        soldier.desiredDirection = { x: strafe.x, z: strafe.z };
+        soldier.rangedMovementSpeed = STRAFE_STRENGTH;
         return;
     }
 
-    /*
-     * Strafe beendet.
-     */
-
-    soldier.desiredDirection = {
-        x: 0,
-        z: 0
-    };
-
+    soldier.desiredDirection = { x: 0, z: 0 };
     soldier.rangedMovementSpeed = 0;
 }
 
-/* =========================================================
- * SHOOT
- * ========================================================= */
-
-function shootArrow(
-    soldier,
-    target,
-    now
-) {
+function shootArrow(soldier, target, now) {
     const entity = soldier.entity;
-
-    if (
-        !isValid(entity) ||
-        !isValid(target)
-    ) {
-        return;
-    }
+    if (!isValid(entity) || !isValid(target)) return;
 
     const origin = {
         x: entity.location.x,
@@ -736,253 +270,181 @@ function shootArrow(
         z: entity.location.z
     };
 
-    const targetPosition = {
+    const predictedTarget = predictTargetPosition(origin, target);
+    const dx = predictedTarget.x - origin.x;
+    const dz = predictedTarget.z - origin.z;
+    const horizontalDistance = Math.hypot(dx, dz);
+
+    if (horizontalDistance <= 0.01) return;
+
+    const direction = calculateArrowDirection(origin, predictedTarget, horizontalDistance);
+    if (!direction) return;
+
+    const spawnLocation = {
+        x: origin.x + direction.x * AIM_FORWARD_OFFSET,
+        y: origin.y + direction.y * AIM_FORWARD_OFFSET,
+        z: origin.z + direction.z * AIM_FORWARD_OFFSET
+    };
+
+    let arrow = null;
+
+    try {
+        arrow = entity.dimension.spawnEntity(ARROW_ID, spawnLocation);
+    } catch (error) {
+        console.warn(`[Soldier Ranged AI] Arrow spawn failed: ${formatError(error)}`);
+        return;
+    }
+
+    if (!isValid(arrow)) return;
+
+    try {
+        const projectile = arrow.getComponent("minecraft:projectile");
+        if (!projectile) {
+            arrow.remove();
+            return;
+        }
+
+        try { projectile.owner = entity; } catch {}
+
+        projectile.shoot(direction, {
+            speed: ARROW_SPEED,
+            uncertainty: 0
+        });
+
+        setArrowRotation(arrow, direction);
+    } catch (error) {
+        console.warn(`[Soldier Ranged AI] Projectile launch failed: ${formatError(error)}`);
+        try { arrow.remove(); } catch {}
+        return;
+    }
+
+    try {
+        arrow.setDynamicProperty("siedler:archerArrow", true);
+        arrow.setDynamicProperty("siedler:ownerId", entity.id);
+        arrow.setDynamicProperty("siedler:level", soldier.level ?? 1);
+        arrow.setDynamicProperty("siedler:targetId", target.id);
+    } catch {}
+
+    trackArrow(arrow, entity.id, now);
+    soldier.rangedNextShot = now + getShotCooldown(soldier);
+
+    try {
+        entity.dimension.playSound("random.bow", entity.location);
+    } catch {}
+}
+
+function predictTargetPosition(origin, target) {
+    const predicted = {
         x: target.location.x,
         y: target.location.y + AIM_HEIGHT,
         z: target.location.z
     };
 
-    const dx =
-        targetPosition.x -
-        origin.x;
+    let flightTicks = estimateFlightTicks(origin, predicted);
+    const velocity = getEntityVelocity(target);
 
-    const dz =
-        targetPosition.z -
-        origin.z;
+    if (!velocity) return predicted;
 
-    const horizontalDistance =
-        Math.hypot(
-            dx,
-            dz
-        );
+    for (let iteration = 0; iteration < TARGET_LEAD_ITERATIONS; iteration++) {
+        const leadTicks = Math.min(MAX_LEAD_TICKS, flightTicks);
 
-    if (
-        horizontalDistance <= 0.01
-    ) {
-        return;
+        predicted.x = target.location.x + velocity.x * leadTicks;
+        predicted.y = target.location.y + AIM_HEIGHT + velocity.y * leadTicks;
+        predicted.z = target.location.z + velocity.z * leadTicks;
+
+        flightTicks = estimateFlightTicks(origin, predicted);
     }
 
-    const direction = calculateArrowDirection(
-        origin,
-        targetPosition,
-        horizontalDistance
-    );
-
-    if (!direction) {
-        return;
-    }
-
-
-    /*
-     * Spawn projectile
-     */
-
-    let arrow = null;
-
-    try {
-        arrow =
-            entity.dimension.spawnEntity(
-                ARROW_ID,
-                origin
-            );
-    } catch (error) {
-        console.warn(
-            `[Soldier Ranged AI] Arrow spawn failed: ${formatError(error)}`
-        );
-
-        return;
-    }
-
-    if (!isValid(arrow)) {
-        return;
-    }
-
-
-    /*
-     * Projectile velocity
-     */
-
-    try {
-        const projectile =
-            arrow.getComponent(
-                "minecraft:projectile"
-            );
-
-        if (!projectile) {
-            arrow.remove();
-
-            return;
-        }
-
-        if (
-            typeof projectile.owner ===
-            "undefined"
-        ) {
-            try {
-                projectile.owner =
-                    entity;
-            } catch {}
-        }
-
-        projectile.shoot(
-            direction,
-            {
-                speed: ARROW_SPEED,
-                uncertainty: 0
-            }
-        );
-    } catch (error) {
-        console.warn(
-            `[Soldier Ranged AI] Projectile launch failed: ${formatError(error)}`
-        );
-
-        try {
-            arrow.remove();
-        } catch {}
-
-        return;
-    }
-
-
-    /*
-     * Dynamic properties
-     */
-
-    try {
-        arrow.setDynamicProperty(
-            "siedler:archerArrow",
-            true
-        );
-
-        arrow.setDynamicProperty(
-            "siedler:ownerId",
-            entity.id
-        );
-
-        arrow.setDynamicProperty(
-            "siedler:level",
-            soldier.level ?? 1
-        );
-    } catch {}
-
-
-    /*
-     * Track projectile
-     */
-
-    trackArrow(
-        arrow,
-        entity.id,
-        now
-    );
-
-
-    /*
-     * Cooldown
-     */
-
-    soldier.rangedNextShot =
-        now +
-        getShotCooldown(
-            soldier
-        );
-
-
-    /*
-     * Sound
-     */
-
-    try {
-        entity.dimension.playSound(
-            "random.bow",
-            entity.location
-        );
-    } catch {}
+    return predicted;
 }
 
-
-function calculateArrowDirection(
-    origin,
-    target,
-    horizontalDistance
-) {
+function calculateArrowDirection(origin, target, horizontalDistance) {
     const dx = target.x - origin.x;
     const dz = target.z - origin.z;
     const targetHeight = target.y - origin.y;
 
-    if (horizontalDistance <= 0.01) {
-        return null;
-    }
+    if (horizontalDistance <= 0.01) return null;
 
     const horizontalX = dx / horizontalDistance;
     const horizontalZ = dz / horizontalDistance;
-    const lowAngle = -0.35;
-    const highAngle = 0.8;
 
-    const lowError =
-        getArrowHeightAtDistance(
-            horizontalDistance,
-            lowAngle
-        ) - targetHeight;
+    // Find the first ballistic solution: this gives the flatter, more useful arc.
+    const minAngle = -0.25;
+    const maxAngle = 1.05;
+    const samples = 52;
 
-    const highError =
-        getArrowHeightAtDistance(
-            horizontalDistance,
-            highAngle
-        ) - targetHeight;
+    let previousAngle = minAngle;
+    let previousError = getArrowHeightAtDistance(horizontalDistance, previousAngle) - targetHeight;
+    let solutionAngle = null;
 
-    let angle;
+    for (let i = 1; i <= samples; i++) {
+        const angle = minAngle + (maxAngle - minAngle) * (i / samples);
+        const error = getArrowHeightAtDistance(horizontalDistance, angle) - targetHeight;
 
-    if (lowError <= 0 && highError >= 0) {
-        let lower = lowAngle;
-        let upper = highAngle;
+        if (previousError === 0 || error === 0 || previousError * error < 0) {
+            let lower = previousAngle;
+            let upper = angle;
+            let lowerError = previousError;
 
-        for (let iteration = 0; iteration < 20; iteration++) {
-            const middle = (lower + upper) / 2;
-            const error =
-                getArrowHeightAtDistance(
-                    horizontalDistance,
-                    middle
-                ) - targetHeight;
+            for (let iteration = 0; iteration < 18; iteration++) {
+                const middle = (lower + upper) / 2;
+                const middleError = getArrowHeightAtDistance(horizontalDistance, middle) - targetHeight;
 
-            if (error > 0) {
-                upper = middle;
-            } else {
-                lower = middle;
+                if (Math.abs(middleError) < 0.0005) {
+                    lower = middle;
+                    upper = middle;
+                    break;
+                }
+
+                if (lowerError * middleError <= 0) {
+                    upper = middle;
+                } else {
+                    lower = middle;
+                    lowerError = middleError;
+                }
+            }
+
+            solutionAngle = (lower + upper) / 2;
+            break;
+        }
+
+        previousAngle = angle;
+        previousError = error;
+    }
+
+    if (solutionAngle === null) {
+        let bestAngle = minAngle;
+        let bestError = Infinity;
+
+        for (let i = 0; i <= samples; i++) {
+            const angle = minAngle + (maxAngle - minAngle) * (i / samples);
+            const error = Math.abs(getArrowHeightAtDistance(horizontalDistance, angle) - targetHeight);
+
+            if (error < bestError) {
+                bestError = error;
+                bestAngle = angle;
             }
         }
 
-        angle = (lower + upper) / 2;
-    } else {
-        angle = Math.abs(lowError) < Math.abs(highError)
-            ? lowAngle
-            : highAngle;
+        solutionAngle = bestAngle;
     }
 
+    const horizontalFactor = Math.cos(solutionAngle);
+
     return {
-        x: horizontalX * Math.cos(angle),
-        y: Math.sin(angle),
-        z: horizontalZ * Math.cos(angle)
+        x: horizontalX * horizontalFactor,
+        y: Math.sin(solutionAngle),
+        z: horizontalZ * horizontalFactor
     };
 }
 
-
-function getArrowHeightAtDistance(
-    horizontalDistance,
-    angle
-) {
+function getArrowHeightAtDistance(horizontalDistance, angle) {
     let horizontalPosition = 0;
     let height = 0;
-    let horizontalVelocity =
-        Math.cos(angle) * ARROW_SPEED;
-    let verticalVelocity =
-        Math.sin(angle) * ARROW_SPEED;
+    let horizontalVelocity = Math.cos(angle) * ARROW_SPEED;
+    let verticalVelocity = Math.sin(angle) * ARROW_SPEED;
 
-    for (
-        let tick = 0;
-        tick < MAX_ARROW_FLIGHT_TICKS;
-        tick++
-    ) {
+    for (let tick = 0; tick < MAX_ARROW_FLIGHT_TICKS; tick++) {
         const previousHorizontalPosition = horizontalPosition;
         const previousHeight = height;
 
@@ -990,134 +452,90 @@ function getArrowHeightAtDistance(
         height += verticalVelocity;
 
         if (horizontalPosition >= horizontalDistance) {
-            const segment =
-                horizontalPosition - previousHorizontalPosition;
+            const segment = horizontalPosition - previousHorizontalPosition;
             const progress = segment > 0
                 ? (horizontalDistance - previousHorizontalPosition) / segment
                 : 0;
 
-            return previousHeight +
-                (height - previousHeight) * progress;
+            return previousHeight + (height - previousHeight) * progress;
         }
 
         horizontalVelocity *= ARROW_DRAG;
-        verticalVelocity =
-            verticalVelocity * ARROW_DRAG -
-            ARROW_GRAVITY;
+        verticalVelocity = verticalVelocity * ARROW_DRAG - ARROW_GRAVITY;
     }
 
     return height;
 }
 
+function estimateFlightTicks(origin, target) {
+    const horizontalDistance = Math.hypot(
+        target.x - origin.x,
+        target.z - origin.z
+    );
 
-/* =========================================================
- * ARROW TRACKING
- * ========================================================= */
+    if (horizontalDistance <= 0.01) return 1;
+
+    let horizontalVelocity = ARROW_SPEED;
+    let position = 0;
+
+    for (let tick = 1; tick <= MAX_ARROW_FLIGHT_TICKS; tick++) {
+        position += horizontalVelocity;
+        if (position >= horizontalDistance) return tick;
+        horizontalVelocity *= ARROW_DRAG;
+    }
+
+    return MAX_ARROW_FLIGHT_TICKS;
+}
 
 const trackedArrows = new Map();
 
-function trackArrow(
-    arrow,
-    ownerId,
-    now
-) {
-    trackedArrows.set(
-        arrow.id,
-        {
-            arrow,
-            ownerId,
-            lastPosition: {
-                ...arrow.location
-            },
-            createdAt: now
-        }
-    );
+function trackArrow(arrow, ownerId, now) {
+    trackedArrows.set(arrow.id, {
+        arrow,
+        ownerId,
+        lastPosition: { ...arrow.location },
+        createdAt: now
+    });
 }
-
 
 function updateTrackedArrows() {
     const now = Date.now();
 
-    for (
-        const [
-            id,
-            data
-        ] of trackedArrows
-    ) {
-        const arrow =
-            data.arrow;
+    for (const [id, data] of trackedArrows) {
+        const arrow = data.arrow;
 
-        if (
-            !isValid(arrow)
-        ) {
+        if (!isValid(arrow)) {
             trackedArrows.delete(id);
             continue;
         }
 
         try {
-            const current =
-                arrow.location;
-
-            /*
-             * Ray zwischen alter und neuer
-             * Position verhindert, dass ein
-             * schneller Pfeil durch Blöcke tunnelt.
-             */
-            const dx =
-                current.x -
-                data.lastPosition.x;
-
-            const dy =
-                current.y -
-                data.lastPosition.y;
-
-            const dz =
-                current.z -
-                data.lastPosition.z;
-
-            const distance =
-                Math.hypot(
-                    dx,
-                    dy,
-                    dz
-                );
+            const current = arrow.location;
+            const dx = current.x - data.lastPosition.x;
+            const dy = current.y - data.lastPosition.y;
+            const dz = current.z - data.lastPosition.z;
+            const distance = Math.hypot(dx, dy, dz);
 
             if (distance > 0.01) {
-                const hit =
-                    hasBlockingRay(
-                        arrow.dimension,
-                        data.lastPosition,
-                        {
-                            x: dx / distance,
-                            y: dy / distance,
-                            z: dz / distance
-                        },
-                        distance
-                    );
+                const direction = {
+                    x: dx / distance,
+                    y: dy / distance,
+                    z: dz / distance
+                };
 
-                if (hit) {
-                    try {
-                        arrow.remove();
-                    } catch {}
-
+                if (hasBlockingRay(arrow.dimension, data.lastPosition, direction, distance)) {
+                    try { arrow.remove(); } catch {}
                     trackedArrows.delete(id);
                     continue;
                 }
+
+                setArrowRotation(arrow, direction);
             }
 
-            data.lastPosition = {
-                ...current
-            };
+            data.lastPosition = { ...current };
 
-            if (
-                now -
-                data.createdAt >
-                10000
-            ) {
-                try {
-                    arrow.remove();
-                } catch {}
-
+            if (now - data.createdAt > 10000) {
+                try { arrow.remove(); } catch {}
                 trackedArrows.delete(id);
             }
         } catch {
@@ -1126,20 +544,8 @@ function updateTrackedArrows() {
     }
 }
 
-
-/* =========================================================
- * LINE OF SIGHT
- * ========================================================= */
-
-function hasLineOfSight(
-    source,
-    target
-) {
-    const heights = [
-        0.25,
-        0.65,
-        0.95
-    ];
+function hasLineOfSight(source, target) {
+    const heights = [0.25, 0.65, 0.95, 1.35];
 
     for (const height of heights) {
         const start = {
@@ -1154,25 +560,12 @@ function hasLineOfSight(
             z: target.location.z
         };
 
-        const dx =
-            end.x - start.x;
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const dz = end.z - start.z;
+        const distance = Math.hypot(dx, dy, dz);
 
-        const dy =
-            end.y - start.y;
-
-        const dz =
-            end.z - start.z;
-
-        const distance =
-            Math.hypot(
-                dx,
-                dy,
-                dz
-            );
-
-        if (distance <= 0.01) {
-            return true;
-        }
+        if (distance <= 0.01) return true;
 
         const direction = {
             x: dx / distance,
@@ -1180,419 +573,178 @@ function hasLineOfSight(
             z: dz / distance
         };
 
-        if (
-            !hasBlockingRay(
-                source.dimension,
-                start,
-                direction,
-                Math.max(
-                    0,
-                    distance -
-                    VISIBILITY_MARGIN
-                )
-            )
-        ) {
-            return true;
-        }
+        if (!hasBlockingRay(
+            source.dimension,
+            start,
+            direction,
+            Math.max(0, distance - VISIBILITY_MARGIN)
+        )) return true;
     }
 
     return false;
 }
 
-
-function hasBlockingRay(
-    dimension,
-    location,
-    direction,
-    maxDistance
-) {
+function hasBlockingRay(dimension, location, direction, maxDistance) {
     try {
-        const hit =
-            dimension.getBlockFromRay(
-                location,
-                direction,
-                {
-                    maxDistance
-                }
-            );
-
-        return !!hit;
+        return !!dimension.getBlockFromRay(location, direction, { maxDistance });
     } catch {
-        /*
-         * Fail closed:
-         * Wenn die Raycast-Prüfung fehlschlägt,
-         * wird NICHT geschossen.
-         */
         return true;
     }
 }
 
-
-/* =========================================================
- * TARGET / TEAM
- * ========================================================= */
-
 function isEnemy(soldier, entity) {
-    if (!isValid(entity)) {
-        return false;
-    }
+    if (!isValid(entity)) return false;
 
     const archer = soldier.entity;
+    if (!isValid(archer) || entity.id === archer.id) return false;
 
-    if (!isValid(archer)) {
-        return false;
-    }
-
-    // Sich selbst niemals angreifen
-    if (entity.id === archer.id) {
-        return false;
-    }
-
-    // -----------------------------------------------------
-    // BESITZER / BOSS
-    // -----------------------------------------------------
-
-    const ownerId =
-        soldier.ownerId ??
-        getDynamicString(
-            archer,
-            "soldier:ownerId",
-            null
-        );
-
-    if (
-        ownerId &&
-        entity.id === ownerId
-    ) {
-        return false;
-    }
-
-    // -----------------------------------------------------
-    // AUSDRÜCKLICH FREUNDLICHE SIEDLER-ENTITIES
-    // -----------------------------------------------------
+    const ownerId = soldier.ownerId ?? getDynamicString(archer, "soldier:ownerId", null);
+    if (ownerId && entity.id === ownerId) return false;
 
     const typeId = entity.typeId ?? "";
 
-    const FRIENDLY_SIEDLER_TYPES = new Set([
+    const friendlyTypes = new Set([
         "siedler:trader",
         "siedler:villager",
         "siedler:merchant"
     ]);
 
-    if (
-        FRIENDLY_SIEDLER_TYPES.has(typeId)
-    ) {
-        return false;
+    if (friendlyTypes.has(typeId)) return false;
+
+    if (typeId === "minecraft:player") {
+        const soldierTeam = getSoldierTeam(soldier);
+        const playerTeam = getPlayerTeam(entity);
+        if (!soldierTeam || !playerTeam) return false;
+
+        return getTeamRelation(soldierTeam, playerTeam) === TEAM_RELATION.HOSTILE;
     }
 
-    // -----------------------------------------------------
-    // SPIELER
-    // -----------------------------------------------------
+    if (typeId === "siedler:soldier") {
+        const soldierTeam = getSoldierTeam(soldier);
+        const targetSoldier = SOLDIERS.get(entity.id);
+        const targetTeam = targetSoldier ? getSoldierTeam(targetSoldier) : null;
+        if (!soldierTeam || !targetTeam) return false;
 
-    if (
-        typeId === "minecraft:player"
-    ) {
-        const soldierTeam =
-            getSoldierTeam(soldier);
-
-        const playerTeam =
-            getPlayerTeam(entity);
-
-        /*
-         * Ohne Teams niemals angreifen.
-         */
-
-        if (
-            !soldierTeam ||
-            !playerTeam
-        ) {
-            return false;
-        }
-
-        return (
-            getTeamRelation(
-                soldierTeam,
-                playerTeam
-            ) ===
-            TEAM_RELATION.HOSTILE
-        );
+        return getTeamRelation(soldierTeam, targetTeam) === TEAM_RELATION.HOSTILE;
     }
 
-    // -----------------------------------------------------
-    // SIEDLER-SOLDAT
-    // -----------------------------------------------------
+    if (typeId.startsWith("siedler:")) return isExplicitSiedlerEnemy(entity);
 
-    if (
-        typeId === "siedler:soldier"
-    ) {
-        const soldierTeam =
-            getSoldierTeam(soldier);
-
-        const targetSoldier =
-            SOLDIERS.get(entity.id);
-
-        const targetTeam =
-            targetSoldier
-                ? getSoldierTeam(targetSoldier)
-                : null;
-
-        if (
-            !soldierTeam ||
-            !targetTeam
-        ) {
-            return false;
-        }
-
-        return (
-            getTeamRelation(
-                soldierTeam,
-                targetTeam
-            ) ===
-            TEAM_RELATION.HOSTILE
-        );
+    if (typeId.startsWith("minecraft:")) {
+        const families = getTypeFamily(entity);
+        return families.includes("monster") || families.includes("hostile");
     }
-
-    // -----------------------------------------------------
-    // SIEDLER-ENTITIES
-    // -----------------------------------------------------
-
-    /*
-     * Andere siedler:* Entities werden NICHT automatisch
-     * als feindlich betrachtet.
-     *
-     * Dadurch werden z.B. Trader, Händler, NPCs usw.
-     * nicht versehentlich beschossen.
-     */
-
-    if (
-        typeId.startsWith("siedler:")
-    ) {
-        return isExplicitSiedlerEnemy(
-            entity
-        );
-    }
-
-    // -----------------------------------------------------
-    // MINECRAFT MONSTER
-    // -----------------------------------------------------
-
-    if (
-        typeId.startsWith("minecraft:")
-    ) {
-        try {
-            const family =
-                entity.getComponent(
-                    "minecraft:type_family"
-                );
-
-            if (!family) {
-                return false;
-            }
-
-            const families =
-                family.getTypeFamilies();
-
-            /*
-             * Nur echte Monster/Hostile-Mobs.
-             */
-
-            return (
-                families.includes("monster") ||
-                families.includes("hostile")
-            );
-        } catch {
-            return false;
-        }
-    }
-
-    // -----------------------------------------------------
-    // ALLES ANDERE
-    // -----------------------------------------------------
 
     return false;
 }
 
-/* =========================================================
- * HELPERS
- * ========================================================= */
+function isExplicitSiedlerEnemy(entity) {
+    const hostileTypes = new Set([
+        "siedler:monster",
+        "siedler:pillager",
+        "siedler:raider"
+    ]);
 
-function findEntityById(
-    source,
-    id
-) {
-    if (!id) {
-        return null;
-    }
+    if (hostileTypes.has(entity.typeId)) return true;
+
+    const families = getTypeFamily(entity);
+    return families.includes("monster") || families.includes("hostile");
+}
+
+function findEntityById(source, id) {
+    if (!id) return null;
 
     try {
-        for (
-            const entity
-            of source.dimension.getEntities()
-        ) {
-            if (
-                entity.id === id
-            ) {
-                return entity;
-            }
+        for (const entity of source.dimension.getEntities()) {
+            if (entity.id === id) return entity;
         }
     } catch {}
 
     return null;
 }
 
-
-function getTypeFamily(
-    entity
-) {
+function getTypeFamily(entity) {
     try {
-        const component =
-            entity.getComponent(
-                "minecraft:type_family"
-            );
-
-        return component?.getTypeFamilies?.() ?? [];
+        return entity.getComponent("minecraft:type_family")?.getTypeFamilies?.() ?? [];
     } catch {
         return [];
     }
 }
 
-
-function getDynamicString(
-    entity,
-    property,
-    fallback = null
-) {
+function getDynamicString(entity, property, fallback = null) {
     try {
-        const value =
-            entity.getDynamicProperty(property);
-
-        if (
-            typeof value === "string" &&
-            value.length > 0
-        ) {
-            return value;
-        }
+        const value = entity.getDynamicProperty(property);
+        return typeof value === "string" && value.length > 0 ? value : fallback;
     } catch {
-        // Property existiert nicht
+        return fallback;
     }
-
-    return fallback;
 }
 
-
-function getShotCooldown(
-    soldier
-) {
-    const level =
-        Math.max(
-            1,
-            Number(
-                soldier.level ?? 1
-            )
-        );
-
-    /*
-     * Höheres Level = schnellerer Schuss
-     */
-    const reduction =
-        Math.min(
-            0.40,
-            (level - 1) * 0.07
-        );
-
-    return Math.max(
-        600,
-        DEFAULT_SHOT_COOLDOWN *
-            (1 - reduction)
-    );
-}
-
-
-function distanceSquared(
-    a,
-    b
-) {
-    const dx =
-        a.x - b.x;
-
-    const dy =
-        a.y - b.y;
-
-    const dz =
-        a.z - b.z;
-
-    return (
-        dx * dx +
-        dy * dy +
-        dz * dz
-    );
-}
-
-
-function faceTarget(
-    entity,
-    target
-) {
+function getEntityVelocity(entity) {
     try {
-        const dx =
-            target.location.x -
-            entity.location.x;
+        const velocity = entity.getVelocity?.();
+        if (!velocity) return null;
 
-        const dz =
-            target.location.z -
-            entity.location.z;
+        return {
+            x: Number(velocity.x) || 0,
+            y: Number(velocity.y) || 0,
+            z: Number(velocity.z) || 0
+        };
+    } catch {
+        return null;
+    }
+}
 
-        const horizontal =
-            Math.hypot(
-                dx,
-                dz
-            );
+function getShotCooldown(soldier) {
+    const level = Math.max(1, Number(soldier.level ?? 1));
+    const reduction = Math.min(0.40, (level - 1) * 0.07);
 
-        if (
-            horizontal <= 0.01
-        ) {
-            return;
-        }
+    return Math.max(600, DEFAULT_SHOT_COOLDOWN * (1 - reduction));
+}
 
-        const yaw =
-            Math.atan2(
-                -dx,
-                dz
-            ) *
-            180 /
-            Math.PI;
+function distanceSquared(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    const dz = a.z - b.z;
+    return dx * dx + dy * dy + dz * dz;
+}
 
-        entity.setRotation({
-            x: 0,
-            y: yaw
-        });
+function faceTarget(entity, target) {
+    try {
+        const dx = target.location.x - entity.location.x;
+        const dz = target.location.z - entity.location.z;
+        const horizontal = Math.hypot(dx, dz);
+        if (horizontal <= 0.01) return;
+
+        const yaw = Math.atan2(-dx, dz) * 180 / Math.PI;
+        entity.setRotation({ x: 0, y: yaw });
     } catch {}
 }
 
+function setArrowRotation(arrow, direction) {
+    try {
+        const horizontal = Math.hypot(direction.x, direction.z);
+        if (horizontal <= 0.0001) return;
+
+        const yaw = Math.atan2(-direction.x, direction.z) * 180 / Math.PI;
+        const pitch = -Math.atan2(direction.y, horizontal) * 180 / Math.PI;
+
+        arrow.setRotation({ x: pitch, y: yaw });
+    } catch {}
+}
 
 function isDead(entity) {
     try {
-        const health =
-            entity.getComponent(
-                "minecraft:health"
-            );
-
-        return (
-            health &&
-            health.currentValue <= 0
-        );
+        const health = entity.getComponent("minecraft:health");
+        return !!health && health.currentValue <= 0;
     } catch {
         return false;
     }
 }
 
-
 function isValid(entity) {
     try {
-        if (!entity) {
-            return false;
-        }
-
+        if (!entity) return false;
         return typeof entity.isValid === "function"
             ? entity.isValid()
             : entity.isValid === true;
@@ -1601,68 +753,6 @@ function isValid(entity) {
     }
 }
 
-
 function formatError(error) {
-    return error instanceof Error
-        ? error.message
-        : String(error);
-}
-function distanceBetween(a, b) {
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    const dz = a.z - b.z;
-
-    return Math.sqrt(
-        dx * dx +
-        dy * dy +
-        dz * dz
-    );
-}
-function isExplicitSiedlerEnemy(entity) {
-    if (!isValid(entity)) {
-        return false;
-    }
-
-    const typeId =
-        entity.typeId ?? "";
-
-    /*
-     * Nur explizit als feindlich definierte
-     * Siedler-Entities dürfen angegriffen werden.
-     *
-     * Hier können später weitere Monster ergänzt werden.
-     */
-
-    const hostileTypes = new Set([
-        "siedler:monster",
-        "siedler:pillager",
-        "siedler:raider"
-    ]);
-
-    if (
-        hostileTypes.has(typeId)
-    ) {
-        return true;
-    }
-
-    try {
-        const family =
-            entity.getComponent(
-                "minecraft:type_family"
-            );
-
-        if (!family) {
-            return false;
-        }
-
-        const families =
-            family.getTypeFamilies();
-
-        return (
-            families.includes("monster") ||
-            families.includes("hostile")
-        );
-    } catch {
-        return false;
-    }
+    return error instanceof Error ? error.message : String(error);
 }
