@@ -1,239 +1,174 @@
 # 🏘️ Siedler Logic – Entwicklungsplan
 
-> Aktueller Entwicklungsplan für `mc-siedler-bp`.
+> Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 04.09.2026  
-**Behavior Pack:** `mc-siedler-bp`  
-**Resource Pack:** `mc-siedler-rp`
+**Stand:** 04.09.2026
 
----
+## 📊 Aktueller Stand
 
-# 📊 Aktueller Stand
+- [x] Zentraler Loader und fehlertolerantes Modul-Laden
+- [x] Teams, Team-Chat, Farben und Diplomatiebeziehungen
+- [x] Chunk-Claims und Claim-Grenzen
+- [x] Wirtschaft, Steuern und Team-Kassen
+- [x] Permanenter Monster-Token-TaxBonus
+- [x] Händler und Marktplätze
+- [x] Soldatenhändler
+- [x] Soldier-Spawn und persistente Owner-Zuordnung
+- [x] Soldier-Level 1–7 und XP-System
+- [x] Infanterie, Bogenschütze und Kavallerie
+- [x] Soldier-Ausrüstung
+- [x] Soldier-Befehle und Gruppen-Grundlage
+- [x] Soldier-Zielsuche und Team-/Feinderkennung
+- [x] Soldier-Nahkampfangriff über `applyDamage()`
+- [x] Soldier-Kampfposition korrigiert: kein vorzeitiger Stopp durch großen Arrival-Radius
+- [x] Praktische Mindest-Nahkampfreichweite gegen Entity-Collision-Probleme
+- [x] Spieler-Dashboard und Soldatenstatistiken
+- [x] Serverstatistiken
+- [x] Resource Pack mit Custom-Soldaten
 
-- [x] Zentraler, fehlertoleranter Loader
-- [x] World Dynamic Properties
-- [x] Teams, Team-Chat, Farben und Beziehungen
-- [x] Teams mit persistentem `taxBonus` inklusive Migration bestehender Teams
-- [x] Chunk-Claims und Claim-Grenzanzeige
-- [x] Steuern und Emerald-Wirtschaft
-- [x] Permanenter TaxBonus ausschließlich durch besiegte Monster-Tokens
-- [x] Jeder besiegte Monster-Token erhöht die tägliche Team-Steuer dauerhaft um +1 Emerald
-- [x] TaxBonus-Limit von 64 Emeralds/Tag
-- [x] persistenter Schutz gegen doppelte Tagesauszahlung nach Neustarts
-- [x] Steuer-Informations-Command
-- [x] Marktplätze und spezialisierte Händler
-- [x] sieben vordefinierte Händlerrollen
-- [x] Soldatenhändler mit Rekrutierungs-UI
-- [x] Soldaten-Entity und Spawn-System
-- [x] Soldier-Zuordnung über `player.id`
-- [x] Soldier-KI-Grundsystem und Befehle
-- [x] Soldier-Kampf-Reichweite gegen Entity-Collision-Stalls abgesichert
-- [x] Soldier-Level 1–7 und persistentes XP-System
-- [x] Infanterie
-- [x] Bogenschütze
-- [x] Kavallerie mit Pferd
-- [x] Ausrüstungssystem
-- [x] Monster-/Pillager-System und Belagerungsgrundlage
-- [x] Essentials, Homes, TPA und erweitertes Spieler-Dashboard
-- [x] Live-Team-Rangliste im Dashboard
-- [x] Soldaten- und XP-Auswertung im Dashboard
-- [x] Server-Statistiken über alle drei Dimensionen
-- [x] Separates Resource Pack
-
----
-
-# 🔴 Phase 1 – Fundament & Stabilität
+## 🔴 Phase 1 – Fundament & Stabilität
 
 - [x] Zentraler Loader
 - [x] Fehlertolerantes Laden
-- [x] Zentrale Versionsverwaltung
-- [x] API-Version auf aktuellen Entwicklungsstand abgestimmt
+- [x] Persistente World Dynamic Properties
+- [x] aktuelle Bedrock Script API berücksichtigt
 
----
+## 🔴 Phase 2 – Soldier-System
 
-# 🔴 Phase 2 – Soldier-System
-
-## 2.1 Einheiten
+### 2.1 Einheiten
 
 - [x] Infanterie
 - [x] Bogenschütze
 - [x] Kavallerie
 - [x] Level 1–7
-- [x] unterschiedliche HP, Schaden, Reichweite und Geschwindigkeit
-- [x] unterschiedliche Ausrüstung
-- [x] persistentes XP-System
-- [x] automatische Beförderung
+- [x] HP, Schaden, Reichweite und Geschwindigkeit pro Level
+- [x] Ausrüstung pro Level
+- [x] persistente XP
+- [x] automatische Level-Up-Logik
 - [x] Rekrutierung über Soldatenhändler
 
-## 2.2 Bewegung & KI
+### 2.2 Bewegung & Kampf-KI
 
-- [x] grundlegende Zielsuche
-- [x] Team-/Feinderkennung
-- [x] Follow / Move / Stay / Attack / Retreat
-- [x] erreichbare Nahkampf-Distanz trotz Entity-Collision
-- [x] Angriffswindup und Angriffscooldown
-- [x] Angriffsschaden wird über `applyDamage()` ausgeführt
-- [ ] bessere Wegfindung
-- [ ] Hinderniserkennung
-- [ ] Gruppenbewegung
-- [ ] Formation
+- [x] Zielsuche
+- [x] Feinderkennung
+- [x] Move / Follow / Stay / Attack / Retreat-Grundlage
+- [x] Nahkampf-Windup
+- [x] Angriffscooldown
+- [x] `applyDamage()`-Schaden
+- [x] Angriff bei praktischer Entity-Kollisionsdistanz
+- [x] Kampf-Approach-Position korrigiert
+- [x] kleiner Arrival-Radius für die Kampfannäherung
+- [x] Soldat läuft nicht mehr dauerhaft zu einem unerreichbaren Zielpunkt
+- [ ] echte Wegfindung über Hindernisse
+- [ ] Block-/Geländeerkennung
+- [ ] bessere Höhen-/Treppenlogik
 - [ ] intelligente Zielprioritäten
+- [ ] Ausweich- und Blockverhalten
 
-## 2.3 Befehle & Gruppen
+### 2.3 Gruppen & Formationen
 
-- [x] Soldier Commands
-- [x] Soldatenauswahl
-- [x] Soldatengruppen
+- [x] Soldier-Auswahl
 - [x] Gruppenverwaltung
+- [x] Gruppenbefehle
 - [x] Formationsgrundlage
-- [x] Gruppen-Erstellungsformular auf aktuelle `@minecraft/server-ui`-2.x-Signaturen angepasst
-- [ ] mehrere komplexe Gruppen gleichzeitig befehligen
+- [ ] dynamische Formation während Bewegung
+- [ ] mehrere Gruppen gleichzeitig steuern
+- [ ] Formationswechsel im Kampf
 
----
-
-# 🟠 Phase 3 – Claims & Territorium
+## 🟠 Phase 3 – Claims & Territorium
 
 - [x] Chunk-Claims
 - [x] Claim-Grenzen
 - [x] Claim-Informationen
-- [x] Claim-Limits
+- [ ] Gebäude-/Siedlungszonen
+- [ ] Militärzonen
 
----
+## 🟠 Phase 4 – Diplomatie
 
-# 🟠 Phase 4 – Diplomatie
-
-- [x] `friendly`
-- [x] `neutral`
-- [x] `hostile`
-- [x] Beziehungen persistent speichern
+- [x] Friendly
+- [x] Neutral
+- [x] Hostile
+- [x] persistente Beziehungen
+- [x] Soldiers berücksichtigen Beziehungen
 - [ ] Bündnisse
+- [ ] Kriegserklärung
 - [ ] Diplomatie-UI
-- [x] Soldiers berücksichtigen Diplomatie
 
----
+## 🟡 Phase 5 – Wirtschaft
 
-# 🟡 Phase 5 – Wirtschaft & Ressourcen
-
-## Ressourcen
-
-- [x] Emeralds als Standardwährung
-- [x] Holz
-- [x] Stein/Cobblestone
-- [x] Sand/Gravel/Lehm
-- [x] Kohle
-- [x] Erze
-- [x] Getreide und Gemüse
-- [x] Samen
-- [x] Tierprodukte
-
-## Steuern & TaxBonus
-
-- [x] Steuern pro Dorfbewohner
 - [x] Emerald-Währung
+- [x] Dorfbewohner-basierte Steuer
 - [x] Team-Kasse
-- [x] TaxBonus durch besiegte Monster-Tokens
-- [x] +1 Emerald tägliche Steuer pro besiegtem Monster-Token
-- [x] permanenter, nicht verbrauchbarer Bonus
-- [x] maximal +64 Emeralds/Tag TaxBonus pro Team
-- [x] Bonus nur für das Team des Spielerkillers
-- [x] Spieler ohne Team erhalten keinen Bonus
-- [x] Tagesauszahlung von maximal 256 Emeralds
-- [x] persistenter Schutz gegen doppelte Auszahlung
-- [x] `/siedler:taxinfo`
-- [x] bestehende Teams erhalten automatisch `taxBonus: 0`, falls die Variable fehlt
-- [x] neue Teams werden mit `taxBonus: 0` angelegt
+- [x] Monster-Token-TaxBonus
+- [x] +1 Emerald/Tag je besiegtem Monster-Token
+- [x] permanenter Bonus
+- [x] maximal 64 TaxBonus Emeralds/Tag
+- [x] Bonus nur für Team des Spielerkillers
+- [x] bestehende Teams erhalten `taxBonus: 0` bei Migration
+- [x] doppelte Tagesauszahlung nach Neustart verhindert
 - [ ] Steuerhistorie
+- [ ] Wirtschaftsstatistiken über Zeit
 
-### Aktuelles TaxBonus-Modell
+## 🟡 Phase 6 – Handel & Märkte
 
-Der TaxBonus stammt **ausschließlich aus Monster-Tokens** und bleibt dauerhaft erhalten.
-
-`Monster-Token besiegt → +1 Emerald/Tag permanenter TaxBonus`
-
-`Tagessteuer = Dorfbewohner + permanenter TaxBonus`
-
-Beispiel:
-
-`10 Dorfbewohner + 1 TaxBonus = 11 Emeralds/Tag`
-
-Nach einem weiteren besiegten Monster-Token:
-
-`10 Dorfbewohner + 2 TaxBonus = 12 Emeralds/Tag`
-
-Der TaxBonus wird bei der täglichen Steuerzahlung **nicht zurückgesetzt**. Er stellt einen dauerhaften wirtschaftlichen Fortschritt des Teams durch das Besiegen von Monster-Tokens dar.
-
-Die Team-Migration stellt sicher, dass ältere Spielwelten ebenfalls das Feld `taxBonus` besitzen. Ein fehlender oder ungültiger Wert wird auf `0` gesetzt und in den World Dynamic Properties gespeichert.
-
----
-
-# 🟡 Phase 6 – Handel & Märkte
-
-- [x] rechteckige Marktplätze
-- [x] Monster-Schutz
-- [x] konfigurierbare Marktgebiete
-- [x] Händler-NPCs
-- [x] sieben spezialisierte Händlerrollen
-- [x] Rohstoff-/Samenangebote
+- [x] Marktplätze
+- [x] Markt-Schutz
+- [x] spezialisierte Händler
 - [x] Soldatenhändler
-- [x] Händler-Variant-Tags
+- [ ] Handelslevel
+- [ ] dynamische Preise
+- [ ] Angebot/Nachfrage
 
----
-
-# 🟢 Phase 7 – Dashboard & Statistiken
+## 🟢 Phase 7 – Dashboard
 
 - [x] `/siedler:stats`
-- [x] Spieler-Profil
-- [x] Live-Teamdaten
+- [x] Spielerprofil
+- [x] Teamübersicht
 - [x] Team-Rangliste
-- [x] Claim- und Bevölkerungsübersicht
-- [x] Steuer-/TaxBonus-Übersicht
-- [x] persönliche Soldatenstatistik
-- [x] Team-Soldatenstatistik
-- [x] Soldaten nach Typ aufgeschlüsselt
-- [x] Soldaten-XP und Durchschnittslevel
-- [x] Serverstatistiken
-- [x] Statistiken über Overworld, Nether und End
-- [x] Dashboard-Aktualisierung
-- [ ] persistente historische Spielerstatistiken
-- [ ] persistente historische Teamstatistiken
-- [ ] Leaderboards für Kills, XP, Wirtschaft und Militär
+- [x] Claims/Bevölkerung
+- [x] Steuern/TaxBonus
+- [x] Soldaten nach Typ
+- [x] Soldier-XP und Level
+- [x] Serverstatistiken über Overworld, Nether und End
+- [ ] historische Statistiken
+- [ ] Leaderboards
 
----
+## 🟢 Phase 8 – Resource Pack
 
-# 🟢 Phase 9 – Resource Pack & Custom Entities
+- [x] Custom Soldier Entity
+- [x] Soldaten-Typen visuell unterscheiden
+- [x] Ausrüstung rendern
+- [x] individuelle Laufanimationen
+- [x] Idle-/Bewegungsanimationen
+- [x] Kampfzustand an RP übergeben
+- [ ] vollständige Angriffsschwinganimation
+- [ ] Treffer-/Blockanimation
+- [ ] Teamfarben am Soldier
 
-- [x] `siedler:soldier` zuverlässig sichtbar
-- [x] `siedler:trader` zuverlässig sichtbar
-- [x] Geometrien validieren
-- [x] Render Controller validieren
-- [x] Ausrüstung korrekt darstellen
-- [x] Soldier-Typen visuell unterscheiden
-- [x] individuelle Bewegungsanimationen
-- [x] Level visuell darstellen
-- [ ] Teamfarbe darstellen
-- [ ] Kampfanimationen weiter ausbauen
-- [ ] Idle-Animationen weiter verfeinern
-- [x] Händler-Typen visuell unterscheiden
+## 🔵 Phase 9 – Monster & Bedrohungen
 
----
-
-# 🔵 Phase 10 – Monster & Bedrohungen
-
-- [x] zentrale Monster-Konfiguration
-- [x] Spawnraten
-- [x] Nacht-Multiplikator
+- [x] Monster-Konfiguration
 - [x] Monster-Tokens
-- [x] Token-Belohnung über permanenten TaxBonus
 - [x] Pillager-Trupps
 - [x] Captains
-- [x] Vindicators/Ravager
-- [x] Außenposten-/Raid-Logik
+- [x] Außenposten
 - [x] Belagerungsgrundlage
-- [x] gezielte Angriffe auf Siedlungen
 - [x] Verteidigungswarnungen
+- [ ] größere Belagerungsformationen
+- [ ] Belagerungsmaschinen
 
----
+## 🎯 Nächster Schwerpunkt
+
+### Soldier-KI v2
+
+1. Wegfindung verbessern
+2. Hindernisse erkennen
+3. echte Nahkampf-Hitbox statt reiner Mittelpunkt-Distanz berücksichtigen
+4. Kampfpositionen dynamisch um das Ziel verteilen
+5. Gruppenformationen stabilisieren
+6. Angriffe, Treffer und Animationen synchronisieren
+7. KI mit realen Serverlogs testen
 
 ### Leitprinzip
 
-> **Nicht möglichst viele Features hinzufügen, sondern die vorhandenen Systeme zu einem funktionierenden Wirtschafts-, Siedlungs- und Strategiespiel verbinden.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben.**
