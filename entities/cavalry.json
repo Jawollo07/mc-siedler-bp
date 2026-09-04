@@ -1,0 +1,41 @@
+{
+  "format_version": "1.26.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "siedler:cavalry",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false,
+      "properties": {
+        "siedler:combat_state": {
+          "type": "enum",
+          "values": ["idle", "move", "attack"],
+          "default": "idle",
+          "client_sync": true
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": { "family": ["soldier", "cavalry", "mob"] },
+      "minecraft:health": { "value": 30, "max": 55 },
+      "minecraft:collision_box": { "width": 0.6, "height": 1.8 },
+      "minecraft:physics": { "has_gravity": true, "has_collision": true },
+      "minecraft:movement": { "value": 0.25 },
+      "minecraft:movement.basic": {},
+      "minecraft:navigation.generic": {},
+      "minecraft:inventory": { "inventory_size": 6, "container_type": "inventory", "private": true },
+      "minecraft:damage_sensor": { "triggers": { "cause": "all", "deals_damage": "yes" } },
+      "minecraft:persistent": {},
+      "minecraft:equippable": {
+        "slots": [
+          { "slot": 0, "accepted_items": ["minecraft:wooden_sword", "minecraft:stone_sword", "minecraft:iron_sword", "minecraft:golden_sword", "minecraft:diamond_sword", "minecraft:netherite_sword"] },
+          { "slot": 1, "accepted_items": ["minecraft:shield"] },
+          { "slot": 2, "accepted_items": ["minecraft:leather_helmet", "minecraft:chainmail_helmet", "minecraft:iron_helmet", "minecraft:golden_helmet", "minecraft:diamond_helmet", "minecraft:netherite_helmet"] },
+          { "slot": 3, "accepted_items": ["minecraft:leather_chestplate", "minecraft:chainmail_chestplate", "minecraft:iron_chestplate", "minecraft:golden_chestplate", "minecraft:diamond_chestplate", "minecraft:netherite_chestplate"] },
+          { "slot": 4, "accepted_items": ["minecraft:leather_leggings", "minecraft:chainmail_leggings", "minecraft:iron_leggings", "minecraft:golden_leggings", "minecraft:diamond_leggings", "minecraft:netherite_leggings"] },
+          { "slot": 5, "accepted_items": ["minecraft:leather_boots", "minecraft:chainmail_boots", "minecraft:iron_boots", "minecraft:golden_boots", "minecraft:diamond_boots", "minecraft:netherite_boots"] }
+        ]
+      }
+    }
+  }
+}

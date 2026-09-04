@@ -14,9 +14,9 @@ const DEBUG = true;
 /** All soldier variants use the same registered entity definition and differentiate
  * themselves via dynamic properties and tags. */
 const SOLDIER_ENTITY_IDS = Object.freeze({
-    infantry: "siedler:soldier",
-    archer: "siedler:soldier",
-    cavalry: "siedler:soldier"
+    infantry: "siedler:infantry",
+    archer: "siedler:archer",
+    cavalry: "siedler:cavalry"
 });
 
 export function spawnSoldier(
