@@ -24,9 +24,9 @@ const ARROW_ID = "minecraft:arrow";
 
 const ARCHER_MIN_RANGE = 6;
 const ARCHER_PREFERRED_RANGE = 12;
-const ARCHER_MAX_RANGE = 28;
+const ARCHER_MAX_RANGE = 40;
 
-const ARROW_SPEED = 2.8;
+const ARROW_SPEED = 4.0;
 const AIM_HEIGHT = 0.95;
 const ARROW_GRAVITY = 0.05;
 
@@ -1424,6 +1424,8 @@ function getShotCooldown(
     );
 }
 
+
+actionPlaceholder = null;
 
 function distanceSquared(
     a,
