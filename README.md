@@ -130,6 +130,10 @@ Teamdaten enthalten mindestens `color`, `players`, `taxChest` und `taxBonus`. Di
 
 Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte der Server bzw. die Welt vollständig neu geladen werden.
 
+### UI-Kompatibilität
+
+Die Soldier-Gruppen-UI verwendet die aktuelle `@minecraft/server-ui`-2.x-Signatur. Bei `ModalFormData.textField()` werden Optionen wie `defaultValue` als Objekt übergeben; bei `slider()` werden `valueStep` und `defaultValue` ebenfalls über das Optionsobjekt gesetzt. Dadurch wird die native Typkonvertierungs-Exception bei der Gruppenerstellung vermieden.
+
 ## 🧩 Architektur
 
 ```text
