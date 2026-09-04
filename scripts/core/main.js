@@ -54,6 +54,7 @@ import ".././monster/token.js";
 // -----------------------------------------------------------------------------
 import ".././essentials/index.js";
 import ".././essentials/player_stats.js";
+import ".././essentials/start.js";
 
 // -----------------------------------------------------------------------------
 // Soldier system
