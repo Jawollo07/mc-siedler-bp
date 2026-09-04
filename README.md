@@ -41,7 +41,9 @@ Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infa
 - spielen beim Schuss den Bogenschuss-Sound,
 - schießen abhängig vom Soldaten-Level schneller,
 - besitzen eine mehrstufige Sichtlinienprüfung vor jedem Schuss,
-- überwachen die Flugbahn jedes erzeugten Pfeils.
+- überwachen die Flugbahn jedes erzeugten Pfeils,
+- verwenden eine erhöhte Pfeilgeschwindigkeit von `4.0`,
+- können Ziele bis zu einer Entfernung von `40` Blöcken erfassen.
 
 ### 👁️ Sichtweite & Hindernisse
 
