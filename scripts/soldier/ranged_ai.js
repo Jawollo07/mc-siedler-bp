@@ -114,13 +114,11 @@ function updateArcher(soldier, now) {
         return;
     }
 
-    /*
-     * -----------------------------------------------------
-     * TARGET VALIDATION
-     * -----------------------------------------------------
-     */
-
     let target = null;
+
+    // -----------------------------------------------------
+    // AKTUELLES ZIEL VALIDIEREN
+    // -----------------------------------------------------
 
     if (soldier.targetId) {
         target = findEntityById(
@@ -135,16 +133,14 @@ function updateArcher(soldier, now) {
             !isEnemy(soldier, target)
         ) {
             soldier.targetId = null;
+            soldier.rangedTargetSince = 0;
             target = null;
         }
     }
 
-
-    /*
-     * -----------------------------------------------------
-     * TARGET RECHECK
-     * -----------------------------------------------------
-     */
+    // -----------------------------------------------------
+    // NEUES ZIEL SUCHEN
+    // -----------------------------------------------------
 
     if (
         !target &&
@@ -153,9 +149,7 @@ function updateArcher(soldier, now) {
             now >= soldier.rangedLastTargetSearch
         )
     ) {
-        target = findTarget(
-            soldier
-        );
+        target = findTarget(soldier);
 
         soldier.rangedLastTargetSearch =
             now + TARGET_RECHECK_MS;
@@ -166,19 +160,15 @@ function updateArcher(soldier, now) {
         }
     }
 
-
-    /*
-     * -----------------------------------------------------
-     * NO TARGET
-     * -----------------------------------------------------
-     */
+    // -----------------------------------------------------
+    // KEIN ZIEL
+    // -----------------------------------------------------
 
     if (!target) {
         soldier.targetId = null;
+        soldier.rangedTargetSince = 0;
 
-        cancelMovement(
-            soldier
-        );
+        cancelMovement(soldier);
 
         soldier.phase =
             SOLDIER_CONFIG.STATES.IDLE;
@@ -186,46 +176,9 @@ function updateArcher(soldier, now) {
         return;
     }
 
-
-    /*
-     * -----------------------------------------------------
-     * TARGET MEMORY
-     * -----------------------------------------------------
-     */
-
-    if (
-        soldier.rangedTargetSince &&
-        now - soldier.rangedTargetSince >
-            TARGET_MEMORY_MS
-    ) {
-        const distance = distanceSquared(
-            entity.location,
-            target.location
-        );
-
-        if (
-            distance >
-            ARCHER_MAX_RANGE * ARCHER_MAX_RANGE
-        ) {
-            soldier.targetId = null;
-
-            cancelMovement(
-                soldier
-            );
-
-            soldier.phase =
-                SOLDIER_CONFIG.STATES.IDLE;
-
-            return;
-        }
-    }
-
-
-    /*
-     * -----------------------------------------------------
-     * DISTANCE
-     * -----------------------------------------------------
-     */
+    // -----------------------------------------------------
+    // DISTANZ
+    // -----------------------------------------------------
 
     const dx =
         target.location.x -
@@ -235,15 +188,18 @@ function updateArcher(soldier, now) {
         target.location.z -
         entity.location.z;
 
-    const horizontalDistance =
-        Math.hypot(
-            dx,
-            dz
-        );
+    const distance =
+        Math.hypot(dx, dz);
 
-    if (horizontalDistance <= 0.01) {
-        cancelMovement(
-            soldier
+    // -----------------------------------------------------
+    // ZIEL ZU WEIT ENTFERNT
+    // -----------------------------------------------------
+
+    if (distance > ARCHER_MAX_RANGE) {
+        moveTowardTarget(
+            soldier,
+            target,
+            APPROACH_SPEED
         );
 
         faceTarget(
@@ -251,73 +207,37 @@ function updateArcher(soldier, now) {
             target
         );
 
-        return;
-    }
-
-
-    /*
-     * -----------------------------------------------------
-     * FACE TARGET
-     * -----------------------------------------------------
-     */
-
-    faceTarget(
-        entity,
-        target
-    );
-
-
-    /*
-     * -----------------------------------------------------
-     * TOO FAR AWAY
-     * -----------------------------------------------------
-     */
-
-    if (
-        horizontalDistance >
-        ARCHER_MAX_RANGE
-    ) {
-        moveTowardTarget(
-            soldier,
-            target,
-            APPROACH_SPEED
-        );
-
         soldier.phase =
             SOLDIER_CONFIG.STATES.MOVE;
 
         return;
     }
 
+    // -----------------------------------------------------
+    // ZIEL ZU NAH
+    // -----------------------------------------------------
 
-    /*
-     * -----------------------------------------------------
-     * TOO CLOSE
-     * -----------------------------------------------------
-     */
-
-    if (
-        horizontalDistance <
-        ARCHER_MIN_RANGE
-    ) {
+    if (distance < ARCHER_MIN_RANGE) {
         moveAwayFromTarget(
             soldier,
             target,
             RETREAT_SPEED
         );
 
+        faceTarget(
+            entity,
+            target
+        );
+
         soldier.phase =
             SOLDIER_CONFIG.STATES.MOVE;
 
         return;
     }
 
-
-    /*
-     * -----------------------------------------------------
-     * LINE OF SIGHT
-     * -----------------------------------------------------
-     */
+    // -----------------------------------------------------
+    // LINE OF SIGHT
+    // -----------------------------------------------------
 
     const visible =
         hasLineOfSight(
@@ -327,15 +247,22 @@ function updateArcher(soldier, now) {
 
     if (!visible) {
         /*
-         * Wenn der Gegner hinter einem Block steht,
-         * versucht der Archer nicht zu schießen.
+         * Nicht blind auf den Gegner zulaufen.
          *
-         * Stattdessen nähert er sich etwas an.
+         * Wir bewegen uns nur langsam in Richtung
+         * Gegner und versuchen dadurch eine neue
+         * Schussposition zu bekommen.
          */
+
         moveTowardTarget(
             soldier,
             target,
-            APPROACH_SPEED
+            APPROACH_SPEED * 0.65
+        );
+
+        faceTarget(
+            entity,
+            target
         );
 
         soldier.phase =
@@ -344,26 +271,78 @@ function updateArcher(soldier, now) {
         return;
     }
 
+    // -----------------------------------------------------
+    // KAMPFPOSITION
+    // -----------------------------------------------------
+
+    faceTarget(
+        entity,
+        target
+    );
 
     /*
-     * -----------------------------------------------------
-     * IDEAL RANGE
-     * -----------------------------------------------------
+     * Wenn wir deutlich weiter als unsere
+     * bevorzugte Distanz entfernt sind,
+     * nähern wir uns langsam.
+     */
+
+    if (
+        distance >
+        ARCHER_PREFERRED_RANGE + 2
+    ) {
+        moveTowardTarget(
+            soldier,
+            target,
+            APPROACH_SPEED * 0.55
+        );
+
+        soldier.phase =
+            SOLDIER_CONFIG.STATES.MOVE;
+
+        return;
+    }
+
+    /*
+     * Wenn wir etwas zu nah sind,
+     * ziehen wir uns zurück.
+     */
+
+    if (
+        distance <
+        ARCHER_PREFERRED_RANGE - 2
+    ) {
+        moveAwayFromTarget(
+            soldier,
+            target,
+            RETREAT_SPEED * 0.55
+        );
+
+        soldier.phase =
+            SOLDIER_CONFIG.STATES.MOVE;
+
+        return;
+    }
+
+    // -----------------------------------------------------
+    // IDEALE SCHUSSDISTANZ
+    // -----------------------------------------------------
+
+    soldier.phase =
+        SOLDIER_CONFIG.STATES.ATTACK;
+
+    /*
+     * Grundbewegung stoppen.
+     *
+     * Strafe wird separat angewendet.
      */
 
     cancelMovement(
         soldier
     );
 
-    soldier.phase =
-        SOLDIER_CONFIG.STATES.ATTACK;
-
-
-    /*
-     * -----------------------------------------------------
-     * STRAFE
-     * -----------------------------------------------------
-     */
+    // -----------------------------------------------------
+    // STRAFING
+    // -----------------------------------------------------
 
     updateStrafe(
         soldier,
@@ -371,12 +350,9 @@ function updateArcher(soldier, now) {
         now
     );
 
-
-    /*
-     * -----------------------------------------------------
-     * SHOOT
-     * -----------------------------------------------------
- */
+    // -----------------------------------------------------
+    // SCHIESSEN
+    // -----------------------------------------------------
 
     if (
         !soldier.rangedNextShot ||
@@ -390,7 +366,6 @@ function updateArcher(soldier, now) {
     }
 }
 
-
 /* =========================================================
  * TARGET SEARCH
  * ========================================================= */
@@ -402,44 +377,36 @@ function findTarget(soldier) {
         return null;
     }
 
-    const soldierTeam = getSoldierTeam(soldier);
-
-    const candidates = entity.dimension.getEntities({
-        location: entity.location,
-        maxDistance: ARCHER_MAX_RANGE
-    });
+    const candidates =
+        entity.dimension.getEntities({
+            location: entity.location,
+            maxDistance: ARCHER_MAX_RANGE
+        });
 
     let bestTarget = null;
-    let bestDistance = Infinity;
+    let bestScore = Infinity;
 
     for (const candidate of candidates) {
         if (!isValid(candidate)) {
             continue;
         }
 
-        // Sich selbst niemals angreifen
-        if (candidate.id === entity.id) {
+        if (
+            candidate.id === entity.id
+        ) {
             continue;
         }
 
-        // Tote Entities ignorieren
-        try {
-            const health = candidate.getComponent("minecraft:health");
-
-            if (health && health.currentValue <= 0) {
-                continue;
-            }
-        } catch {
+        if (
+            isDead(candidate)
+        ) {
             continue;
         }
 
         /*
-         * Besitzer/Boss des Soldaten niemals angreifen.
-         *
-         * soldier.ownerId ist die primäre Quelle.
-         * Falls der Soldat diese Information nicht im Runtime-Objekt
-         * besitzt, versuchen wir sie aus der Dynamic Property zu lesen.
+         * Besitzer immer ignorieren.
          */
+
         const ownerId =
             soldier.ownerId ??
             getDynamicString(
@@ -455,18 +422,87 @@ function findTarget(soldier) {
             continue;
         }
 
-        // Nur tatsächliche Gegner auswählen
-        if (!isEnemy(soldier, candidate)) {
+        /*
+         * Wichtig:
+         * Erst Gegnerprüfung, dann Bewertung.
+         */
+
+        if (
+            !isEnemy(
+                soldier,
+                candidate
+            )
+        ) {
             continue;
         }
 
-        const distance = distanceBetween(
-            entity.location,
-            candidate.location
-        );
+        const distance =
+            Math.sqrt(
+                distanceSquared(
+                    entity.location,
+                    candidate.location
+                )
+            );
 
-        if (distance < bestDistance) {
-            bestDistance = distance;
+        let score =
+            distance;
+
+        /*
+         * Direkte Sicht stark bevorzugen.
+         */
+
+        if (
+            hasLineOfSight(
+                entity,
+                candidate
+            )
+        ) {
+            score -= 5;
+        } else {
+            score += 8;
+        }
+
+        /*
+         * Spieler priorisieren.
+         */
+
+        if (
+            candidate.typeId ===
+            "minecraft:player"
+        ) {
+            score -= 3;
+        }
+
+        /*
+         * Feindliche Soldaten ebenfalls priorisieren.
+         */
+
+        if (
+            candidate.typeId ===
+            "siedler:soldier"
+        ) {
+            score -= 2;
+        }
+
+        /*
+         * Bevorzugte Bogenschützen-Distanz.
+         */
+
+        if (
+            distance >= ARCHER_MIN_RANGE &&
+            distance <= ARCHER_MAX_RANGE
+        ) {
+            score +=
+                Math.abs(
+                    distance -
+                    ARCHER_PREFERRED_RANGE
+                ) * 0.25;
+        }
+
+        if (
+            score < bestScore
+        ) {
+            bestScore = score;
             bestTarget = candidate;
         }
     }
@@ -592,50 +628,87 @@ function updateStrafe(
     const strafe =
         soldier.rangedStrafe;
 
+    /*
+     * Neue Strafe-Richtung wählen.
+     */
+
     if (
-        now < strafe.next
+        now >= strafe.next
     ) {
+        const dx =
+            target.location.x -
+            soldier.entity.location.x;
+
+        const dz =
+            target.location.z -
+            soldier.entity.location.z;
+
+        const distance =
+            Math.hypot(dx, dz);
+
+        if (distance <= 0.01) {
+            return;
+        }
+
+        const direction =
+            Math.random() < 0.5
+                ? -1
+                : 1;
+
+        /*
+         * Senkrechte zum Gegner.
+         */
+
+        strafe.x =
+            (-dz / distance) *
+            direction;
+
+        strafe.z =
+            (dx / distance) *
+            direction;
+
+        strafe.until =
+            now + STRAFE_DURATION;
+
+        strafe.next =
+            now + STRAFE_INTERVAL +
+            Math.random() * 500;
+    }
+
+    /*
+     * Strafe ist noch aktiv.
+     */
+
+    if (
+        now < strafe.until
+    ) {
+        soldier.desiredDirection = {
+            x:
+                strafe.x *
+                STRAFE_STRENGTH,
+
+            z:
+                strafe.z *
+                STRAFE_STRENGTH
+        };
+
+        soldier.rangedMovementSpeed =
+            STRAFE_STRENGTH;
+
         return;
     }
 
-    const dx =
-        target.location.x -
-        soldier.entity.location.x;
+    /*
+     * Strafe beendet.
+     */
 
-    const dz =
-        target.location.z -
-        soldier.entity.location.z;
+    soldier.desiredDirection = {
+        x: 0,
+        z: 0
+    };
 
-    const distance =
-        Math.hypot(
-            dx,
-            dz
-        );
-
-    if (distance <= 0.01) {
-        return;
-    }
-
-    const side =
-        Math.random() < 0.5
-            ? -1
-            : 1;
-
-    strafe.x =
-        (-dz / distance) *
-        side;
-
-    strafe.z =
-        (dx / distance) *
-        side;
-
-    strafe.until =
-        now + STRAFE_DURATION;
-
-    strafe.next =
-        now + STRAFE_INTERVAL;
+    soldier.rangedMovementSpeed = 0;
 }
-
 
 /* =========================================================
  * SHOOT
@@ -1081,24 +1154,25 @@ function isEnemy(soldier, entity) {
         return false;
     }
 
-    const soldierEntity = soldier.entity;
+    const archer = soldier.entity;
 
-    if (!isValid(soldierEntity)) {
+    if (!isValid(archer)) {
         return false;
     }
 
-    // Niemals sich selbst angreifen
-    if (entity.id === soldierEntity.id) {
+    // Sich selbst niemals angreifen
+    if (entity.id === archer.id) {
         return false;
     }
 
-    /*
-     * Besitzer/Boss immer freundlich behandeln.
-     */
+    // -----------------------------------------------------
+    // BESITZER / BOSS
+    // -----------------------------------------------------
+
     const ownerId =
         soldier.ownerId ??
         getDynamicString(
-            soldierEntity,
+            archer,
             "soldier:ownerId",
             null
         );
@@ -1110,76 +1184,114 @@ function isEnemy(soldier, entity) {
         return false;
     }
 
-    const soldierTeam =
-        getSoldierTeam(soldier);
+    // -----------------------------------------------------
+    // AUSDRÜCKLICH FREUNDLICHE SIEDLER-ENTITIES
+    // -----------------------------------------------------
 
-    /*
-     * Spieler
-     *
-     * Ein Spieler ist NICHT automatisch feindlich.
-     * Nur wenn beide Seiten ein Team haben und dieses
-     * Team als HOSTILE eingestuft ist, darf der Bogenschütze
-     * den Spieler angreifen.
-     */
+    const typeId = entity.typeId ?? "";
+
+    const FRIENDLY_SIEDLER_TYPES = new Set([
+        "siedler:trader",
+        "siedler:villager",
+        "siedler:merchant"
+    ]);
+
     if (
-        entity.typeId ===
-        "minecraft:player"
+        FRIENDLY_SIEDLER_TYPES.has(typeId)
     ) {
+        return false;
+    }
+
+    // -----------------------------------------------------
+    // SPIELER
+    // -----------------------------------------------------
+
+    if (
+        typeId === "minecraft:player"
+    ) {
+        const soldierTeam =
+            getSoldierTeam(soldier);
+
         const playerTeam =
             getPlayerTeam(entity);
 
+        /*
+         * Ohne Teams niemals angreifen.
+         */
+
         if (
-            soldierTeam &&
-            playerTeam
+            !soldierTeam ||
+            !playerTeam
         ) {
-            return (
-                getTeamRelation(
-                    soldierTeam,
-                    playerTeam
-                ) ===
-                TEAM_RELATION.HOSTILE
-            );
+            return false;
         }
 
-        // Kein Team = kein automatischer Feind
-        return false;
+        return (
+            getTeamRelation(
+                soldierTeam,
+                playerTeam
+            ) ===
+            TEAM_RELATION.HOSTILE
+        );
     }
 
-    /*
-     * Andere Soldaten
-     */
+    // -----------------------------------------------------
+    // SIEDLER-SOLDAT
+    // -----------------------------------------------------
+
     if (
-        entity.typeId ===
-        "siedler:soldier"
+        typeId === "siedler:soldier"
     ) {
+        const soldierTeam =
+            getSoldierTeam(soldier);
+
+        const targetSoldier =
+            SOLDIERS.get(entity.id);
+
         const targetTeam =
-            getSoldierTeam({ entity });
+            targetSoldier
+                ? getSoldierTeam(targetSoldier)
+                : null;
 
         if (
-            soldierTeam &&
-            targetTeam
+            !soldierTeam ||
+            !targetTeam
         ) {
-            return (
-                getTeamRelation(
-                    soldierTeam,
-                    targetTeam
-                ) ===
-                TEAM_RELATION.HOSTILE
-            );
+            return false;
         }
 
-        // Unbekannter/kein Team -> nicht angreifen
-        return false;
+        return (
+            getTeamRelation(
+                soldierTeam,
+                targetTeam
+            ) ===
+            TEAM_RELATION.HOSTILE
+        );
     }
 
+    // -----------------------------------------------------
+    // SIEDLER-ENTITIES
+    // -----------------------------------------------------
+
     /*
-     * Monster/NPCs
+     * Andere siedler:* Entities werden NICHT automatisch
+     * als feindlich betrachtet.
      *
-     * Alles, was kein Spieler oder eigener Siedler-Soldat
-     * ist, wird anschließend über die Monster-/Hostile-Erkennung
-     * behandelt.
+     * Dadurch werden z.B. Trader, Händler, NPCs usw.
+     * nicht versehentlich beschossen.
      */
-    const typeId = entity.typeId ?? "";
+
+    if (
+        typeId.startsWith("siedler:")
+    ) {
+        return isExplicitSiedlerEnemy(
+            entity
+        );
+    }
+
+    // -----------------------------------------------------
+    // MINECRAFT MONSTER
+    // -----------------------------------------------------
 
     if (
         typeId.startsWith("minecraft:")
@@ -1190,40 +1302,32 @@ function isEnemy(soldier, entity) {
                     "minecraft:type_family"
                 );
 
-            if (family) {
-                const families =
-                    family.getTypeFamilies();
-
-                if (
-                    families.includes("monster") ||
-                    families.includes("hostile")
-                ) {
-                    return true;
-                }
+            if (!family) {
+                return false;
             }
+
+            const families =
+                family.getTypeFamilies();
+
+            /*
+             * Nur echte Monster/Hostile-Mobs.
+             */
+
+            return (
+                families.includes("monster") ||
+                families.includes("hostile")
+            );
         } catch {
-            // Falls die Family-Komponente nicht verfügbar ist
+            return false;
         }
     }
 
-    /*
-     * Siedler-eigene Monster können hier ebenfalls
-     * als feindlich erkannt werden.
-     */
-    if (
-        typeId.startsWith("siedler:")
-    ) {
-        if (
-            typeId.includes("monster") ||
-            typeId.includes("pillager")
-        ) {
-            return true;
-        }
-    }
+    // -----------------------------------------------------
+    // ALLES ANDERE
+    // -----------------------------------------------------
 
     return false;
 }
-
 
 /* =========================================================
  * HELPERS
@@ -1430,4 +1534,52 @@ function distanceBetween(a, b) {
         dy * dy +
         dz * dz
     );
+}
+function isExplicitSiedlerEnemy(entity) {
+    if (!isValid(entity)) {
+        return false;
+    }
+
+    const typeId =
+        entity.typeId ?? "";
+
+    /*
+     * Nur explizit als feindlich definierte
+     * Siedler-Entities dürfen angegriffen werden.
+     *
+     * Hier können später weitere Monster ergänzt werden.
+     */
+
+    const hostileTypes = new Set([
+        "siedler:monster",
+        "siedler:pillager",
+        "siedler:raider"
+    ]);
+
+    if (
+        hostileTypes.has(typeId)
+    ) {
+        return true;
+    }
+
+    try {
+        const family =
+            entity.getComponent(
+                "minecraft:type_family"
+            );
+
+        if (!family) {
+            return false;
+        }
+
+        const families =
+            family.getTypeFamilies();
+
+        return (
+            families.includes("monster") ||
+            families.includes("hostile")
+        );
+    } catch {
+        return false;
+    }
 }
