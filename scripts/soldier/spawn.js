@@ -72,17 +72,15 @@ export function spawnSoldier(
             try {
                 mount = spawnCavalryMount(dimension, location, owner, level);
 
-                if (mount && typeof entity.startRiding === "function") {
-                    const started = entity.startRiding(mount);
-                    if (!started) {
-                        throw new Error("startRiding() returned false");
-                    }
-                } else {
-                    throw new Error("Mounted riding API unavailable");
+                if (typeof entity.startRiding !== "function") {
+                    throw new Error("Entity.startRiding() is unavailable");
                 }
 
-                // Keep the mount reference authoritative. The AI will reuse it
-                // instead of repeatedly searching for a nearby horse.
+                const started = entity.startRiding(mount);
+                if (!started) {
+                    throw new Error("startRiding() returned false");
+                }
+
                 mount.setDynamicProperty("soldier:riderId", entity.id);
             } catch (error) {
                 console.warn(`[Soldier] Cavalry mount failed: ${error}`);
@@ -146,17 +144,24 @@ function spawnCavalryMount(dimension, location, owner, level) {
     mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
     mount.setDynamicProperty("soldier:level", level);
 
-    // Bedrock horse spawning can produce a foal. Force the adult age event
-    // immediately and once more on the next tick for version compatibility.
+    // Explicitly grow the horse to adult size. The Script API exposes entity
+    // type events through triggerEvent(); this is more reliable than executing
+    // a command and works with the current Bedrock API.
     growHorseUp(mount);
     system.runTimeout(() => {
         if (mount?.isValid) growHorseUp(mount);
     }, 1);
 
-    // Make the mount persistent so unloading/reloading does not delete it.
-    try {
-        mount.runCommand("event entity @s minecraft:ageable_grow_up");
-    } catch {}
+    // A cavalry mount belongs to the same player as the soldier. Taming also
+    // prevents vanilla horse interaction logic from treating it as a wild horse.
+    if (owner) {
+        try {
+            const tameable = mount.getComponent("minecraft:tameable");
+            tameable?.tame(owner);
+        } catch (error) {
+            if (DEBUG) console.warn(`[Soldier] Horse taming failed: ${error}`);
+        }
+    }
 
     return mount;
 }
@@ -164,7 +169,7 @@ function spawnCavalryMount(dimension, location, owner, level) {
 function growHorseUp(mount) {
     if (!mount?.isValid) return;
     try {
-        mount.runCommand("event entity @s minecraft:ageable_grow_up");
+        mount.triggerEvent("minecraft:ageable_grow_up");
     } catch (error) {
         if (DEBUG) console.warn(`[Soldier] Could not force horse to adult: ${error}`);
     }
