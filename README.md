@@ -40,13 +40,16 @@ Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infa
 - berechnen eine ballistische Flugbahn inklusive Fallkorrektur,
 - spielen beim Schuss den Bogenschuss-Sound,
 - schießen abhängig vom Soldaten-Level schneller,
-- besitzen eine Sichtlinienprüfung vor jedem Schuss.
+- besitzen eine mehrstufige Sichtlinienprüfung vor jedem Schuss,
+- überwachen die Flugbahn jedes erzeugten Pfeils.
 
 ### 👁️ Sichtweite & Hindernisse
 
-Fernkampfangriffe benötigen eine **freie Sichtlinie** zwischen Bogenschütze und Ziel. Vor dem Schuss wird per Block-Ray geprüft, ob ein nicht passierbarer Block die Flugbahn blockiert. Befindet sich beispielsweise eine Wand zwischen Bogenschütze und Gegner, wird kein Pfeil abgeschossen.
+Fernkampfangriffe benötigen eine **freie Sichtlinie** zwischen Bogenschütze und Ziel. Vor dem Schuss wird per Block-Ray geprüft, ob ein nicht passierbarer Block die Schusslinie blockiert. Die Prüfung verwendet mehrere Zielhöhen, damit Teildeckung nicht einfach umgangen wird.
 
-Die Prüfung erfolgt sowohl beim normalen Zielangriff als auch direkt vor dem Erzeugen des Pfeils. Dadurch können Pfeile nicht absichtlich durch Wände gespawnt bzw. geschossen werden.
+Zusätzlich wird die tatsächliche Pfeilbewegung serverseitig überwacht. Zwischen der letzten und der aktuellen Pfeilposition wird eine Block-Ray-Prüfung durchgeführt. Wird dabei eine Blockfläche gekreuzt, wird der Pfeil sofort entfernt. Dadurch werden auch schnelle Pfeile abgesichert, die zwischen zwei Script-Ticks theoretisch durch eine Wand tunneln könnten.
+
+Die Sichtlinienprüfung und die Flugbahnprüfung sind bewusst **fail-closed**: Wenn eine Ray-Abfrage fehlschlägt, darf der Pfeil nicht weiterfliegen bzw. nicht abgeschossen werden.
 
 ### 🐎 Kavallerie
 
