@@ -46,12 +46,14 @@ Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infa
 - schießen abhängig vom Soldaten-Level schneller,
 - besitzen eine mehrstufige Sichtlinienprüfung vor jedem Schuss,
 - überwachen die Flugbahn jedes erzeugten Pfeils,
-- verwenden eine Pfeilgeschwindigkeit von `3.2` mit `0.05` Gravitation und `0.99` Luftwiderstand,
+- verwenden eine Pfeilgeschwindigkeit von `6.0` mit `0.05` Gravitation und `0.99` Luftwiderstand,
 - können Ziele bis zu einer Entfernung von `40` Blöcken erfassen.
 
 ### 🏹 Pfeilphysik
 
-Die Pfeilphysik wurde auf eine langsamere, deutlich sichtbarere Flugbahn umgestellt. Der ballistische Solver simuliert pro Tick horizontale Bewegung, Luftwiderstand und Gravitation und sucht anschließend numerisch nach einem passenden Abschusswinkel. Dadurch wird die Fallkurve bei kurzen und langen Schüssen wesentlich konsistenter.
+Die Pfeilgeschwindigkeit wurde auf `6.0` gesetzt, damit die Projektile die erwartete Fernkampfdistanz erreichen. Der ballistische Solver verwendet exakt denselben Geschwindigkeitswert wie `projectile.shoot()`. Dadurch bleibt die berechnete Flugkurve trotz der höheren Geschwindigkeit konsistent mit dem tatsächlich gestarteten Projektil.
+
+Der Solver simuliert pro Tick horizontale Bewegung, Luftwiderstand und Gravitation und sucht anschließend numerisch nach einem passenden Abschusswinkel. Dadurch wird die Fallkurve bei kurzen und langen Schüssen konsistent berechnet.
 
 Zusätzlich wird die voraussichtliche Flugzeit für bewegte Ziele geschätzt. Der Bogenschütze führt bis zu drei kurze Korrekturen der Zielposition durch, damit laufende Gegner nicht mehr ausschließlich auf ihre aktuelle Position beschossen werden.
 
