@@ -2,7 +2,7 @@
 
 > Aktueller Entwicklungsplan für `mc-siedler-bp`.
 
-**Stand:** 03.09.2026  
+**Stand:** 04.09.2026  
 **Behavior Pack:** `mc-siedler-bp`  
 **Resource Pack:** `mc-siedler-rp`
 
@@ -75,7 +75,6 @@
 - [ ] Formation
 - [ ] intelligente Zielprioritäten
 
-
 ## 2.3 Befehle & Gruppen
 
 - [x] Soldier Commands
@@ -83,6 +82,7 @@
 - [x] Soldatengruppen
 - [x] Gruppenverwaltung
 - [x] Formationsgrundlage
+- [x] Gruppen-Erstellungsformular auf aktuelle `@minecraft/server-ui`-2.x-Signaturen angepasst
 - [ ] mehrere komplexe Gruppen gleichzeitig befehligen
 
 ---
