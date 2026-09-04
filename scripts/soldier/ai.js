@@ -76,11 +76,56 @@ function updateSoldiers() {
 
 function updateSoldier(soldier, now) {
     if (!isValid(soldier.entity)) return false;
+
     synchronize(soldier);
+
     const command = getSoldierCommand(soldier);
-    if (command && executeCommand(soldier, command, now)) { applyNaturalMovement(soldier); return true; }
-    const result = soldier.type === "cavalry" ? runCavalryAI(soldier, now) || runAutonomousAI(soldier, now) : runAutonomousAI(soldier, now);
+
+    if (command && executeCommand(soldier, command, now)) {
+        applyNaturalMovement(soldier);
+        return true;
+    }
+
+    let result = true;
+
+    /*
+     * ARCHER:
+     *
+     * Bogenschützen werden NICHT mehr durch die normale
+     * Nahkampf-KI gesteuert.
+     *
+     * ranged_ai.js übernimmt:
+     * - Zielsuche
+     * - Distanz
+     * - Bewegung
+     * - Ausrichtung
+     * - Schuss
+     * - Cooldown
+     *
+     * Dadurch kann fightTarget() den Bogenschützen
+     * nicht mehr zum Gegner ziehen.
+     */
+    if (soldier.type === "archer") {
+        applyNaturalMovement(soldier);
+        return true;
+    }
+
+    /*
+     * CAVALRY
+     */
+    if (soldier.type === "cavalry") {
+        result =
+            runCavalryAI(soldier, now) ||
+            runAutonomousAI(soldier, now);
+    } else {
+        /*
+         * INFANTRY / normale Nahkämpfer
+         */
+        result = runAutonomousAI(soldier, now);
+    }
+
     applyNaturalMovement(soldier);
+
     return result;
 }
 
