@@ -25,7 +25,7 @@
 - [x] Bogenschützen mit echter `minecraft:arrow`-Projectile-KI
 - [x] Ballistisches Zielen inklusive diskreter Gravitation-/Drag-Simulation
 - [x] Projectile-Owner für korrekte Trefferzuordnung
-- [x] Realistischere Pfeilgeschwindigkeit (`3.2`)
+- [x] Pfeilgeschwindigkeit auf `6.0` korrigiert, damit die erwartete Fernkampfreichweite erreicht wird
 - [x] Vorausschauendes Zielen auf bewegte Ziele
 - [x] Pfeilstart mit sicherem Vorwärts-Offset gegen Selbstkollision
 - [x] Pfeilrotation wird während des Fluges an die Flugrichtung angepasst
@@ -80,12 +80,14 @@
 - [x] automatische Pfeil-Bereinigung nach langer Flugzeit
 - [x] automatische Bogenschützen-Schussintervalle nach Level
 - [x] erhöhte Zielreichweite
+- [x] Pfeilgeschwindigkeit mit `projectile.shoot()` und ballistischem Solver auf `6.0` synchronisiert
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
 - [ ] intelligente Zielprioritäten
 - [ ] Ausweich- und Blockverhalten
 - [ ] Pfeil-/Schadenswerte vollständig an Bogenverzauberungen und Soldier-Level koppeln
+- [ ] reale Ingame-Flugdistanz und Treffergenauigkeit nach Geschwindigkeitsanpassung testen
 
 ### 2.3 Gruppen & Formationen
 
@@ -179,6 +181,7 @@
 8. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
 9. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
 10. Treffer- und Schadenszuordnung bei bewegten Zielen testen
+11. Korrigierte Pfeilgeschwindigkeit von `6.0` auf reale Flugdistanz und Treffergenauigkeit testen
 
 ### Leitprinzip
 
