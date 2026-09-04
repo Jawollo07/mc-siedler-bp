@@ -25,6 +25,8 @@
 - [x] Bogenschützen mit echter `minecraft:arrow`-Projectile-KI
 - [x] Ballistisches Zielen inklusive Fallkorrektur
 - [x] Projectile-Owner für korrekte Trefferzuordnung
+- [x] Erhöhte Bogenschützen-Pfeilgeschwindigkeit (`4.0`)
+- [x] Erweiterte Bogenschützen-Zielreichweite auf `40` Blöcke
 - [x] Spieler-Dashboard und Soldatenstatistiken
 - [x] Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
@@ -66,6 +68,7 @@
 - [x] echte sichtbare `minecraft:arrow`-Projektile
 - [x] Zielgerichtetes ballistisches Schießen
 - [x] automatische Bogenschützen-Schussintervalle nach Level
+- [x] erhöhte Pfeilgeschwindigkeit und größere Zielreichweite
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
