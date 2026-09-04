@@ -22,7 +22,8 @@ const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
  *         color: "§c",
  *         players: ["player-id"],
  *         taxChest: null,
- *         taxBonus: 0
+ *         taxBonus: 0,
+ *         coords: null
  *     }
  * }
  */
@@ -50,15 +51,27 @@ export function getTeams() {
             if (!Object.prototype.hasOwnProperty.call(teamData, "taxBonus")) {
                 teamData.taxBonus = 0;
                 migrated = true;
-                continue;
+            } else {
+                const numericBonus = Number(teamData.taxBonus);
+                if (!Number.isFinite(numericBonus) || numericBonus < 0) {
+                    teamData.taxBonus = 0;
+                    migrated = true;
+                } else if (teamData.taxBonus !== Math.floor(numericBonus)) {
+                    teamData.taxBonus = Math.floor(numericBonus);
+                    migrated = true;
+                }
             }
 
-            const numericBonus = Number(teamData.taxBonus);
-            if (!Number.isFinite(numericBonus) || numericBonus < 0) {
-                teamData.taxBonus = 0;
-                migrated = true;
-            } else if (teamData.taxBonus !== Math.floor(numericBonus)) {
-                teamData.taxBonus = Math.floor(numericBonus);
+            const normalizedCoords = normalizeCoordinates(teamData.coords);
+            const coordsChanged = normalizedCoords
+                ? !teamData.coords
+                    || teamData.coords.x !== normalizedCoords.x
+                    || teamData.coords.y !== normalizedCoords.y
+                    || teamData.coords.z !== normalizedCoords.z
+                : teamData.coords !== null;
+
+            if (coordsChanged) {
+                teamData.coords = normalizedCoords;
                 migrated = true;
             }
         }
@@ -91,6 +104,58 @@ export function saveTeams(teams) {
         console.error(`[Teams] Fehler beim Speichern der Teams: ${error}`);
         return false;
     }
+}
+
+/**
+ * Returns the saved coordinates of a team.
+ *
+ * @param {string} teamName
+ * @returns {{x: number, y: number, z: number}|null}
+ */
+export function getTeamCoordinates(teamName) {
+    const coordinates = getTeams()[teamName]?.coords;
+    const normalized = normalizeCoordinates(coordinates);
+
+    return normalized ? { ...normalized } : null;
+}
+
+/**
+ * Saves integer coordinates for a team.
+ *
+ * @param {string} teamName
+ * @param {{x: number, y: number, z: number}} coordinates
+ * @returns {boolean}
+ */
+export function setTeamCoordinates(teamName, coordinates) {
+    const normalized = normalizeCoordinates(coordinates);
+    if (!normalized) {
+        return false;
+    }
+
+    const teams = getTeams();
+    if (!teams[teamName]) {
+        return false;
+    }
+
+    teams[teamName].coords = normalized;
+    return saveTeams(teams);
+}
+
+function normalizeCoordinates(coordinates) {
+    if (!coordinates || typeof coordinates !== "object") {
+        return null;
+    }
+
+    const values = [coordinates.x, coordinates.y, coordinates.z].map(Number);
+    if (!values.every(Number.isFinite)) {
+        return null;
+    }
+
+    return {
+        x: Math.floor(values[0]),
+        y: Math.floor(values[1]),
+        z: Math.floor(values[2])
+    };
 }
 
 /**
@@ -253,7 +318,8 @@ function registerTeamCommands(registry) {
                 color,
                 players: [],
                 taxChest: null,
-                taxBonus: 0
+                taxBonus: 0,
+                coords: null
             };
 
             player.sendMessage(
@@ -482,6 +548,40 @@ function registerTeamCommands(registry) {
                     }`
                 );
             }
+        });
+
+        return { status: CustomCommandStatus.Success };
+    });
+    registry.registerCommand({
+        name: "siedler:set_team_coords",
+        description: "Speichert die Koordinaten eines Teams.",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false,
+        mandatoryParameters: [
+            { type: CustomCommandParamType.String, name: "team" },
+            { type: CustomCommandParamType.Float, name: "x" },
+            { type: CustomCommandParamType.Float, name: "y" },
+            { type: CustomCommandParamType.Float, name: "z" }
+        ]
+    }, (origin, team, x, y, z) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+
+        const teamName = String(team ?? "").trim();
+        const coords = [x, y, z].map(Number);
+
+        if (!coords.every(Number.isFinite)) {
+            player.sendMessage("§cUngültige Koordinaten.");
+            return { status: CustomCommandStatus.Failure };
+        }
+
+        system.run(() => {
+            if (!setTeamCoordinates(teamName, { x: coords[0], y: coords[1], z: coords[2] })) {
+                player.sendMessage(`§cDie Koordinaten für Team "${teamName}" konnten nicht gespeichert werden.`);
+                return;
+            }
+
+            player.sendMessage(`§aKoordinaten für Team "${teamName}" wurden auf (${coords[0]}, ${coords[1]}, ${coords[2]}) gesetzt.`);
         });
 
         return { status: CustomCommandStatus.Success };
