@@ -3,9 +3,9 @@ import { SOLDIER_CONFIG, SOLDIERS } from "./config.js";
 import { getPlayerTeam, getSoldierTeam } from "../teams/index.js";
 import { getTeamRelation, TEAM_RELATION } from "../teams/relations.js";
 
-const CHARGE_DISTANCE = 6;
-const CHARGE_MIN_DISTANCE = 3.5;
-const PASS_DISTANCE = 2.8;
+const CHARGE_DISTANCE = 8;
+const CHARGE_MIN_DISTANCE = 3.0;
+const PASS_DISTANCE = 2.6;
 const REPOSITION_DISTANCE = 5;
 const ATTACK_COOLDOWN = 850;
 const CHARGE_COOLDOWN = 5000;
@@ -16,13 +16,20 @@ const MAX_TARGET_DISTANCE = 24;
 
 /**
  * Dedicated cavalry combat AI.
- * Cavalry does not simply stop in front of an enemy. It approaches from range,
- * accelerates into a charge, strikes while passing the target, then circles back
- * for another attack.
+ * Movement is handled by ai.js/applyNaturalMovement(). This module only
+ * calculates the desired direction and combat state. That prevents the
+ * mounted unit from receiving two competing movement systems.
  */
 export function runCavalryAI(soldier, now) {
     const entity = soldier.entity;
     if (!entity?.isValid) return false;
+
+    const mount = getMount(soldier);
+    if (!mount) {
+        soldier.targetId = null;
+        stopCavalry(soldier);
+        return false;
+    }
 
     const target = getCavalryTarget(soldier);
     if (!target) {
@@ -31,14 +38,9 @@ export function runCavalryAI(soldier, now) {
         return true;
     }
 
+    soldier.mount = mount;
     soldier.targetId = target.id;
     const distance = horizontalDistance(entity.location, target.location);
-    const mount = getMount(soldier);
-
-    if (!mount) {
-        // A cavalry unit without its horse falls back to ordinary melee behavior.
-        return false;
-    }
 
     if (soldier.cavalryState === "charge" && distance <= PASS_DISTANCE) {
         performChargeHit(soldier, target, now);
@@ -50,6 +52,7 @@ export function runCavalryAI(soldier, now) {
     }
 
     if (soldier.cavalryState === "circle" || !soldier.cavalryState) {
+        setStateMove(soldier);
         if (distance >= CHARGE_MIN_DISTANCE && distance <= CHARGE_DISTANCE && now >= (soldier.cavalryNextCharge ?? 0)) {
             startCharge(soldier, target, now);
             return true;
@@ -59,15 +62,19 @@ export function runCavalryAI(soldier, now) {
     }
 
     if (soldier.cavalryState === "charge") {
+        setStateMove(soldier);
         setCavalryDirection(soldier, target, true);
         return true;
     }
 
     if (soldier.cavalryState === "pass") {
+        setStateMove(soldier);
         setCavalryDirection(soldier, target, false);
         return true;
     }
 
+    setStateMove(soldier);
+    setCavalryDirection(soldier, target, false);
     return true;
 }
 
@@ -82,13 +89,14 @@ function startCharge(soldier, target, now) {
     soldier.cavalryChargeTargetId = target.id;
     soldier.cavalryChargeStarted = now;
     soldier.cavalryNextCharge = now + CHARGE_COOLDOWN;
-    faceEntity(soldier.entity, target.location);
+    setStateMove(soldier);
     setCavalryDirection(soldier, target, true);
 }
 
 function performChargeHit(soldier, target, now) {
     if ((soldier.cavalryLastHit ?? 0) + ATTACK_COOLDOWN > now) {
         soldier.cavalryState = "pass";
+        setStateMove(soldier);
         return;
     }
 
@@ -101,8 +109,16 @@ function performChargeHit(soldier, target, now) {
         const dx = target.location.x - entity.location.x;
         const dz = target.location.z - entity.location.z;
         const distance = Math.hypot(dx, dz) || 1;
-        target.applyImpulse?.({ x: (dx / distance) * CHARGE_IMPULSE, y: 0.05, z: (dz / distance) * CHARGE_IMPULSE });
-        entity.applyImpulse?.({ x: (-dx / distance) * PASS_IMPULSE, y: 0, z: (-dz / distance) * PASS_IMPULSE });
+        target.applyImpulse?.({
+            x: (dx / distance) * CHARGE_IMPULSE,
+            y: 0.05,
+            z: (dz / distance) * CHARGE_IMPULSE
+        });
+        entity.applyImpulse?.({
+            x: (-dx / distance) * PASS_IMPULSE,
+            y: 0,
+            z: (-dz / distance) * PASS_IMPULSE
+        });
     } catch (error) {
         console.warn(`[Cavalry AI] Charge attack failed: ${error}`);
     }
@@ -110,6 +126,7 @@ function performChargeHit(soldier, target, now) {
     soldier.cavalryLastHit = now;
     soldier.cavalryState = "pass";
     soldier.cavalryNextCharge = now + CHARGE_COOLDOWN;
+    setStateMove(soldier);
 }
 
 function setCavalryDirection(soldier, target, aggressive) {
@@ -119,11 +136,13 @@ function setCavalryDirection(soldier, target, aggressive) {
 
     const dx = target.location.x - entity.location.x;
     const dz = target.location.z - entity.location.z;
-    const distance = Math.hypot(dx, dz) || 1;
+    const distance = Math.hypot(dx, dz);
+    if (distance <= 0.01) return;
+
     let dirX = dx / distance;
     let dirZ = dz / distance;
 
-    // During a pass, continue forward instead of turning immediately back into the target.
+    // During a pass, keep riding forward instead of turning directly into the target.
     if (soldier.cavalryState === "pass") {
         const rotation = mount.getRotation?.() ?? entity.getRotation?.() ?? { y: 0 };
         const yaw = Number(rotation.y) * Math.PI / 180;
@@ -131,23 +150,49 @@ function setCavalryDirection(soldier, target, aggressive) {
         dirZ = Math.cos(yaw);
     }
 
-    const speed = Number(entity.getDynamicProperty("soldier:speed") ?? 0.38);
-    const multiplier = aggressive ? 1.15 : 0.9;
+    // applyNaturalMovement() consumes these values and moves the mount.
+    soldier.desiredDirection.x = dirX;
+    soldier.desiredDirection.z = dirZ;
+
     try {
-        mount.setRotation?.({ x: 0, y: Math.atan2(-dirX, dirZ) * 180 / Math.PI });
-        mount.applyImpulse({ x: dirX * speed * multiplier * 0.11, y: 0, z: dirZ * speed * multiplier * 0.11 });
+        const yaw = Math.atan2(-dirX, dirZ) * 180 / Math.PI;
+        mount.setRotation?.({ x: 0, y: yaw });
     } catch {}
+}
+
+function setStateMove(soldier) {
+    // ai.js uses phase === MOVE as the movement gate. The old cavalry AI only
+    // changed cavalryState, so applyNaturalMovement() considered the horse idle.
+    soldier.phase = SOLDIER_CONFIG.STATES.MOVE;
+    if (!soldier.desiredDirection) soldier.desiredDirection = { x: 0, z: 0 };
+    if (!soldier.velocity) soldier.velocity = { x: 0, z: 0 };
 }
 
 function stopCavalry(soldier) {
     soldier.cavalryState = "circle";
+    if (soldier.desiredDirection) {
+        soldier.desiredDirection.x = 0;
+        soldier.desiredDirection.z = 0;
+    }
+    if (soldier.velocity) {
+        soldier.velocity.x *= 0.5;
+        soldier.velocity.z *= 0.5;
+    }
+    soldier.phase = SOLDIER_CONFIG.STATES.IDLE;
 }
 
 function getMount(soldier) {
-    if (soldier.mount?.isValid) return soldier.mount;
+    if (soldier.mount?.isValid && soldier.mount.hasTag?.("soldier_mount")) return soldier.mount;
     try {
-        const nearby = soldier.entity.dimension.getEntities({ location: soldier.entity.location, maxDistance: 2.5 });
-        return nearby.find(entity => entity.isValid && entity.hasTag?.("soldier_mount")) ?? null;
+        const nearby = soldier.entity.dimension.getEntities({
+            location: soldier.entity.location,
+            maxDistance: 3.5
+        });
+        return nearby.find(entity =>
+            entity.isValid &&
+            entity.id !== soldier.entity.id &&
+            entity.hasTag?.("soldier_mount")
+        ) ?? null;
     } catch {
         return null;
     }
@@ -156,8 +201,16 @@ function getMount(soldier) {
 function getCavalryTarget(soldier) {
     if (soldier.targetId) {
         try {
-            for (const entity of soldier.entity.dimension.getEntities({ location: soldier.entity.location, maxDistance: MAX_TARGET_DISTANCE })) {
-                if (entity.id === soldier.targetId && isEnemy(soldier, entity) && !isDead(entity)) return entity;
+            for (const entity of soldier.entity.dimension.getEntities({
+                location: soldier.entity.location,
+                maxDistance: MAX_TARGET_DISTANCE
+            })) {
+                if (
+                    entity.id === soldier.targetId &&
+                    !isMount(entity) &&
+                    isEnemy(soldier, entity) &&
+                    !isDead(entity)
+                ) return entity;
             }
         } catch {}
     }
@@ -165,8 +218,18 @@ function getCavalryTarget(soldier) {
     let best = null;
     let bestDistance = Infinity;
     try {
-        for (const candidate of soldier.entity.dimension.getEntities({ location: soldier.entity.location, maxDistance: MAX_TARGET_DISTANCE })) {
-            if (!candidate.isValid || candidate.id === soldier.entity.id || isDead(candidate) || !isEnemy(soldier, candidate)) continue;
+        for (const candidate of soldier.entity.dimension.getEntities({
+            location: soldier.entity.location,
+            maxDistance: MAX_TARGET_DISTANCE
+        })) {
+            if (
+                !candidate.isValid ||
+                candidate.id === soldier.entity.id ||
+                isMount(candidate) ||
+                isDead(candidate) ||
+                !isEnemy(soldier, candidate)
+            ) continue;
+
             const distance = horizontalDistanceSquared(soldier.entity.location, candidate.location);
             if (distance < bestDistance) {
                 best = candidate;
@@ -179,16 +242,24 @@ function getCavalryTarget(soldier) {
     return best;
 }
 
+function isMount(entity) {
+    try {
+        return !!entity?.hasTag?.("soldier_mount");
+    } catch {
+        return false;
+    }
+}
+
 function isEnemy(soldier, target) {
     const soldierTeam = getSoldierTeam(soldier);
-    if (!soldierTeam || !target?.isValid) return false;
+    if (!soldierTeam || !target?.isValid || isMount(target)) return false;
 
     if (target.typeId === "minecraft:player") {
         const targetTeam = getPlayerTeam(target);
         return !!targetTeam && getTeamRelation(soldierTeam, targetTeam) === TEAM_RELATION.HOSTILE;
     }
 
-    if (target.hasTag?.("soldier") || target.typeId === "siedler:soldier") {
+    if (target.hasTag?.("soldier") || target.typeId === "siedler:soldier" || target.typeId === "siedler:infantry" || target.typeId === "siedler:archer" || target.typeId === "siedler:cavalry") {
         const targetSoldier = SOLDIERS.get(target.id);
         const targetTeam = targetSoldier ? getSoldierTeam(targetSoldier) : null;
         return !!targetTeam && getTeamRelation(soldierTeam, targetTeam) === TEAM_RELATION.HOSTILE;
@@ -213,13 +284,4 @@ function horizontalDistanceSquared(a, b) {
     const x = b.x - a.x;
     const z = b.z - a.z;
     return x * x + z * z;
-}
-
-function faceEntity(entity, location) {
-    const dx = location.x - entity.location.x;
-    const dz = location.z - entity.location.z;
-    if (Math.hypot(dx, dz) < 0.01) return;
-    try {
-        entity.setRotation?.({ x: 0, y: Math.atan2(-dx, dz) * 180 / Math.PI });
-    } catch {}
 }
