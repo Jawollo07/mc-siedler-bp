@@ -11,8 +11,6 @@ import {
 
 const DEBUG = true;
 
-/** All soldier variants use the same registered entity definition and differentiate
- * themselves via dynamic properties and tags. */
 const SOLDIER_ENTITY_IDS = Object.freeze({
     infantry: "siedler:infantry",
     archer: "siedler:archer",
@@ -72,21 +70,20 @@ export function spawnSoldier(
 
         if (typeData.mount) {
             try {
-                mount = dimension.spawnEntity(typeData.mount, {
-                    x: location.x,
-                    y: location.y,
-                    z: location.z
-                });
-                mount.addTag("soldier_mount");
-                mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
-                mount.setDynamicProperty("soldier:level", level);
-                if (typeof entity.startRiding === "function") {
-                    entity.startRiding(mount);
+                mount = spawnCavalryMount(dimension, location, owner, level);
+
+                if (mount && typeof entity.startRiding === "function") {
+                    const started = entity.startRiding(mount);
+                    if (!started) {
+                        throw new Error("startRiding() returned false");
+                    }
                 } else {
-                    mount.addTag("siedler_mount_pending");
-                    entity.runCommand(`ride @s start_riding @e[type=${typeData.mount},tag=siedler_mount_pending,c=1] teleport_rider`);
-                    mount.removeTag("siedler_mount_pending");
+                    throw new Error("Mounted riding API unavailable");
                 }
+
+                // Keep the mount reference authoritative. The AI will reuse it
+                // instead of repeatedly searching for a nearby horse.
+                mount.setDynamicProperty("soldier:riderId", entity.id);
             } catch (error) {
                 console.warn(`[Soldier] Cavalry mount failed: ${error}`);
                 try { if (mount?.isValid) mount.remove(); } catch {}
@@ -115,7 +112,15 @@ export function spawnSoldier(
             nextAttack: 0,
             nextTargetSearch: 0,
             nextMovement: 0,
-            command: null
+            command: null,
+            desiredDirection: { x: 0, z: 0 },
+            velocity: { x: 0, z: 0 },
+            lastPosition: { ...location },
+            attack: null,
+            strafe: { x: 0, z: 0, until: 0, next: 0 },
+            cavalryState: "circle",
+            cavalryNextCharge: 0,
+            cavalryLastHit: 0
         });
 
         return entity;
@@ -124,6 +129,44 @@ export function spawnSoldier(
         try { if (entity?.isValid) entity.remove(); } catch {}
         try { if (mount?.isValid) mount.remove(); } catch {}
         return null;
+    }
+}
+
+function spawnCavalryMount(dimension, location, owner, level) {
+    const mount = dimension.spawnEntity("minecraft:horse", {
+        x: location.x,
+        y: location.y,
+        z: location.z
+    });
+
+    if (!mount?.isValid) throw new Error("Horse entity is invalid after spawn");
+
+    mount.addTag("soldier_mount");
+    mount.addTag("cavalry_mount");
+    mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
+    mount.setDynamicProperty("soldier:level", level);
+
+    // Bedrock horse spawning can produce a foal. Force the adult age event
+    // immediately and once more on the next tick for version compatibility.
+    growHorseUp(mount);
+    system.runTimeout(() => {
+        if (mount?.isValid) growHorseUp(mount);
+    }, 1);
+
+    // Make the mount persistent so unloading/reloading does not delete it.
+    try {
+        mount.runCommand("event entity @s minecraft:ageable_grow_up");
+    } catch {}
+
+    return mount;
+}
+
+function growHorseUp(mount) {
+    if (!mount?.isValid) return;
+    try {
+        mount.runCommand("event entity @s minecraft:ageable_grow_up");
+    } catch (error) {
+        if (DEBUG) console.warn(`[Soldier] Could not force horse to adult: ${error}`);
     }
 }
 
