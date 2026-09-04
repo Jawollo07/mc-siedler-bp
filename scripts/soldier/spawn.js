@@ -72,13 +72,16 @@ export function spawnSoldier(
             try {
                 mount = spawnCavalryMount(dimension, location, owner, level);
 
-                if (typeof entity.startRiding !== "function") {
-                    throw new Error("Entity.startRiding() is unavailable");
+                // startRiding() was removed/unavailable in the current Script API.
+                // Riding is now controlled through the mount's rideable component.
+                const rideable = mount.getComponent("minecraft:rideable");
+                if (!rideable || typeof rideable.addRider !== "function") {
+                    throw new Error("minecraft:rideable.addRider() is unavailable");
                 }
 
-                const started = entity.startRiding(mount);
-                if (!started) {
-                    throw new Error("startRiding() returned false");
+                const added = rideable.addRider(entity);
+                if (!added) {
+                    throw new Error("minecraft:rideable.addRider() returned false");
                 }
 
                 mount.setDynamicProperty("soldier:riderId", entity.id);
@@ -144,16 +147,13 @@ function spawnCavalryMount(dimension, location, owner, level) {
     mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
     mount.setDynamicProperty("soldier:level", level);
 
-    // Explicitly grow the horse to adult size. The Script API exposes entity
-    // type events through triggerEvent(); this is more reliable than executing
-    // a command and works with the current Bedrock API.
+    // Force an adult horse. Do this immediately and once again on the next tick
+    // because vanilla ageable initialization can otherwise overwrite the state.
     growHorseUp(mount);
     system.runTimeout(() => {
         if (mount?.isValid) growHorseUp(mount);
     }, 1);
 
-    // A cavalry mount belongs to the same player as the soldier. Taming also
-    // prevents vanilla horse interaction logic from treating it as a wild horse.
     if (owner) {
         try {
             const tameable = mount.getComponent("minecraft:tameable");
