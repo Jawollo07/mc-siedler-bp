@@ -3,6 +3,7 @@ import { addTaxes } from "./taxes.js";
 import { calculateTax, normalizeTaxBonus } from "./config.js";
 import { getTeams, saveTeams } from "../teams/index.js";
 import { countVillagersInTeamClaims } from "../claims/utils.js";
+import showTaxStatsForm from "./stats.js";
 
 const MORNING_START = 0;
 const MORNING_WINDOW = 200;
@@ -32,6 +33,11 @@ function playerOnly(origin) {
     return player?.typeId === "minecraft:player" ? player : null;
 }
 
+function getCurrentPlayer() {
+    const players = world.getAllPlayers();
+    return players.length > 0 ? players[0] : null;
+}
+
 function getLastPaidDay() {
     const value = world.getDynamicProperty(LAST_PAID_DAY_PROPERTY);
     return typeof value === "number" && Number.isFinite(value) ? Math.floor(value) : -1;
@@ -51,6 +57,11 @@ function payTaxesOncePerDay(currentDay) {
     if (getLastPaidDay() === currentDay) return;
     if (!setLastPaidDay(currentDay)) return;
     payAllTeamTaxes();
+
+    const player = getCurrentPlayer();
+    if (player && typeof showTaxStatsForm === "function") {
+        showTaxStatsForm(player);
+    }
 }
 
 function payAllTeamTaxes() {

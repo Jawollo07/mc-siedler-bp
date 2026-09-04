@@ -99,9 +99,8 @@
 - [x] Hostile
 - [x] persistente Beziehungen
 - [x] Soldiers berücksichtigen Beziehungen
-- [ ] Bündnisse
-- [ ] Kriegserklärung
-- [ ] Diplomatie-UI
+- [x] Bündnisse
+- [x] Diplomatie-UI
 
 ## 🟡 Phase 5 – Wirtschaft
 
@@ -115,8 +114,7 @@
 - [x] Bonus nur für Team des Spielerkillers
 - [x] bestehende Teams erhalten `taxBonus: 0` bei Migration
 - [x] doppelte Tagesauszahlung nach Neustart verhindert
-- [ ] Steuerhistorie
-- [ ] Wirtschaftsstatistiken über Zeit
+- [x] Tägliche Steuer Übersicht
 
 ## 🟡 Phase 6 – Handel & Märkte
 
@@ -124,9 +122,6 @@
 - [x] Markt-Schutz
 - [x] spezialisierte Händler
 - [x] Soldatenhändler
-- [ ] Handelslevel
-- [ ] dynamische Preise
-- [ ] Angebot/Nachfrage
 
 ## 🟢 Phase 7 – Dashboard
 
@@ -139,8 +134,6 @@
 - [x] Soldaten nach Typ
 - [x] Soldier-XP und Level
 - [x] Serverstatistiken über Overworld, Nether und End
-- [ ] historische Statistiken
-- [ ] Leaderboards
 
 ## 🟢 Phase 8 – Resource Pack
 
@@ -150,9 +143,6 @@
 - [x] individuelle Laufanimationen
 - [x] Idle-/Bewegungsanimationen
 - [x] Kampfzustand an RP übergeben
-- [ ] vollständige Angriffsschwinganimation
-- [ ] Treffer-/Blockanimation
-- [ ] Teamfarben am Soldier
 
 ## 🔵 Phase 9 – Monster & Bedrohungen
 
@@ -163,8 +153,6 @@
 - [x] Außenposten
 - [x] Belagerungsgrundlage
 - [x] Verteidigungswarnungen
-- [ ] größere Belagerungsformationen
-- [ ] Belagerungsmaschinen
 
 ## 🎯 Nächster Schwerpunkt
 
