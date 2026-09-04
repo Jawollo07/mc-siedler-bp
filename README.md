@@ -111,6 +111,7 @@ Gemeinsame Funktionen:
 - Schaden-/Gegnerstärke-basierte XP
 - unterschiedliche HP, Geschwindigkeit, Schaden und Reichweite
 - stufenweise bessere Waffen und Rüstung
+- praktische Nahkampf-Reichweite zur Vermeidung von Entity-Collision-Stalls
 - direkte Rekrutierung über den Soldatenhändler
 
 ## 🏠 Claims & Teams
