@@ -31,7 +31,7 @@ Nahkämpfer laufen bis zur praktischen Entity-Kollisionsdistanz und greifen ansc
 
 ### 🏹 Bogenschützen
 
-Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht mehr wie Infanteristen per `applyDamage()` an. Sie:
+Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infanteristen per `applyDamage()` an. Sie:
 
 - halten bevorzugt Abstand zum Gegner,
 - zielen auf das Ziel,
@@ -39,9 +39,14 @@ Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht mehr wie
 - setzen den Bogenschützen als Projectile-Owner,
 - berechnen eine ballistische Flugbahn inklusive Fallkorrektur,
 - spielen beim Schuss den Bogenschuss-Sound,
-- schießen abhängig vom Soldaten-Level schneller.
+- schießen abhängig vom Soldaten-Level schneller,
+- besitzen eine Sichtlinienprüfung vor jedem Schuss.
 
-Damit fliegt tatsächlich ein sichtbarer Pfeil vom Bogenschützen zum Gegner und der Treffer wird über das normale Minecraft-Projektilsystem verarbeitet.
+### 👁️ Sichtweite & Hindernisse
+
+Fernkampfangriffe benötigen eine **freie Sichtlinie** zwischen Bogenschütze und Ziel. Vor dem Schuss wird per Block-Ray geprüft, ob ein nicht passierbarer Block die Flugbahn blockiert. Befindet sich beispielsweise eine Wand zwischen Bogenschütze und Gegner, wird kein Pfeil abgeschossen.
+
+Die Prüfung erfolgt sowohl beim normalen Zielangriff als auch direkt vor dem Erzeugen des Pfeils. Dadurch können Pfeile nicht absichtlich durch Wände gespawnt bzw. geschossen werden.
 
 ### 🐎 Kavallerie
 
