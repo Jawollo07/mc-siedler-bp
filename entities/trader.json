@@ -21,7 +21,7 @@
       "minecraft:physics":{},
       "minecraft:pushable":{"is_pushable":true,"is_pushable_by_piston":true},
       "minecraft:nameable":{},
-      "minecraft:interact":{"interactions":[{"on_interact":"siedler:trader_interact","use_item":false,"interact_text":"§7Handeln"}]},
+      "minecraft:interact":{"interactions":[{"on_interact":{"event":"siedler:trader_interact"},"use_item":false,"interact_text":"§7Handeln"}]},
       "minecraft:behavior.trade_with_player":{"priority":1},
       "minecraft:behavior.look_at_player":{"priority":2,"look_distance":8,"probability":1},
       "minecraft:behavior.random_stroll":{"priority":8,"speed_multiplier":0.6},
@@ -35,7 +35,8 @@
       "siedler:set_tools":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_weapons","trades_supplies","trades_soldiers"]},"add":{"component_groups":["trades_tools"]}},
       "siedler:set_weapons":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_supplies","trades_soldiers"]},"add":{"component_groups":["trades_weapons"]}},
       "siedler:set_supplies":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_weapons","trades_soldiers"]},"add":{"component_groups":["trades_supplies"]}},
-      "siedler:set_soldiers":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_weapons","trades_supplies"]},"add":{"component_groups":["trades_soldiers"]}}
+      "siedler:set_soldiers":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_weapons","trades_supplies"]},"add":{"component_groups":["trades_soldiers"]}},
+      "siedler:trader_interact":{}
     }
   }
 }
