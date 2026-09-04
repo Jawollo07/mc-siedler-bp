@@ -29,6 +29,8 @@ const ARCHER_MAX_RANGE = 40;
 const ARROW_SPEED = 6.0;
 const AIM_HEIGHT = 0.95;
 const ARROW_GRAVITY = 0.05;
+const ARROW_DRAG = 0.99;
+const MAX_ARROW_FLIGHT_TICKS = 80;
 
 const DEFAULT_SHOT_COOLDOWN = 1200;
 
@@ -744,10 +746,6 @@ function shootArrow(
         targetPosition.x -
         origin.x;
 
-    const dy =
-        targetPosition.y -
-        origin.y;
-
     const dz =
         targetPosition.z -
         origin.z;
@@ -764,39 +762,15 @@ function shootArrow(
         return;
     }
 
-    /*
-     * Ballistische Kompensation
-     */
-    const flightTime =
-        horizontalDistance /
-        ARROW_SPEED;
+    const direction = calculateArrowDirection(
+        origin,
+        targetPosition,
+        horizontalDistance
+    );
 
-    const gravityCorrection =
-        0.5 *
-        ARROW_GRAVITY *
-        flightTime *
-        flightTime;
-
-    const adjustedDy =
-        dy +
-        gravityCorrection;
-
-    const length =
-        Math.hypot(
-            dx,
-            adjustedDy,
-            dz
-        );
-
-    if (length <= 0.01) {
+    if (!direction) {
         return;
     }
-
-    const direction = {
-        x: dx / length,
-        y: adjustedDy / length,
-        z: dz / length
-    };
 
 
     /*
@@ -924,6 +898,115 @@ function shootArrow(
             entity.location
         );
     } catch {}
+}
+
+
+function calculateArrowDirection(
+    origin,
+    target,
+    horizontalDistance
+) {
+    const dx = target.x - origin.x;
+    const dz = target.z - origin.z;
+    const targetHeight = target.y - origin.y;
+
+    if (horizontalDistance <= 0.01) {
+        return null;
+    }
+
+    const horizontalX = dx / horizontalDistance;
+    const horizontalZ = dz / horizontalDistance;
+    const lowAngle = -0.35;
+    const highAngle = 0.8;
+
+    const lowError =
+        getArrowHeightAtDistance(
+            horizontalDistance,
+            lowAngle
+        ) - targetHeight;
+
+    const highError =
+        getArrowHeightAtDistance(
+            horizontalDistance,
+            highAngle
+        ) - targetHeight;
+
+    let angle;
+
+    if (lowError <= 0 && highError >= 0) {
+        let lower = lowAngle;
+        let upper = highAngle;
+
+        for (let iteration = 0; iteration < 20; iteration++) {
+            const middle = (lower + upper) / 2;
+            const error =
+                getArrowHeightAtDistance(
+                    horizontalDistance,
+                    middle
+                ) - targetHeight;
+
+            if (error > 0) {
+                upper = middle;
+            } else {
+                lower = middle;
+            }
+        }
+
+        angle = (lower + upper) / 2;
+    } else {
+        angle = Math.abs(lowError) < Math.abs(highError)
+            ? lowAngle
+            : highAngle;
+    }
+
+    return {
+        x: horizontalX * Math.cos(angle),
+        y: Math.sin(angle),
+        z: horizontalZ * Math.cos(angle)
+    };
+}
+
+
+function getArrowHeightAtDistance(
+    horizontalDistance,
+    angle
+) {
+    let horizontalPosition = 0;
+    let height = 0;
+    let horizontalVelocity =
+        Math.cos(angle) * ARROW_SPEED;
+    let verticalVelocity =
+        Math.sin(angle) * ARROW_SPEED;
+
+    for (
+        let tick = 0;
+        tick < MAX_ARROW_FLIGHT_TICKS;
+        tick++
+    ) {
+        const previousHorizontalPosition = horizontalPosition;
+        const previousHeight = height;
+
+        horizontalPosition += horizontalVelocity;
+        height += verticalVelocity;
+
+        if (horizontalPosition >= horizontalDistance) {
+            const segment =
+                horizontalPosition - previousHorizontalPosition;
+            const progress = segment > 0
+                ? (horizontalDistance - previousHorizontalPosition) / segment
+                : 0;
+
+            return previousHeight +
+                (height - previousHeight) * progress;
+        }
+
+        horizontalVelocity *= ARROW_DRAG;
+        verticalVelocity =
+            verticalVelocity * ARROW_DRAG -
+            ARROW_GRAVITY;
+    }
+
+    return height;
 }
 
 
