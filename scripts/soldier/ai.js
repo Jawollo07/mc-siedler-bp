@@ -7,7 +7,7 @@ import { runCavalryAI, runCavalryAttackCommand } from "./cavalry_ai.js";
 
 const SOLDIER_ID = "siedler:soldier";
 const TICK_MS = 50;
-const ARRIVAL_DISTANCE = 1.15;
+const ARRIVAL_DISTANCE = 0.2;
 const SOFT_ARRIVAL_DISTANCE = 2.2;
 const MAX_HORIZONTAL_SPEED = 0.32;
 const MOVEMENT_ACCELERATION = 0.055;
@@ -18,6 +18,8 @@ const ATTACK_RECOVERY = 260;
 const ATTACK_ANIMATION_TICKS = 13;
 const ATTACK_RANGE_PADDING = 0.18;
 const COMBAT_STOP_PADDING = 0.18;
+const MIN_MELEE_COMBAT_RANGE = 1.45;
+const MELEE_HIT_PADDING = 0.35;
 const HIT_LUNGE = 0.035;
 const STRAFE_STRENGTH = 0.045;
 const STRAFE_DURATION = 650;
@@ -50,9 +52,8 @@ function registerExistingSoldier(entity) {
     const level = getDynamicNumber(entity, "soldier:level", Number(getTaggedValue(entity, "soldier_level:")) || 1);
     const typeData = SOLDIER_TYPES[type] ?? SOLDIER_TYPES.infantry;
     const levelData = typeData.levels?.[level] ?? typeData.levels?.[1];
-    const mount = typeData.mount ? findMount(entity) : null;
     SOLDIERS.set(entity.id, {
-        entity, mount, type, level,
+        entity, mount: typeData.mount ? findMount(entity) : null, type, level,
         ownerId: getDynamicString(entity, "soldier:ownerId", null),
         phase: SOLDIER_CONFIG.STATES.IDLE, targetId: null,
         abilities: levelData?.abilities ?? [], abilityCooldowns: {},
@@ -68,9 +69,8 @@ function registerExistingSoldier(entity) {
 
 function updateSoldiers() {
     for (const [id, soldier] of SOLDIERS) {
-        try {
-            if (!updateSoldier(soldier, Date.now())) SOLDIERS.delete(id);
-        } catch (error) { debug(`Update failed for ${id}: ${formatError(error)}`); }
+        try { if (!updateSoldier(soldier, Date.now())) SOLDIERS.delete(id); }
+        catch (error) { debug(`Update failed for ${id}: ${formatError(error)}`); }
     }
 }
 
@@ -78,13 +78,8 @@ function updateSoldier(soldier, now) {
     if (!isValid(soldier.entity)) return false;
     synchronize(soldier);
     const command = getSoldierCommand(soldier);
-    if (command && executeCommand(soldier, command, now)) {
-        applyNaturalMovement(soldier);
-        return true;
-    }
-    const result = soldier.type === "cavalry"
-        ? runCavalryAI(soldier, now) || runAutonomousAI(soldier, now)
-        : runAutonomousAI(soldier, now);
+    if (command && executeCommand(soldier, command, now)) { applyNaturalMovement(soldier); return true; }
+    const result = soldier.type === "cavalry" ? runCavalryAI(soldier, now) || runAutonomousAI(soldier, now) : runAutonomousAI(soldier, now);
     applyNaturalMovement(soldier);
     return result;
 }
@@ -95,17 +90,14 @@ function executeCommand(soldier, command, now) {
         case SOLDIER_COMMANDS.STOP:
             soldier.targetId = null; cancelAttack(soldier); setState(soldier, SOLDIER_CONFIG.STATES.IDLE); clearSoldierCommand(soldier); stopMoving(soldier); return true;
         case SOLDIER_COMMANDS.STAY:
-            soldier.targetId = null; cancelAttack(soldier); setState(soldier, SOLDIER_CONFIG.STATES.IDLE);
-            if (command.position) setMovementTarget(soldier, command.position, now);
-            return true;
+            soldier.targetId = null; cancelAttack(soldier); setState(soldier, SOLDIER_CONFIG.STATES.IDLE); if (command.position) setMovementTarget(soldier, command.position, now); return true;
         case SOLDIER_COMMANDS.MOVE:
             if (!command.position) { clearSoldierCommand(soldier); return false; }
             soldier.targetId = null; cancelAttack(soldier);
             if (distanceBetween(entity.location, command.position) <= ARRIVAL_DISTANCE) { setState(soldier, SOLDIER_CONFIG.STATES.IDLE); clearSoldierCommand(soldier); stopMoving(soldier); return true; }
             setState(soldier, SOLDIER_CONFIG.STATES.MOVE); setMovementTarget(soldier, command.position, now); return true;
         case SOLDIER_COMMANDS.FOLLOW: {
-            const owner = getOwner(entity);
-            if (!owner) return true;
+            const owner = getOwner(entity); if (!owner) return true;
             soldier.targetId = null; cancelAttack(soldier);
             if (distanceBetween(entity.location, owner.location) <= SOFT_ARRIVAL_DISTANCE) { setState(soldier, SOLDIER_CONFIG.STATES.IDLE); stopMoving(soldier); return true; }
             setState(soldier, SOLDIER_CONFIG.STATES.MOVE); setMovementTarget(soldier, owner.location, now); return true;
@@ -134,28 +126,27 @@ function runAutonomousAI(soldier, now) {
         soldier.nextTargetSearch = now + ticksToMs(SOLDIER_CONFIG.TARGET_INTERVAL);
         if (target) soldier.targetId = target.id;
     }
-    if (!soldier.targetId) {
-        cancelAttack(soldier); setState(soldier, SOLDIER_CONFIG.STATES.IDLE); stopMoving(soldier); return true;
-    }
+    if (!soldier.targetId) { cancelAttack(soldier); setState(soldier, SOLDIER_CONFIG.STATES.IDLE); stopMoving(soldier); return true; }
     const target = findEntityById(soldier.entity, soldier.targetId);
-    if (!target || !isEnemy(soldier, target) || isDead(target)) {
-        soldier.targetId = null; cancelAttack(soldier); stopMoving(soldier); return true;
-    }
+    if (!target || !isEnemy(soldier, target) || isDead(target)) { soldier.targetId = null; cancelAttack(soldier); stopMoving(soldier); return true; }
     return fightTarget(soldier, target, now);
 }
 
 function fightTarget(soldier, target, now) {
     const entity = soldier.entity;
     const distance = distanceBetween(entity.location, target.location);
-    const range = getDynamicNumber(entity, "soldier:attackRange", SOLDIER_CONFIG.DEFAULT_ATTACK_RANGE);
+    const range = Math.max(MIN_MELEE_COMBAT_RANGE, getDynamicNumber(entity, "soldier:attackRange", SOLDIER_CONFIG.DEFAULT_ATTACK_RANGE));
     const effectiveRange = range + ATTACK_RANGE_PADDING;
+
     if (soldier.attack) {
         faceTargetSmoothly(entity, target.location); stopMoving(soldier); setState(soldier, SOLDIER_CONFIG.STATES.ATTACK);
         if (now >= soldier.attack.hitAt) performAttackHit(soldier, target, now);
         return true;
     }
     if (distance > effectiveRange) {
-        setState(soldier, SOLDIER_CONFIG.STATES.MOVE); setMovementTarget(soldier, getCombatApproachPosition(entity, target, range), now); return true;
+        setState(soldier, SOLDIER_CONFIG.STATES.MOVE);
+        setMovementTarget(soldier, getCombatApproachPosition(entity, target, range), now);
+        return true;
     }
     stopMoving(soldier); faceTargetSmoothly(entity, target.location);
     if (now >= soldier.nextAttack) beginAttack(soldier, target, now);
@@ -170,15 +161,15 @@ function beginAttack(soldier, target, now) {
 }
 
 function performAttackHit(soldier, target, now) {
-    const attackData = soldier.attack;
-    if (!attackData || attackData.hit) return;
+    const attackData = soldier.attack; if (!attackData || attackData.hit) return;
     attackData.hit = true;
     if (!isValid(target) || isDead(target) || !isEnemy(soldier, target)) { finishAttack(soldier, now); return; }
     const entity = soldier.entity;
-    const range = getDynamicNumber(entity, "soldier:attackRange", SOLDIER_CONFIG.DEFAULT_ATTACK_RANGE);
-    if (distanceBetween(entity.location, target.location) > range + 0.45) { finishAttack(soldier, now); return; }
+    const range = Math.max(MIN_MELEE_COMBAT_RANGE, getDynamicNumber(entity, "soldier:attackRange", SOLDIER_CONFIG.DEFAULT_ATTACK_RANGE));
+    if (distanceBetween(entity.location, target.location) > range + MELEE_HIT_PADDING) { finishAttack(soldier, now); return; }
     const damage = getDynamicNumber(entity, "soldier:damage", SOLDIER_CONFIG.DEFAULT_DAMAGE);
-    try { target.applyDamage(damage); applyHitLunge(soldier, target); } catch (error) { debug(`Attack failed: ${formatError(error)}`); soldier.targetId = null; }
+    try { target.applyDamage(damage); applyHitLunge(soldier, target); debug(`${entity.id} hit ${target.id} for ${damage}`); }
+    catch (error) { debug(`Attack failed: ${formatError(error)}`); }
     finishAttack(soldier, now);
 }
 
@@ -189,14 +180,23 @@ function finishAttack(soldier, now) {
     system.runTimeout(() => { if (isValid(entity) && !soldier.attack) setCombatAnimation(entity, "idle"); }, ATTACK_ANIMATION_TICKS);
 }
 function cancelAttack(soldier) { soldier.attack = null; if (isValid(soldier.entity)) setCombatAnimation(soldier.entity, "idle"); }
-function setCombatAnimation(entity, state) { if (!isValid(entity) || typeof entity.setProperty !== "function") return; try { entity.setProperty("siedler:combat_state", state); } catch (error) { debug(`Combat animation state failed: ${formatError(error)}`); } }
+function setCombatAnimation(entity, state) { if (!isValid(entity) || typeof entity.setProperty !== "function") return; try { entity.setProperty("siedler:combat_state", state); } catch {} }
 function applyHitLunge(soldier, target) { const dx = target.location.x - soldier.entity.location.x, dz = target.location.z - soldier.entity.location.z, distance = Math.hypot(dx, dz); if (distance <= 0.01) return; try { soldier.entity.applyImpulse({ x: dx / distance * HIT_LUNGE, y: 0, z: dz / distance * HIT_LUNGE }); } catch {} }
 function maybeStrafe(soldier, target, now) { if (now < soldier.strafe.until || now < soldier.strafe.next) return; if (Math.random() > 0.22) { soldier.strafe.next = now + STRAFE_COOLDOWN; return; } const dx = target.location.x - soldier.entity.location.x, dz = target.location.z - soldier.entity.location.z, distance = Math.hypot(dx, dz); if (distance <= 0.01) return; const side = Math.random() < 0.5 ? -1 : 1; soldier.strafe.x = -dz / distance * side; soldier.strafe.z = dx / distance * side; soldier.strafe.until = now + STRAFE_DURATION; soldier.strafe.next = now + STRAFE_COOLDOWN; }
-function getCombatApproachPosition(entity, target, range) { const dx = target.location.x - entity.location.x, dz = target.location.z - entity.location.z, distance = Math.hypot(dx, dz); if (distance <= 0.01) return entity.location; const desiredDistance = Math.max(0.8, range - COMBAT_STOP_PADDING); return { x: target.location.x - dx / distance * desiredDistance, y: entity.location.y, z: target.location.z - dz / distance * desiredDistance }; }
+
+function getCombatApproachPosition(entity, target, range) {
+    const dx = target.location.x - entity.location.x, dz = target.location.z - entity.location.z, distance = Math.hypot(dx, dz);
+    if (distance <= 0.01) return entity.location;
+    // setMovementTarget has a 0.2 block arrival threshold. Aim directly for the
+    // target's near side instead of adding another large arrival radius.
+    const desiredDistance = Math.max(0.05, range - ARRIVAL_DISTANCE - COMBAT_STOP_PADDING);
+    return { x: target.location.x - dx / distance * desiredDistance, y: entity.location.y, z: target.location.z - dz / distance * desiredDistance };
+}
+
 function defendPosition(soldier, command, now) { const position = command.position, radius = Number(command.radius ?? 8); if (!position) { clearSoldierCommand(soldier); return false; } if (distanceBetween(soldier.entity.location, position) > radius && now >= soldier.nextMovement) { cancelAttack(soldier); setState(soldier, SOLDIER_CONFIG.STATES.MOVE); setMovementTarget(soldier, position, now); return true; } const target = findTarget(soldier); if (target && distanceBetween(target.location, position) <= radius) return soldier.type === "cavalry" ? runCavalryAI(soldier, now) : fightTarget(soldier, target, now); soldier.targetId = null; cancelAttack(soldier); setState(soldier, SOLDIER_CONFIG.STATES.IDLE); stopMoving(soldier); return true; }
 function patrolPosition(soldier, command, now) { const positions = command.positions; if (!Array.isArray(positions) || positions.length < 2) { clearSoldierCommand(soldier); return false; } const index = Math.min(command.patrolIndex ?? 0, positions.length - 1), position = positions[index]; if (distanceBetween(soldier.entity.location, position) <= ARRIVAL_DISTANCE) { command.patrolIndex = (index + 1) % positions.length; stopMoving(soldier); return true; } cancelAttack(soldier); setState(soldier, SOLDIER_CONFIG.STATES.MOVE); setMovementTarget(soldier, position, now); return true; }
 function setMovementTarget(soldier, position, now) { if (!isValidPosition(position)) return; const dx = Number(position.x) - soldier.entity.location.x, dz = Number(position.z) - soldier.entity.location.z, distance = Math.hypot(dx, dz); if (distance <= ARRIVAL_DISTANCE) { stopMoving(soldier); return; } soldier.desiredDirection.x = dx / distance; soldier.desiredDirection.z = dz / distance; soldier.nextMovement = now + ticksToMs(SOLDIER_CONFIG.MOVEMENT_INTERVAL); }
-function applyNaturalMovement(soldier) { const entity = soldier.entity; if (!isValid(entity)) return; const movementEntity = soldier.type === "cavalry" ? (soldier.mount?.isValid ? soldier.mount : findMount(entity)) : entity; if (soldier.type === "cavalry" && movementEntity) soldier.mount = movementEntity; if (!movementEntity?.isValid) return; const desired = soldier.desiredDirection, velocity = soldier.velocity, moving = Math.hypot(desired.x, desired.z) > 0.01 && soldier.phase === SOLDIER_CONFIG.STATES.MOVE; const maxSpeed = soldier.type === "cavalry" ? Math.min(0.6, getDynamicNumber(entity, "soldier:speed", 0.38) * 1.35) : MAX_HORIZONTAL_SPEED; const targetSpeed = moving ? maxSpeed : 0; const acceleration = moving ? MOVEMENT_ACCELERATION : MOVEMENT_BRAKE; velocity.x += (desired.x * targetSpeed - velocity.x) * acceleration; velocity.z += (desired.z * targetSpeed - velocity.z) * acceleration; if (!moving && soldier.targetId && soldier.strafe?.until > Date.now() && soldier.type !== "cavalry") { velocity.x += (soldier.strafe.x * STRAFE_STRENGTH - velocity.x) * 0.12; velocity.z += (soldier.strafe.z * STRAFE_STRENGTH - velocity.z) * 0.12; } const speed = Math.hypot(velocity.x, velocity.z); if (speed < 0.01) { velocity.x = 0; velocity.z = 0; } try { if (speed > 0.01) movementEntity.applyImpulse({ x: velocity.x, y: 0, z: velocity.z }); else if (moving) movementEntity.applyImpulse({ x: desired.x * 0.012, y: 0, z: desired.z * 0.012 }); if (moving) smoothLook(movementEntity, desired); } catch (error) { debug(`Natural movement failed: ${formatError(error)}`); } }
+function applyNaturalMovement(soldier) { const entity = soldier.entity; if (!isValid(entity)) return; const movementEntity = soldier.type === "cavalry" ? (soldier.mount?.isValid ? soldier.mount : findMount(entity)) : entity; if (soldier.type === "cavalry" && movementEntity) soldier.mount = movementEntity; if (!movementEntity?.isValid) return; const desired = soldier.desiredDirection, velocity = soldier.velocity, moving = Math.hypot(desired.x, desired.z) > 0.01 && soldier.phase === SOLDIER_CONFIG.STATES.MOVE; const maxSpeed = soldier.type === "cavalry" ? Math.min(0.6, getDynamicNumber(entity, "soldier:speed", 0.38) * 1.35) : MAX_HORIZONTAL_SPEED; const targetSpeed = moving ? maxSpeed : 0, acceleration = moving ? MOVEMENT_ACCELERATION : MOVEMENT_BRAKE; velocity.x += (desired.x * targetSpeed - velocity.x) * acceleration; velocity.z += (desired.z * targetSpeed - velocity.z) * acceleration; if (!moving && soldier.targetId && soldier.strafe?.until > Date.now() && soldier.type !== "cavalry") { velocity.x += (soldier.strafe.x * STRAFE_STRENGTH - velocity.x) * 0.12; velocity.z += (soldier.strafe.z * STRAFE_STRENGTH - velocity.z) * 0.12; } const speed = Math.hypot(velocity.x, velocity.z); if (speed < 0.01) { velocity.x = 0; velocity.z = 0; } try { if (speed > 0.01) movementEntity.applyImpulse({ x: velocity.x, y: 0, z: velocity.z }); else if (moving) movementEntity.applyImpulse({ x: desired.x * 0.012, y: 0, z: desired.z * 0.012 }); if (moving) smoothLook(movementEntity, desired); } catch (error) { debug(`Natural movement failed: ${formatError(error)}`); } }
 function stopMoving(soldier) { soldier.desiredDirection.x = 0; soldier.desiredDirection.z = 0; soldier.velocity.x *= 0.55; soldier.velocity.z *= 0.55; }
 function smoothLook(entity, direction) { const current = entity.getRotation?.() ?? { x: 0, y: 0 }, targetYaw = Math.atan2(-direction.x, direction.z) * 180 / Math.PI, delta = normalizeAngle(targetYaw - current.y); entity.setRotation?.({ x: current.x * 0.7, y: current.y + delta * TURN_RESPONSE }); }
 function faceTargetSmoothly(entity, location) { const dx = location.x - entity.location.x, dz = location.z - entity.location.z, distance = Math.hypot(dx, dz); if (distance > 0.01) smoothLook(entity, { x: dx / distance, z: dz / distance }); }
