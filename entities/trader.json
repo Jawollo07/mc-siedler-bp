@@ -21,7 +21,7 @@
       "minecraft:physics":{},
       "minecraft:pushable":{"is_pushable":true,"is_pushable_by_piston":true},
       "minecraft:nameable":{},
-      "minecraft:interact":{"interactions":[]},
+      "minecraft:interact":{"interactions":[{"on_interact":"siedler:trader_interact","use_item":false,"interact_text":"§7Handeln"}]},
       "minecraft:behavior.trade_with_player":{"priority":1},
       "minecraft:behavior.look_at_player":{"priority":2,"look_distance":8,"probability":1},
       "minecraft:behavior.random_stroll":{"priority":8,"speed_multiplier":0.6},

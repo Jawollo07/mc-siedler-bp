@@ -74,7 +74,42 @@ export function isInMarket(entity) {
         entity.dimension?.id
     ) !== null;
 }
+export function disableBlockBreakingInMarkets() {
+    if (!world.beforeEvents?.blockBreak) return;
 
+    world.beforeEvents.blockBreak.subscribe((event) => {
+        const player = event.player;
+        if (!player?.isValid) return;
+
+        const market = getMarketAt(player.location, player.dimension?.id);
+        if (!market) return;
+
+        event.cancel = true;
+        try {
+            player.sendMessage(
+                `§8[§6Market§8]§r §cDu kannst in diesem Bereich keine Blöcke abbauen.`
+            );
+        } catch {}
+    });
+}
+export function disableBlockPlacingInMarkets() {
+    if (!world.beforeEvents?.blockPlace) return;
+
+    world.beforeEvents.blockPlace.subscribe((event) => {
+        const player = event.player;
+        if (!player?.isValid) return;
+
+        const market = getMarketAt(player.location, player.dimension?.id);
+        if (!market) return;
+
+        event.cancel = true;
+        try {
+            player.sendMessage(
+                `§8[§6Market§8]§r §cDu kannst in diesem Bereich keine Blöcke platzieren.`
+            );
+        } catch {}
+    });
+}
 /**
  * Removes a hostile/monster entity when it is inside a market.
  *
