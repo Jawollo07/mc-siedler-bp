@@ -1,7 +1,10 @@
 import { ActionFormData } from "@minecraft/server-ui";
-import { getTeams } from "../teams/index.js";
+import { getPlayerTeam, getTeams } from "../teams/index.js";
 
-export default function showTaxStatsForm(teamName) {
+export function showTaxStatsForm(teamNameOrPlayer) {
+    const teamName = typeof teamNameOrPlayer === "string"
+        ? teamNameOrPlayer
+        : getPlayerTeam(teamNameOrPlayer);
     const teams = getTeams();
     const teamData = teams[teamName];
     if (!teamData) return;
@@ -16,3 +19,5 @@ export default function showTaxStatsForm(teamName) {
         .button(`Anzahl der Dorfbewohner: ${teamData.villagerCount ?? 0}`);
     return form;
 }
+
+export default showTaxStatsForm;
