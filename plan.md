@@ -47,10 +47,6 @@
 - [x] Fehlertolerantes Laden
 - [x] Zentrale Versionsverwaltung
 - [x] API-Version auf aktuellen Entwicklungsstand abgestimmt
-- [ ] Einheitliches Logging-System
-- [ ] zentrale Fehler-/Diagnosefunktionen
-- [ ] automatische Konfigurationsvalidierung
-- [ ] Performance-Prüfung aller `runInterval`-Systeme
 
 ---
 
@@ -67,9 +63,6 @@
 - [x] persistentes XP-System
 - [x] automatische Beförderung
 - [x] Rekrutierung über Soldatenhändler
-- [ ] Schwerer Soldat
-- [ ] Spezialeinheiten
-- [ ] Unterhalt pro Einheit
 
 ## 2.2 Bewegung & KI
 
@@ -81,20 +74,9 @@
 - [ ] Gruppenbewegung
 - [ ] Formation
 - [ ] intelligente Zielprioritäten
-- [ ] Sichtlinie
 
-## 2.3 Kampf
 
-- [ ] natürliches Annähern
-- [ ] realistische Angriffsintervalle
-- [ ] Attack-Animationen mit RP abstimmen
-- [ ] echte Projektil-/Bogenschützenlogik
-- [ ] Kavallerie-Sturmangriff
-- [ ] Fokusfeuer
-- [ ] Kampfmoral
-- [ ] Garnisons-/Belagerungsverhalten
-
-## 2.4 Befehle & Gruppen
+## 2.3 Befehle & Gruppen
 
 - [x] Soldier Commands
 - [x] Soldatenauswahl
@@ -102,7 +84,6 @@
 - [x] Gruppenverwaltung
 - [x] Formationsgrundlage
 - [ ] mehrere komplexe Gruppen gleichzeitig befehligen
-- [ ] Garnisonen erstellen
 
 ---
 
@@ -112,10 +93,6 @@
 - [x] Claim-Grenzen
 - [x] Claim-Informationen
 - [x] Claim-Limits
-- [ ] Hauptsiedlung
-- [ ] Außenposten
-- [ ] militärische Kontrolle
-- [ ] umkämpfte Gebiete
 
 ---
 
@@ -127,8 +104,7 @@
 - [x] Beziehungen persistent speichern
 - [ ] Bündnisse
 - [ ] Diplomatie-UI
-- [ ] Claims berücksichtigen Diplomatie
-- [ ] Soldiers berücksichtigen Diplomatie
+- [x] Soldiers berücksichtigen Diplomatie
 
 ---
 
@@ -145,7 +121,6 @@
 - [x] Getreide und Gemüse
 - [x] Samen
 - [x] Tierprodukte
-- [ ] weitere unverarbeitete Rohstoffe
 
 ## Steuern & TaxBonus
 
@@ -164,7 +139,6 @@
 - [x] bestehende Teams erhalten automatisch `taxBonus: 0`, falls die Variable fehlt
 - [x] neue Teams werden mit `taxBonus: 0` angelegt
 - [ ] Steuerhistorie
-- [ ] wirtschaftliche Ereignisse mit temporären Boni
 
 ### Aktuelles TaxBonus-Modell
 
@@ -198,10 +172,6 @@ Die Team-Migration stellt sicher, dass ältere Spielwelten ebenfalls das Feld `t
 - [x] Rohstoff-/Samenangebote
 - [x] Soldatenhändler
 - [x] Händler-Variant-Tags
-- [ ] echte Handelsangebote zwischen Spielern/Teams
-- [ ] Handelsaufträge
-- [ ] Ressourcenpreise
-- [ ] Angebot/Nachfrage
 
 ---
 
@@ -222,21 +192,20 @@ Die Team-Migration stellt sicher, dass ältere Spielwelten ebenfalls das Feld `t
 - [x] Dashboard-Aktualisierung
 - [ ] persistente historische Spielerstatistiken
 - [ ] persistente historische Teamstatistiken
-- [ ] Tages-/Wochen-/Monatsauswertungen
 - [ ] Leaderboards für Kills, XP, Wirtschaft und Militär
 
 ---
 
 # 🟢 Phase 9 – Resource Pack & Custom Entities
 
-- [ ] `siedler:soldier` zuverlässig sichtbar
-- [ ] `siedler:trader` zuverlässig sichtbar
-- [ ] Geometrien validieren
-- [ ] Render Controller validieren
-- [ ] Ausrüstung korrekt darstellen
+- [x] `siedler:soldier` zuverlässig sichtbar
+- [x] `siedler:trader` zuverlässig sichtbar
+- [x] Geometrien validieren
+- [x] Render Controller validieren
+- [x] Ausrüstung korrekt darstellen
 - [x] Soldier-Typen visuell unterscheiden
 - [x] individuelle Bewegungsanimationen
-- [ ] Level visuell darstellen
+- [x] Level visuell darstellen
 - [ ] Teamfarbe darstellen
 - [ ] Kampfanimationen weiter ausbauen
 - [ ] Idle-Animationen weiter verfeinern
@@ -260,16 +229,6 @@ Die Team-Migration stellt sicher, dass ältere Spielwelten ebenfalls das Feld `t
 - [x] Verteidigungswarnungen
 
 ---
-
-# 🔵 Phase 11 – Siedler-3-Spielgefühl
-
-- [ ] klare Ressourcenketten
-- [ ] Bevölkerung als Wirtschaftsfaktor
-- [ ] Territorium als strategische Ressource
-- [ ] Handel zwischen Teams
-- [x] Diplomatie
-- [ ] Krieg und Frieden
-- [ ] Belagerungen
 
 ### Leitprinzip
 
