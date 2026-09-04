@@ -2,7 +2,7 @@
 
 > Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 04.09.2026
+**Stand:** 05.09.2026
 
 ## 📊 Aktueller Stand
 
@@ -11,31 +11,23 @@
 - [x] Chunk-Claims und Claim-Grenzen
 - [x] Wirtschaft, Steuern und Team-Kassen
 - [x] Permanenter Monster-Token-TaxBonus
-- [x] Händler und Marktplätze
-- [x] Soldatenhändler
-- [x] Soldier-Spawn und persistente Owner-Zuordnung
-- [x] Soldier-Level 1–7 und XP-System
+- [x] Händler, Marktplätze und Soldatenhändler
+- [x] Soldier-Spawn, Owner-Zuordnung, Level 1–7 und XP-System
 - [x] Infanterie, Bogenschütze und Kavallerie
-- [x] Soldier-Ausrüstung
-- [x] Soldier-Befehle und Gruppen-Grundlage
+- [x] Soldier-Ausrüstung und Befehle
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
-- [x] Soldier-Nahkampfangriff über `applyDamage()`
-- [x] Soldier-Kampfposition korrigiert: kein vorzeitiger Stopp durch großen Arrival-Radius
-- [x] Praktische Mindest-Nahkampfreichweite gegen Entity-Collision-Probleme
-- [x] Bogenschützen mit echter `minecraft:arrow`-Projectile-KI
-- [x] Ballistisches Zielen inklusive diskreter Gravitation-/Drag-Simulation
-- [x] Projectile-Owner für korrekte Trefferzuordnung
-- [x] Pfeilgeschwindigkeit auf `6.0` korrigiert
-- [x] Vollständiger Velocity-Vektor direkt an `projectile.shoot()` übergeben, statt die optionale Speed-Angabe zu verwenden
-- [x] Vorausschauendes Zielen auf bewegte Ziele
-- [x] Pfeilstart mit sicherem Vorwärts-Offset gegen Selbstkollision
-- [x] Pfeilrotation wird während des Fluges an die Flugrichtung angepasst
-- [x] Swept-Ray-Prüfung gegen Block-Tunneling
-- [x] Automatische Bereinigung alter Pfeil-Projektile
-- [x] Erweiterte Bogenschützen-Zielreichweite auf `40` Blöcke
-- [x] Spieler-Dashboard und Soldatenstatistiken
-- [x] Serverstatistiken
+- [x] Soldier-Nahkampfangriff mit Windup/Cooldown
+- [x] Eigene Bogenschützen-KI mit echter `minecraft:arrow`-Projectile-Physik
+- [x] Ballistisches Zielen, Gravitation, Drag, Predictive Aim und Swept-Ray
+- [x] Spieler-Dashboard und Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
+- [x] Kavallerie-Mount wird als `minecraft:horse` erzeugt
+- [x] Kavallerie-Mount wird per `minecraft:ageable_grow_up` auf erwachsen gesetzt
+- [x] Kavallerie-Mount wird bei vorhandenem Besitzer getamed
+- [x] Soldier und Mount werden stabil über `soldier.mount` verbunden
+- [x] Kavallerie-Bewegung wird über die zentrale Soldier-Bewegungsroutine ausgeführt
+- [x] Kavallerie setzt für Charge/Circle/Pass korrekt den `move`-Zustand
+- [x] Eigenes Kavallerie-Mount wird bei der Kavallerie-Zielsuche ausgeschlossen
 
 ## 🔴 Phase 1 – Fundament & Stabilität
 
@@ -57,38 +49,33 @@
 - [x] persistente XP
 - [x] automatische Level-Up-Logik
 - [x] Rekrutierung über Soldatenhändler
+- [x] erwachsenes Kavallerie-Mount
+- [x] stabile Soldier–Mount-Zuordnung
 
 ### 2.2 Bewegung & Kampf-KI
 
 - [x] Zielsuche
 - [x] Feinderkennung
 - [x] Move / Follow / Stay / Attack / Retreat-Grundlage
-- [x] Nahkampf-Windup
-- [x] Angriffscooldown
+- [x] Nahkampf-Windup und Angriffscooldown
 - [x] `applyDamage()`-Schaden
-- [x] Angriff bei praktischer Entity-Kollisionsdistanz
-- [x] Kampf-Approach-Position korrigiert
-- [x] kleiner Arrival-Radius für die Kampfannäherung
-- [x] Soldat läuft nicht mehr dauerhaft zu einem unerreichbaren Zielpunkt
+- [x] Kampf-Approach-Position und kleiner Arrival-Radius
 - [x] eigener Fernkampf für Bogenschützen
 - [x] echte sichtbare `minecraft:arrow`-Projektile
-- [x] Zielgerichtetes ballistisches Schießen
-- [x] Gravitation und Luftwiderstand bei der ballistischen Flugbahnberechnung
-- [x] flache gültige Flugbahn bevorzugt
-- [x] bewegte Ziele werden durch Flugzeit-Prognose berücksichtigt
-- [x] Pfeilrichtung wird während des Fluges visuell synchronisiert
-- [x] Swept-Ray gegen schnelle Pfeile und Block-Tunneling
-- [x] automatische Pfeil-Bereinigung nach langer Flugzeit
-- [x] automatische Bogenschützen-Schussintervalle nach Level
-- [x] erhöhte Zielreichweite
-- [x] Pfeilgeschwindigkeit mit vollständigem Velocity-Vektor und ballistischem Solver auf `6.0` synchronisiert
+- [x] ballistisches Schießen mit Gravitation und Luftwiderstand
+- [x] vorausschauendes Zielen auf bewegte Ziele
+- [x] Pfeilrotation und Swept-Ray gegen Block-Tunneling
+- [x] automatische Pfeil-Bereinigung
+- [x] Kavallerie bewegt das Mount statt den Reiter direkt
+- [x] Kavallerie-Movement-State mit `applyNaturalMovement()` synchronisiert
+- [x] Charge- und Pass-Manöver
+- [x] eigenes Mount wird nicht als Ziel gewählt
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
 - [ ] intelligente Zielprioritäten
 - [ ] Ausweich- und Blockverhalten
-- [ ] Pfeil-/Schadenswerte vollständig an Bogenverzauberungen und Soldier-Level koppeln
-- [ ] reale Ingame-Flugdistanz und Treffergenauigkeit nach Velocity-Korrektur testen
+- [ ] reale Ingame-Kavallerie-Tests mit Hindernissen, Steigungen und mehreren Zielen
 
 ### 2.3 Gruppen & Formationen
 
@@ -182,8 +169,8 @@
 8. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
 9. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
 10. Treffer- und Schadenszuordnung bei bewegten Zielen testen
-11. Direkten Velocity-Vektor im echten Server testen und Flugdistanz bei 10/20/30 Blöcken verifizieren
+11. Kavallerie mit realen Ingame-Tests für Mount, Charge, Passieren und Hindernisse verifizieren
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem erwachsenen Mount reiten und dieses zuverlässig steuern.**
