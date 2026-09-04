@@ -20,13 +20,12 @@ export function giveSoldierTool(player) {
     const item = new ItemStack(SOLDIER_TOOL_ID, 1);
     item.nameTag = SOLDIER_TOOL_NAME;
     item.setLore(["§7Rechtsklick: Soldatenverwaltung", "§7Soldaten markieren und Gruppen steuern"]);
-    item.addTag(SOLDIER_TOOL_TAG);
     player.getComponent(EntityComponentTypes.Inventory)?.container?.addItem(item);
 }
 
 world.afterEvents.itemUse.subscribe(event => {
     const item = event.itemStack;
-    if (item?.typeId !== SOLDIER_TOOL_ID || !(item.getTags?.() ?? []).includes(SOLDIER_TOOL_TAG)) return;
+    if (item?.typeId !== SOLDIER_TOOL_ID || item.nameTag !== SOLDIER_TOOL_NAME) return;
     system.run(() => openSoldierMenu(event.source));
 });
 

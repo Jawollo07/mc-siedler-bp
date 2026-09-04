@@ -17,7 +17,7 @@
     },
     "components": {
       "minecraft:type_family": { "family": ["soldier", "cavalry", "mob"] },
-      "minecraft:health": { "value": 30, "max": 55 },
+      "minecraft:health": { "value": 120, "max": 120 },
       "minecraft:collision_box": { "width": 0.6, "height": 1.8 },
       "minecraft:physics": { "has_gravity": true, "has_collision": true },
       "minecraft:movement": { "value": 0.25 },

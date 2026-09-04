@@ -83,7 +83,9 @@ export function spawnSoldier(
                 if (typeof entity.startRiding === "function") {
                     entity.startRiding(mount);
                 } else {
-                    console.warn("[Soldier] Riding API is unavailable; cavalry spawned without mount.");
+                    mount.addTag("siedler_mount_pending");
+                    entity.runCommand(`ride @s start_riding @e[type=${typeData.mount},tag=siedler_mount_pending,c=1] teleport_rider`);
+                    mount.removeTag("siedler_mount_pending");
                 }
             } catch (error) {
                 console.warn(`[Soldier] Cavalry mount failed: ${error}`);

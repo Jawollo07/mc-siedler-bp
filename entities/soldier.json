@@ -20,8 +20,8 @@
         "family": ["soldier", "mob"]
       },
       "minecraft:health": {
-        "value": 30,
-        "max": 55
+        "value": 120,
+        "max": 120
       },
       "minecraft:collision_box": {
         "width": 0.6,
@@ -35,6 +35,7 @@
         "value": 0.25
       },
       "minecraft:movement.basic": {},
+      "minecraft:navigation.generic": {},
       "minecraft:inventory": {
         "inventory_size": 6,
         "container_type": "inventory",
