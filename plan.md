@@ -23,9 +23,14 @@
 - [x] Soldier-Kampfposition korrigiert: kein vorzeitiger Stopp durch großen Arrival-Radius
 - [x] Praktische Mindest-Nahkampfreichweite gegen Entity-Collision-Probleme
 - [x] Bogenschützen mit echter `minecraft:arrow`-Projectile-KI
-- [x] Ballistisches Zielen inklusive Fallkorrektur
+- [x] Ballistisches Zielen inklusive diskreter Gravitation-/Drag-Simulation
 - [x] Projectile-Owner für korrekte Trefferzuordnung
-- [x] Erhöhte Bogenschützen-Pfeilgeschwindigkeit (`4.0`)
+- [x] Realistischere Pfeilgeschwindigkeit (`3.2`)
+- [x] Vorausschauendes Zielen auf bewegte Ziele
+- [x] Pfeilstart mit sicherem Vorwärts-Offset gegen Selbstkollision
+- [x] Pfeilrotation wird während des Fluges an die Flugrichtung angepasst
+- [x] Swept-Ray-Prüfung gegen Block-Tunneling
+- [x] Automatische Bereinigung alter Pfeil-Projektile
 - [x] Erweiterte Bogenschützen-Zielreichweite auf `40` Blöcke
 - [x] Spieler-Dashboard und Soldatenstatistiken
 - [x] Serverstatistiken
@@ -67,8 +72,14 @@
 - [x] eigener Fernkampf für Bogenschützen
 - [x] echte sichtbare `minecraft:arrow`-Projektile
 - [x] Zielgerichtetes ballistisches Schießen
+- [x] Gravitation und Luftwiderstand bei der ballistischen Flugbahnberechnung
+- [x] flache gültige Flugbahn bevorzugt
+- [x] bewegte Ziele werden durch Flugzeit-Prognose berücksichtigt
+- [x] Pfeilrichtung wird während des Fluges visuell synchronisiert
+- [x] Swept-Ray gegen schnelle Pfeile und Block-Tunneling
+- [x] automatische Pfeil-Bereinigung nach langer Flugzeit
 - [x] automatische Bogenschützen-Schussintervalle nach Level
-- [x] erhöhte Pfeilgeschwindigkeit und größere Zielreichweite
+- [x] erhöhte Zielreichweite
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
@@ -166,6 +177,8 @@
 6. Angriffe, Treffer und Animationen synchronisieren
 7. KI mit realen Serverlogs testen
 8. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
+9. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
+10. Treffer- und Schadenszuordnung bei bewegten Zielen testen
 
 ### Leitprinzip
 
