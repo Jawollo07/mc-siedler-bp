@@ -60,6 +60,7 @@ import ".././essentials/player_stats.js";
 // -----------------------------------------------------------------------------
 import ".././soldier/index.js";
 import ".././soldier/trader.js";
+import "../soldier/level.js";
 
 const VERSION = version;
 const MODULE_COUNT = 19;

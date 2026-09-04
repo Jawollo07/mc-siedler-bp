@@ -9,7 +9,7 @@ import {
     SOLDIERS
 } from "./config.js";
 
-const DEBUG = true;
+const DEBUG = false;
 
 const SOLDIER_ENTITY_IDS = Object.freeze({
     infantry: "siedler:infantry",
