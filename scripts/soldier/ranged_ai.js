@@ -398,11 +398,11 @@ function updateArcher(soldier, now) {
 function findTarget(soldier) {
     const entity = soldier.entity;
 
-    if (!entity || !entity.isValid()) {
+    if (!isValid(entity)) {
         return null;
     }
 
-    const soldierTeam = getSoldierTeam(entity);
+    const soldierTeam = getSoldierTeam(soldier);
 
     const candidates = entity.dimension.getEntities({
         location: entity.location,
@@ -413,7 +413,7 @@ function findTarget(soldier) {
     let bestDistance = Infinity;
 
     for (const candidate of candidates) {
-        if (!candidate || !candidate.isValid()) {
+        if (!isValid(candidate)) {
             continue;
         }
 
@@ -1077,16 +1077,13 @@ function hasBlockingRay(
  * ========================================================= */
 
 function isEnemy(soldier, entity) {
-    if (!entity || !entity.isValid()) {
+    if (!isValid(entity)) {
         return false;
     }
 
     const soldierEntity = soldier.entity;
 
-    if (
-        !soldierEntity ||
-        !soldierEntity.isValid()
-    ) {
+    if (!isValid(soldierEntity)) {
         return false;
     }
 
@@ -1114,7 +1111,7 @@ function isEnemy(soldier, entity) {
     }
 
     const soldierTeam =
-        getSoldierTeam(soldierEntity);
+        getSoldierTeam(soldier);
 
     /*
      * Spieler
@@ -1156,7 +1153,7 @@ function isEnemy(soldier, entity) {
         "siedler:soldier"
     ) {
         const targetTeam =
-            getSoldierTeam(entity);
+            getSoldierTeam({ entity });
 
         if (
             soldierTeam &&
@@ -1405,7 +1402,13 @@ function isDead(entity) {
 
 function isValid(entity) {
     try {
-        return !!entity?.isValid;
+        if (!entity) {
+            return false;
+        }
+
+        return typeof entity.isValid === "function"
+            ? entity.isValid()
+            : entity.isValid === true;
     } catch {
         return false;
     }
