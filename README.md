@@ -37,38 +37,36 @@ Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infa
 - zielen auf das Ziel,
 - spawnen echte `minecraft:arrow`-Projektile,
 - setzen den Bogenschützen als Projectile-Owner,
-- übergeben dem Projektil einen vollständigen Geschwindigkeitsvektor statt sich auf die optionale `shoot()`-Geschwindigkeitsinterpretation zu verlassen,
+- übergeben dem Projektil einen vollständigen Geschwindigkeitsvektor,
 - verwenden eine diskrete ballistische Flugbahnberechnung mit Gravitation und Luftwiderstand,
-- wählen bevorzugt eine flache gültige Flugbahn statt einer unnötig hohen Flugkurve,
 - berücksichtigen die aktuelle Bewegung des Ziels durch vorausschauendes Zielen,
-- starten Pfeile leicht vor dem Soldaten, damit sie nicht an der eigenen Entity kollidieren,
+- starten Pfeile leicht vor dem Soldaten,
 - richten die sichtbare Pfeilrotation während des Fluges an der tatsächlichen Flugrichtung aus,
-- spielen beim Schuss den Bogenschuss-Sound,
-- schießen abhängig vom Soldaten-Level schneller,
-- besitzen eine mehrstufige Sichtlinienprüfung vor jedem Schuss,
 - überwachen die Flugbahn jedes erzeugten Pfeils,
 - verwenden eine Anfangsgeschwindigkeit von `6.0` mit `0.05` Gravitation und `0.99` Luftwiderstand,
 - können Ziele bis zu einer Entfernung von `40` Blöcken erfassen.
 
 ### 🏹 Pfeilphysik
 
-Die Pfeilgeschwindigkeit wird direkt als vollständiger initialer Velocity-Vektor an `projectile.shoot()` übergeben. Dadurch wird vermieden, dass unterschiedliche Bedrock-Versionen die optionale `speed`-Angabe anders interpretieren und der Pfeil dadurch deutlich zu kurz fliegt.
+Die Pfeilgeschwindigkeit wird direkt als vollständiger initialer Velocity-Vektor an `projectile.shoot()` übergeben. Der ballistische Solver simuliert horizontale Bewegung, Luftwiderstand und Gravitation und berücksichtigt bewegte Ziele durch Flugzeit-Prognose.
 
-Der ballistische Solver verwendet denselben Geschwindigkeitswert `6.0` und simuliert pro Tick horizontale Bewegung, Luftwiderstand und Gravitation. Anschließend wird numerisch ein passender Abschusswinkel gesucht.
-
-Zusätzlich wird die voraussichtliche Flugzeit für bewegte Ziele geschätzt. Der Bogenschütze führt bis zu drei kurze Korrekturen der Zielposition durch, damit laufende Gegner nicht mehr ausschließlich auf ihre aktuelle Position beschossen werden.
-
-Die Pfeile werden außerdem zwischen ihrer letzten und aktuellen Position per Block-Ray geprüft. Dadurch werden schnelle Projektile gegen Tunneling durch dünne Blockflächen abgesichert. Wird ein Block auf der Flugstrecke erkannt, wird der Pfeil entfernt. Nach zehn Sekunden werden nicht mehr relevante Pfeile automatisch bereinigt.
+Pfeile werden zwischen ihrer letzten und aktuellen Position per Block-Ray geprüft. Dadurch werden schnelle Projektile gegen Tunneling durch dünne Blockflächen abgesichert. Nicht mehr relevante Pfeile werden automatisch bereinigt.
 
 ### 👁️ Sichtweite & Hindernisse
 
 Fernkampfangriffe benötigen eine **freie Sichtlinie** zwischen Bogenschütze und Ziel. Vor dem Schuss wird per Block-Ray geprüft, ob ein nicht passierbarer Block die Schusslinie blockiert. Die Prüfung verwendet mehrere Zielhöhen, damit Teildeckung berücksichtigt wird.
 
-Die Sichtlinienprüfung und die Flugbahnprüfung sind bewusst **fail-closed**: Wenn eine Ray-Abfrage fehlschlägt, darf der Pfeil nicht weiterfliegen bzw. nicht abgeschossen werden.
-
 ### 🐎 Kavallerie
 
-Kavallerie verwendet weiterhin die separate Kavallerie-KI mit Mount- und Charge-Logik.
+Kavallerie besitzt eine eigene Mount- und Charge-KI. Beim Spawn wird ein erwachsenes `minecraft:horse` als Mount erzeugt, mit dem Soldaten über `startRiding()` verbunden und – wenn ein Besitzer vorhanden ist – diesem Spieler zugeordnet. Das Mount erhält die Tags `soldier_mount` und `cavalry_mount`.
+
+Die Bewegung der Kavallerie wird zentral über die normale Soldier-Bewegungsroutine auf das Mount angewendet. Dadurch konkurrieren Charge-KI und Bewegungs-KI nicht mehr miteinander. Die Kavallerie:
+
+- bewegt sich auch außerhalb der direkten Nahkampfreichweite,
+- setzt den Bewegungszustand korrekt auf `move`,
+- führt Charge-Angriffe mit erhöhtem Schaden aus,
+- reitet beim Passieren des Ziels weiter statt sofort stehenzubleiben,
+- erkennt das eigene Mount niemals als Feindziel.
 
 ## 💰 Steuern & permanenter Monster-Token-TaxBonus
 
@@ -131,6 +129,8 @@ scripts/core/main.js
 └── Soldier
     ├── ai.js
     ├── ranged_ai.js
+    ├── cavalry_ai.js
+    ├── spawn.js
     ├── config.js
     ├── commands.js
     ├── command_manager.js
