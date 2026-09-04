@@ -17,21 +17,35 @@ Aktuelle Systeme:
 - 🏪 Marktplätze und spezialisierte Händler
 - ⚔️ Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
 - 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
-- 🐎 Infanterie, Bogenschützen und Kavallerie
+- 🏹 Infanterie, echte Bogenschützen mit Pfeil-Projektilen und Kavallerie
 - 👹 Monster, Pillager-Trupps, Außenposten und Belagerungen
 - 🧰 Essentials und erweitertes Spieler-Dashboard
 
 ## ⚔️ Soldier-KI
 
-Das Soldier-System verwendet eine eigene Kampf- und Bewegungslogik. Ein Soldat sucht feindliche Ziele, nähert sich ihnen und wechselt anschließend in den `attack`-Zustand.
+Das Soldier-System verwendet eine eigene Kampf- und Bewegungslogik. Ein Soldat sucht feindliche Ziele, nähert sich ihnen und wechselt anschließend in den passenden Kampfzustand.
 
-Ein wichtiger Fix betrifft die **Nahkampfreichweite**: Die alte Logik stoppte den Soldaten durch einen zu großen Bewegungs-Ankunftsradius deutlich vor dem Gegner. Die Kampfposition wird jetzt mit einem kleinen Ankunftsradius berechnet, sodass der Soldat tatsächlich bis an die praktische Kollisionsdistanz heranläuft.
+### 🗡️ Infanterie
 
-Ablauf:
+Nahkämpfer laufen bis zur praktischen Entity-Kollisionsdistanz und greifen anschließend über `applyDamage()` mit Windup und Cooldown an. Die Kampfposition verwendet einen kleinen Arrival-Radius, damit Soldaten nicht vor dem Gegner stehen bleiben.
 
-`Ziel erkennen → annähern → praktische Nahkampfdistanz → Angriffswindup → applyDamage() → Cooldown → nächster Angriff`
+### 🏹 Bogenschützen
 
-Die konfigurierte Level-Reichweite bleibt dabei erhalten; die KI verwendet für Nahkämpfer zusätzlich eine sichere Mindestreichweite von 1.45 Blöcken, damit Entity-Kollision den Angriff nicht verhindert.
+Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht mehr wie Infanteristen per `applyDamage()` an. Sie:
+
+- halten bevorzugt Abstand zum Gegner,
+- zielen auf das Ziel,
+- spawnen echte `minecraft:arrow`-Projektile,
+- setzen den Bogenschützen als Projectile-Owner,
+- berechnen eine ballistische Flugbahn inklusive Fallkorrektur,
+- spielen beim Schuss den Bogenschuss-Sound,
+- schießen abhängig vom Soldaten-Level schneller.
+
+Damit fliegt tatsächlich ein sichtbarer Pfeil vom Bogenschützen zum Gegner und der Treffer wird über das normale Minecraft-Projektilsystem verarbeitet.
+
+### 🐎 Kavallerie
+
+Kavallerie verwendet weiterhin die separate Kavallerie-KI mit Mount- und Charge-Logik.
 
 ## 💰 Steuern & permanenter Monster-Token-TaxBonus
 
@@ -93,11 +107,13 @@ scripts/core/main.js
 ├── Essentials
 └── Soldier
     ├── ai.js
+    ├── ranged_ai.js
     ├── config.js
     ├── commands.js
     ├── command_manager.js
     ├── archer.js
     ├── cavalry.js
+    ├── combat_range.js
     └── level.js
 ```
 
