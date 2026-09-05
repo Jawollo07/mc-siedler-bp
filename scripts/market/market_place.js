@@ -176,5 +176,6 @@ if (world.afterEvents?.entitySpawn) {
 
 // Run once every second as a safety net for monsters that walk/fly into a market.
 system.runInterval(cleanupMarketMonsters, 20);
+system.runInterval(() => {disableBlockBreakingInMarkets(); disableBlockPlacingInMarkets();}, 10);
 
 console.info("§a[Market] Rectangular monster-free market protection loaded");
