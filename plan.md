@@ -37,6 +37,7 @@
 - [x] Eigenes Mount wird bei der Zielsuche ausgeschlossen
 - [x] Rideable-API als Mounting-Fallback
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
+- [x] Marktplatz blockiert Abbau und Platzierung
 
 ## 🔴 Phase 1 – Fundament & Stabilität
 
@@ -138,6 +139,8 @@
 
 - [x] Marktplätze
 - [x] Markt-Schutz
+- [x] Blöcke im Markt nicht abbaubar
+- [x] Blöcke im Markt nicht platzierbar
 - [x] spezialisierte Händler
 - [x] Soldatenhändler
 - [x] funktionierende Trade-UI für Lebensmittel-, Baustoff-, Rohstoff-, Werkzeug-, Waffen- und Versorgungshändler
