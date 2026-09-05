@@ -17,6 +17,12 @@
 - Essentials mit Homes, Spawn, TPA, privaten Nachrichten, Todespunkten, Startsystem und Admin-Werkzeugen
 - Spieler-Dashboard und Serverstatistiken
 
+## 🏪 Marktplatz
+
+Der konfigurierte Marktplatz ist ein geschützter Bereich. Spieler können dort **keine Blöcke abbauen**, dürfen aber weiterhin **Blöcke platzieren**. Monster werden zusätzlich aus dem Markt entfernt und neu gespawnte Monster werden dort ebenfalls sofort entfernt.
+
+Die Block-Abbau-Sperre wird über `world.beforeEvents.playerBreakBlock` umgesetzt. Die frühere Block-Platzierungs-Sperre ist bewusst entfernt, damit Bauen im Markt weiterhin möglich bleibt.
+
 ## ⚔️ Soldier-KI
 
 Das Soldier-System verwendet eigene Kampf- und Bewegungslogik. Infanterie nutzt Nahkampf, Bogenschützen eine eigene Fernkampf-KI mit echten `minecraft:arrow`-Projektilen und ballistischer Flugbahnberechnung.
