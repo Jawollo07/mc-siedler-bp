@@ -1,4 +1,4 @@
-import { system, CustomCommandParamType, CustomCommandStatus, CommandPermissionLevel } from "@minecraft/server";
+import { system, world, CustomCommandParamType, CustomCommandStatus, CommandPermissionLevel } from "@minecraft/server";
 
 const TRADER_TYPE = "siedler:trader";
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
@@ -24,6 +24,28 @@ function reply(player, message) {
     try { player.sendMessage(`§8[§bHändler§8]§r ${message}`); } catch {}
 }
 
+function applyTraderType(trader, type) {
+    const config = TRADER_TYPES[type];
+    if (!config || !trader?.isValid) return false;
+
+    try {
+        trader.triggerEvent(config.event);
+        if (config.tag && !trader.hasTag(config.tag)) trader.addTag(config.tag);
+        try { trader.nameTag = config.name; } catch {}
+        return true;
+    } catch (error) {
+        console.warn(`[Trader] Failed to apply type ${type}: ${error}`);
+        return false;
+    }
+}
+
+function getTraderType(trader) {
+    for (const [type, config] of Object.entries(TRADER_TYPES)) {
+        if (config.tag && trader.hasTag(config.tag)) return type;
+    }
+    return "food";
+}
+
 function spawnTrader(player, type, location) {
     const config = TRADER_TYPES[type];
     if (!config) {
@@ -34,15 +56,49 @@ function spawnTrader(player, type, location) {
 
     try {
         const trader = player.dimension.spawnEntity(TRADER_TYPE, location);
-        if (config.event) trader.triggerEvent(config.event);
-        if (config.tag) trader.addTag(config.tag);
-        try { trader.nameTag = config.name; } catch {}
-        reply(player, `§a${config.name} §agespawnt.`);
+
+        // Trade tables are component groups. Apply them on the next tick so the
+        // entity has finished spawning before its active trade component changes.
+        system.run(() => {
+            if (!applyTraderType(trader, type)) {
+                reply(player, "§cHändler konnte nicht initialisiert werden.");
+                return;
+            }
+            reply(player, `§a${config.name} §agespawnt.`);
+        });
     } catch (error) {
         console.warn(`[Trader] Spawn failed: ${error}`);
         reply(player, "§cHändler konnte nicht gespawnt werden.");
     }
 }
+
+// Also repairs traders created by older versions or by /summon.
+world.afterEvents.entitySpawn.subscribe((event) => {
+    const trader = event.entity;
+    if (trader.typeId !== TRADER_TYPE) return;
+
+    system.run(() => {
+        try {
+            const type = getTraderType(trader);
+            applyTraderType(trader, type);
+        } catch (error) {
+            console.warn(`[Trader] Spawn initialization failed: ${error}`);
+        }
+    });
+});
+
+system.runInterval(() => {
+    // Lightweight recovery for traders that were already present when the
+    // script was reloaded and therefore did not receive entitySpawn.
+    for (const dimension of [world.getDimension("overworld"), world.getDimension("nether"), world.getDimension("the_end")]) {
+        try {
+            for (const trader of dimension.getEntities({ type: TRADER_TYPE })) {
+                const type = getTraderType(trader);
+                applyTraderType(trader, type);
+            }
+        } catch {}
+    }
+}, 200);
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
