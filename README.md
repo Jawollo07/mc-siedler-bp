@@ -19,12 +19,24 @@ Aktuelle Systeme:
 - 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
 - 🏹 Infanterie, echte Bogenschützen mit ballistisch berechneten Pfeil-Projektilen und Kavallerie
 - 👹 Monster, Pillager-Trupps, Außenposten und Belagerungen
-- 🧰 Essentials mit Homes, Spawn, TPA, privaten Nachrichten, Todespunkten und Admin-Werkzeugen
+- 🧰 Essentials mit Homes, Spawn, TPA, privaten Nachrichten, Todespunkten, Startsystem und Admin-Werkzeugen
 - 📊 Erweitertes Spieler-Dashboard und Serverstatistiken
 
 ## 🧰 Essentials
 
-Das Essentials-System liegt zentral unter `scripts/essentials/index.js` und verwendet für persistente Spielerdaten die Spieler-ID statt des Namens. Dadurch bleiben Homes und Todespunkte auch bei Namensänderungen eindeutig zugeordnet. Der Spielersucher akzeptiert zusätzlich Namen, IDs und eindeutige Namens-Präfixe.
+Das Essentials-System ist in mehrere Aufgabenbereiche gegliedert. Persistente Spielerdaten verwenden die Spieler-ID statt des Namens. Das Startsystem in `scripts/essentials/start.js` verwaltet Team-Teleports, Spielstart und Starterkits.
+
+### Startsystem
+
+```text
+/siedler:team_tp <spieler>
+/siedler:starterkit <spieler>
+/siedler:startgame
+```
+
+`/siedler:startgame` prüft Teams und Startkoordinaten, teleportiert nur online erreichbare Spieler und verhindert doppelte Starterkits über den Tag `siedler:starterkit_received`. Ungültige Teams werden protokolliert und übersprungen, statt den kompletten Startvorgang abzubrechen.
+
+Das Starterkit verwendet echte `ItemStack`-Objekte und erkennt teilweise volle Inventare. Ein manuell ausgeführtes `/siedler:starterkit` kann bewusst erneut vergeben werden; der automatische Spielstart gibt einem Spieler dagegen kein zweites Kit.
 
 ### Spieler-Commands
 
@@ -159,6 +171,9 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte der Server
 /siedler:tpdeny
 /siedler:msg <spieler> <nachricht>
 /siedler:reply <nachricht>
+/siedler:team_tp <spieler>
+/siedler:starterkit <spieler>
+/siedler:startgame
 /siedler:settax <team> <x> <y> <z>
 /siedler:taxinfo <team>
 /siedler:countvillagers <team>
@@ -183,6 +198,7 @@ scripts/core/main.js
 ├── Monster
 ├── Essentials
 │   ├── index.js
+│   ├── start.js
 │   └── player_stats.js
 └── Soldier
     ├── ai.js
