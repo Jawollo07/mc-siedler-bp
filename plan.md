@@ -19,7 +19,8 @@
 - [x] Ballistisches Zielen, Gravitation, Drag, Predictive Aim und Swept-Ray
 - [x] Spieler-Dashboard und Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
-- [x] Kavallerie verwendet ein normales erwachsenes `minecraft:horse`
+- [x] Kavallerie verwendet ein normales `minecraft:horse`
+- [x] Kavallerie-Mount wird beim Spawn explizit als erwachsenes Vanilla-Pferd initialisiert
 - [x] Kavallerie-Soldat wird über den nativen `/ride`-Befehl auf das Pferd gesetzt
 - [x] Vanilla-Rider-Kompatibilität über die `baby_undead`-Familie hergestellt
 - [x] Eindeutige Mount-Tags für die Soldier–Horse-Zuordnung
@@ -52,6 +53,7 @@
 - [x] automatische Level-Up-Logik
 - [x] Rekrutierung über Soldatenhändler
 - [x] Vanilla-Pferd als Kavallerie-Mount
+- [x] erwachsenes Wild-Pferd als stabiler Mount-Zustand
 - [x] Mount-Zuordnung über eindeutige Tags
 - [x] Mounting über `/ride`
 - [x] Rider-Kompatibilität mit Vanilla-Horse über unterstützte Entity-Familie
@@ -74,6 +76,7 @@
 - [x] eigenes Mount wird nicht als Ziel gewählt
 - [x] `/ride`-basierte Rider-Zuordnung
 - [x] Rider-Kompatibilität für Vanilla-Pferde korrigiert
+- [x] erwachsenes Mount gegen zufälliges Fohlen abgesichert
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
