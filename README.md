@@ -1,6 +1,6 @@
 # 🏘️ Siedler Logic
 
-> Modulares Minecraft-Bedrock-Behavior-Pack für das Minecraft-Siedler-Projekt – mit Teams, Claims, Wirtschaft, Märkten, Händlern, Monstern und Soldaten.
+> Modulares Minecraft-Bedrock-Behavior-Pack für das Minecraft-Siedler-Projekt – mit Teams, Claims, Wirtschaft, Märkten, Händlern, Monstern, Soldaten und einem zentralen Essentials-System.
 
 **Behavior Pack:** https://github.com/Jawollo07/mc-siedler-bp  
 **Resource Pack:** https://github.com/Jawollo07/mc-siedler-rp
@@ -19,7 +19,49 @@ Aktuelle Systeme:
 - 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
 - 🏹 Infanterie, echte Bogenschützen mit ballistisch berechneten Pfeil-Projektilen und Kavallerie
 - 👹 Monster, Pillager-Trupps, Außenposten und Belagerungen
-- 🧰 Essentials und erweitertes Spieler-Dashboard
+- 🧰 Essentials mit Homes, Spawn, TPA, privaten Nachrichten, Todespunkten und Admin-Werkzeugen
+- 📊 Erweitertes Spieler-Dashboard und Serverstatistiken
+
+## 🧰 Essentials
+
+Das Essentials-System liegt zentral unter `scripts/essentials/index.js` und verwendet für persistente Spielerdaten die Spieler-ID statt des Namens. Dadurch bleiben Homes und Todespunkte auch bei Namensänderungen eindeutig zugeordnet. Der Spielersucher akzeptiert zusätzlich Namen, IDs und eindeutige Namens-Präfixe.
+
+### Spieler-Commands
+
+```text
+/siedler:spawn
+/siedler:sethome
+/siedler:home
+/siedler:delhome
+/siedler:back
+/siedler:tpa <spieler>
+/siedler:tpahere <spieler>
+/siedler:tpaccept
+/siedler:tpdeny
+/siedler:msg <spieler> <nachricht>
+/siedler:reply <nachricht>
+```
+
+TPA-Anfragen laufen nach 60 Sekunden ab. Mehrere eingehende Anfragen können gleichzeitig existieren; `tpaccept` und `tpdeny` verarbeiten die aktuellste Anfrage. Anfragen werden beim Verlassen eines Spielers automatisch bereinigt.
+
+Homes und Todespunkte werden als World Dynamic Properties gespeichert. Beim Laden werden ungültige Datensätze ignoriert, statt das komplette Essentials-System zu blockieren. Der letzte Todespunkt wird automatisch beim Tod eines Spielers aktualisiert.
+
+### Admin-Commands
+
+```text
+/siedler:admin_heal [spieler]
+/siedler:admin_feed [spieler]
+/siedler:admin_god [spieler]
+/siedler:admin_fly [spieler]
+/siedler:admin_kill <spieler>
+/siedler:admin_clear <spieler>
+/siedler:admin_day
+/siedler:admin_night
+/siedler:admin_sun
+/siedler:admin_rain
+```
+
+Admin-Commands sind auf `GameDirectors` beschränkt. Godmode und Flugmodus werden pro Spieler über die Laufzeit-ID verwaltet und bei einem erneuten Spawn für aktiven Godmode wiederhergestellt.
 
 ## ⚔️ Soldier-KI
 
@@ -106,6 +148,17 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte der Server
 
 ```text
 /siedler:stats
+/siedler:spawn
+/siedler:sethome
+/siedler:home
+/siedler:delhome
+/siedler:back
+/siedler:tpa <spieler>
+/siedler:tpahere <spieler>
+/siedler:tpaccept
+/siedler:tpdeny
+/siedler:msg <spieler> <nachricht>
+/siedler:reply <nachricht>
 /siedler:settax <team> <x> <y> <z>
 /siedler:taxinfo <team>
 /siedler:countvillagers <team>
@@ -129,6 +182,8 @@ scripts/core/main.js
 ├── Market
 ├── Monster
 ├── Essentials
+│   ├── index.js
+│   └── player_stats.js
 └── Soldier
     ├── ai.js
     ├── ranged_ai.js
