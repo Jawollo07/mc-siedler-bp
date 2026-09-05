@@ -19,9 +19,9 @@
 
 ## 🏪 Marktplatz
 
-Der konfigurierte Marktplatz ist ein geschützter Bereich. Spieler können dort **keine Blöcke abbauen**, dürfen aber weiterhin **Blöcke platzieren**. Monster werden zusätzlich aus dem Markt entfernt und neu gespawnte Monster werden dort ebenfalls sofort entfernt.
+Der konfigurierte Marktplatz ist ein vollständig geschützter Bereich. Spieler können dort **keine Blöcke abbauen und keine Blöcke platzieren**. Monster werden zusätzlich aus dem Markt entfernt und neu gespawnte Monster werden dort ebenfalls sofort entfernt.
 
-Die Block-Abbau-Sperre wird über `world.beforeEvents.playerBreakBlock` umgesetzt. Die frühere Block-Platzierungs-Sperre ist bewusst entfernt, damit Bauen im Markt weiterhin möglich bleibt.
+Die Block-Abbau- und Block-Platzierungs-Sperre wird über `world.beforeEvents.playerBreakBlock` und `world.beforeEvents.playerPlaceBlock` umgesetzt. Die Events werden vor der eigentlichen Weltänderung abgebrochen, sodass kein nachträgliches Zurücksetzen platzierter Blöcke notwendig ist.
 
 ## ⚔️ Soldier-KI
 
