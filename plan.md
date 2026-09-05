@@ -39,6 +39,11 @@
 - [x] Robuster Schutz gegen ungültige persistente Essentials-Daten
 - [x] Admin-Essentials für Heal, Feed, Godmode, Fly, Kill, Clear und Wetter/Zeit
 - [x] Aktiver Godmode wird beim erneuten Spieler-Spawn wiederhergestellt
+- [x] Startsystem mit Team-Teleport und Spielstart
+- [x] Starterkit verwendet `ItemStack` statt ungültiger String-/Count-Übergaben
+- [x] Starterkit-Duplikate beim automatischen Spielstart verhindert
+- [x] Startsystem validiert Teamdaten und überspringt fehlerhafte Teams/Spieler
+- [x] Startsystem erkennt teilweise volle Inventare
 
 ## 🔴 Phase 1 – Fundament & Stabilität
 
@@ -48,6 +53,7 @@
 - [x] aktuelle Bedrock Script API berücksichtigt
 - [x] Essentials-Persistenz validiert ungültige Daten statt das Modul abbrechen zu lassen
 - [x] Laufzeit-Caches werden bei Spieler-Verlassen bereinigt
+- [x] Start-/Starterkit-System behandelt ungültige Teamdaten kontrolliert
 
 ## 🔴 Phase 2 – Soldier-System
 
@@ -189,7 +195,20 @@
 - [x] Homes/Todespunkte über Spieler-ID persistiert
 - [x] eindeutige Namens-/ID-Suche
 
-### 10.2 Admin-Funktionen
+### 10.2 Start & Starterkit
+
+- [x] `/siedler:team_tp <spieler>`
+- [x] `/siedler:starterkit <spieler>`
+- [x] `/siedler:startgame`
+- [x] Team-Koordinaten werden vor Teleport geprüft
+- [x] Spieler werden per ID aufgelöst
+- [x] doppelte Spieler in mehreren Teamlisten werden nur einmal verarbeitet
+- [x] automatisches Starterkit nur einmal pro Spieler
+- [x] manueller Starterkit-Befehl kann bewusst erneut vergeben werden
+- [x] volle Inventare werden erkannt
+- [x] Starterkit-Items werden als `ItemStack` hinzugefügt
+
+### 10.3 Admin-Funktionen
 
 - [x] Heal
 - [x] Feed
@@ -202,12 +221,15 @@
 - [x] Zielspieler bei Admin-Befehlen optional, wo sinnvoll
 - [x] GameDirectors-Berechtigung
 
-### 10.3 Stabilität
+### 10.4 Stabilität
 
 - [x] ungültige Dynamic Properties abfangen
 - [x] TPA-Ablauf und Cleanup
 - [x] Runtime-Caches beim Leave bereinigen
 - [x] Teleport- und Admin-Fehler sauber behandeln
+- [x] ungültige Team-Startkoordinaten überspringen
+- [x] Offline-Spieler beim Spielstart überspringen
+- [x] doppelte Starterkits beim normalen Spielstart verhindern
 - [ ] Essentials-Konfiguration in ein eigenes Config-Modul auslagern
 - [ ] optionale Home-Limits pro Rang/Team
 - [ ] optionales `/spawn`-Cooldown-/Combat-Tag-System
@@ -233,4 +255,4 @@
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem kompatiblen erwachsenen Mount reiten und dieses zuverlässig steuern. Essentials soll dagegen zuverlässig, fehlertolerant und vollständig über Spieler-IDs arbeiten, ohne durch ungültige Persistenzdaten oder verlassene Spieler Anfragen/Caches zu blockieren.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem kompatiblen erwachsenen Mount reiten und dieses zuverlässig steuern. Essentials soll zuverlässig, fehlertolerant und vollständig über Spieler-IDs arbeiten; der Spielstart soll nur valide Teams verarbeiten und Starterkits nicht unkontrolliert duplizieren.**
