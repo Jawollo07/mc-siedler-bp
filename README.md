@@ -23,7 +23,7 @@ Das Soldier-System verwendet eigene Kampf- und Bewegungslogik. Infanterie nutzt 
 
 ### 🐎 Kavallerie
 
-Kavallerie verwendet jetzt **kein eigenes `siedler:cavalry_horse`-Mount mehr**. Beim Spawnen wird ein normales, erwachsenes `minecraft:horse` erzeugt. Der Soldat wird über den nativen Minecraft-`/ride`-Befehl auf das Pferd gesetzt.
+Kavallerie verwendet **kein eigenes Pferde-Entity mehr**. Beim Spawnen wird ein normales, erwachsenes `minecraft:horse` erzeugt. Der Soldat wird über den nativen Minecraft-`/ride`-Befehl auf das Pferd gesetzt.
 
 ```text
 siedler:cavalry
@@ -33,11 +33,13 @@ siedler:cavalry
       minecraft:horse
 ```
 
-Das Pferd erhält die Tags `soldier_mount` und `cavalry_mount` sowie Dynamic Properties für Besitzer und Level. Dadurch kann die Kavallerie-KI das richtige Mount zuverlässig wiederfinden.
+Wichtig für die Kompatibilität: Vanilla-Pferde akzeptieren als Rider nur bestimmte Entity-Familien. Die Kavallerie besitzt deshalb zusätzlich die kompatible `baby_undead`-Familie. Dadurch kann `/ride ... start_riding ...` das Vanilla-Pferd verwenden, ohne die Kavallerie als `player` zu behandeln.
+
+Das Pferd erhält die Tags `soldier_mount` und `cavalry_mount` sowie Dynamic Properties für Besitzer, Level und Rider. Dadurch kann die Kavallerie-KI das richtige Mount zuverlässig wiederfinden.
 
 Die Kavallerie-Bewegung wird weiterhin zentral auf das Pferd angewendet. Charge-, Circle- und Pass-Manöver bleiben erhalten. Das Mount wird bei der Zielsuche explizit als Nicht-Ziel behandelt.
 
-Für die Mount-Zuordnung werden temporäre, eindeutige Tags verwendet, sodass keine Spieler-/Entity-Namen benötigt werden. Falls `/ride` auf einer Serverversion nicht unmittelbar als Rider-Zustand erkannt wird, existiert ein kontrollierter Fallback über `minecraft:rideable.addRider()`.
+Das Mounting verwendet eindeutige temporäre Tags und den aktuellen `/ride`-Aufbau mit `teleport_ride` und `if_group_fits`. Falls die Rideable-Komponente den Rider im selben Tick noch nicht meldet, wird einmalig `minecraft:rideable.addRider()` als API-Fallback versucht.
 
 ### 🏹 Pfeilphysik
 
