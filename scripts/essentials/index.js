@@ -260,7 +260,7 @@ world.afterEvents.playerSpawn?.subscribe?.((event) => {
     });
 });
 
-world.beforeEvents.startup.subscribe((event) => {
+system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
     registerPlayerCommand(registry, "siedler:spawn", "Teleportiert dich zum Weltspawn.", (origin) => {
