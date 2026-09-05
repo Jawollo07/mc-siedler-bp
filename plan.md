@@ -29,6 +29,16 @@
 - [x] Kavallerie-Bewegung wird über die zentrale Soldier-Bewegungsroutine auf das Mount ausgeführt
 - [x] Kavallerie setzt für Charge/Circle/Pass korrekt den `move`-Zustand
 - [x] Eigenes Kavallerie-Mount wird bei der Kavallerie-Zielsuche ausgeschlossen
+- [x] Essentials mit persistenten Homes und Todespunkten
+- [x] Essentials `/spawn`, `/home` und `/back`
+- [x] Essentials TPA mit `/tpa`, `/tpahere`, `/tpaccept` und `/tpdeny`
+- [x] Mehrere gleichzeitige eingehende TPA-Anfragen mit Ablauf nach 60 Sekunden
+- [x] TPA-Anfragen werden beim Verlassen von Spielern bereinigt
+- [x] Private Nachrichten mit `/msg` und `/reply`
+- [x] Spielersuche per ID, exaktem Namen und eindeutigem Namens-Präfix
+- [x] Robuster Schutz gegen ungültige persistente Essentials-Daten
+- [x] Admin-Essentials für Heal, Feed, Godmode, Fly, Kill, Clear und Wetter/Zeit
+- [x] Aktiver Godmode wird beim erneuten Spieler-Spawn wiederhergestellt
 
 ## 🔴 Phase 1 – Fundament & Stabilität
 
@@ -36,6 +46,8 @@
 - [x] Fehlertolerantes Laden
 - [x] Persistente World Dynamic Properties
 - [x] aktuelle Bedrock Script API berücksichtigt
+- [x] Essentials-Persistenz validiert ungültige Daten statt das Modul abbrechen zu lassen
+- [x] Laufzeit-Caches werden bei Spieler-Verlassen bereinigt
 
 ## 🔴 Phase 2 – Soldier-System
 
@@ -158,6 +170,48 @@
 - [x] Belagerungsgrundlage
 - [x] Verteidigungswarnungen
 
+## 🟣 Phase 10 – Essentials
+
+### 10.1 Spielerfunktionen
+
+- [x] `/siedler:spawn`
+- [x] `/siedler:sethome`
+- [x] `/siedler:home`
+- [x] `/siedler:delhome`
+- [x] `/siedler:back`
+- [x] `/siedler:tpa`
+- [x] `/siedler:tpahere`
+- [x] `/siedler:tpaccept`
+- [x] `/siedler:tpdeny`
+- [x] `/siedler:msg`
+- [x] `/siedler:reply`
+- [x] Todespunkt wird automatisch gespeichert
+- [x] Homes/Todespunkte über Spieler-ID persistiert
+- [x] eindeutige Namens-/ID-Suche
+
+### 10.2 Admin-Funktionen
+
+- [x] Heal
+- [x] Feed
+- [x] Godmode
+- [x] Fly
+- [x] Kill
+- [x] Clear
+- [x] Tag/Nacht
+- [x] Sonne/Regen
+- [x] Zielspieler bei Admin-Befehlen optional, wo sinnvoll
+- [x] GameDirectors-Berechtigung
+
+### 10.3 Stabilität
+
+- [x] ungültige Dynamic Properties abfangen
+- [x] TPA-Ablauf und Cleanup
+- [x] Runtime-Caches beim Leave bereinigen
+- [x] Teleport- und Admin-Fehler sauber behandeln
+- [ ] Essentials-Konfiguration in ein eigenes Config-Modul auslagern
+- [ ] optionale Home-Limits pro Rang/Team
+- [ ] optionales `/spawn`-Cooldown-/Combat-Tag-System
+
 ## 🎯 Nächster Schwerpunkt
 
 ### Soldier-KI v2
@@ -174,7 +228,9 @@
 10. Treffer- und Schadenszuordnung bei bewegten Zielen testen
 11. Kavallerie-Mount, Rider-Verbindung, Charge, Passieren und Bewegung real testen
 12. Custom-Mount auf Hindernisse, Steigungen und Terrain-Wechsel testen
+13. Essentials-Konfiguration aus `index.js` herauslösen
+14. Essentials optional um Rang-/Team-Limits erweitern
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem kompatiblen erwachsenen Mount reiten und dieses zuverlässig steuern.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem kompatiblen erwachsenen Mount reiten und dieses zuverlässig steuern. Essentials soll dagegen zuverlässig, fehlertolerant und vollständig über Spieler-IDs arbeiten, ohne durch ungültige Persistenzdaten oder verlassene Spieler Anfragen/Caches zu blockieren.**
