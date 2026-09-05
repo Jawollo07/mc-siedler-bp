@@ -74,6 +74,11 @@ export function isInMarket(entity) {
         entity.dimension?.id
     ) !== null;
 }
+
+/**
+ * Prevents players from breaking blocks inside markets.
+ * Block placement intentionally remains enabled.
+ */
 export function disableBlockBreakingInMarkets() {
     if (!world.beforeEvents?.playerBreakBlock?.subscribe) return;
 
@@ -92,24 +97,7 @@ export function disableBlockBreakingInMarkets() {
         } catch {}
     });
 }
-export function disableBlockPlacingInMarkets() {
-    if (!world.beforeEvents?.playerPlaceBlock?.subscribe) return;
 
-    world.beforeEvents.playerPlaceBlock.subscribe((event) => {
-        const player = event.player;
-        if (!player?.isValid) return;
-
-        const market = getMarketAt(event.block.location, player.dimension?.id);
-        if (!market) return;
-
-        event.cancel = true;
-        try {
-            player.sendMessage(
-                `§8[§6Market§8]§r §cDu kannst in diesem Bereich keine Blöcke platzieren.`
-            );
-        } catch {}
-    });
-}
 /**
  * Removes a hostile/monster entity when it is inside a market.
  *
@@ -177,6 +165,5 @@ if (world.afterEvents?.entitySpawn) {
 // Run once every second as a safety net for monsters that walk/fly into a market.
 system.runInterval(cleanupMarketMonsters, 20);
 disableBlockBreakingInMarkets();
-disableBlockPlacingInMarkets();
 
-console.info("§a[Market] Rectangular monster-free market protection loaded");
+console.info("§a[Market] Block-breaking protection and monster-free market protection loaded");
