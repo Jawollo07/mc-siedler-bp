@@ -60,7 +60,9 @@ Der tägliche TaxBonus entsteht ausschließlich durch besiegte Monster-Tokens. J
 
 ## 🧑‍🌾 Händler
 
-Händler werden als `siedler:trader` mit spezialisierten Rollen gespawnt. Der Soldatenhändler ermöglicht die Rekrutierung von Soldaten.
+Händler werden als `siedler:trader` mit spezialisierten Rollen gespawnt. Lebensmittel-, Baustoff-, Rohstoff-, Werkzeug-, Waffen- und Versorgungshändler verwenden eigene Vanilla-Trade-Tabellen und öffnen beim Interagieren das normale Bedrock-Handelsfenster. Die Trade-Tabelle wird über eine Component Group aktiviert, damit die Handels-KI korrekt funktioniert.
+
+Die Händler-Initialisierung wartet nach dem Spawn einen Tick, damit die Trade-Component sicher aktiv ist. Zusätzlich werden ältere bzw. per `/summon` erzeugte Händler ohne Handelsrolle automatisch repariert. Bereits vorhandene Händlerrollen werden nicht ständig neu angewendet, damit Handelsnutzungen nicht zurückgesetzt werden. Der Soldatenhändler verwendet weiterhin die eigene Rekrutierungslogik.
 
 ## 📊 Dashboard
 
@@ -96,6 +98,9 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Wel
 /siedler:startgame
 /siedler:token
 /siedler:trader <type>
+/siedler:trader_here <type>
+/siedler:trader_types
+/siedler:trader_remove
 /siedler:spawn_soldier <type> [level]
 /siedler:move <x y z>
 /siedler:follow
