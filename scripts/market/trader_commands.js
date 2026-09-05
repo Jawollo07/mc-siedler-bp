@@ -24,6 +24,10 @@ function reply(player, message) {
     try { player.sendMessage(`§8[§bHändler§8]§r ${message}`); } catch {}
 }
 
+function hasTraderRole(trader) {
+    return Object.values(TRADER_TYPES).some(config => config.tag && trader.hasTag(config.tag));
+}
+
 function applyTraderType(trader, type) {
     const config = TRADER_TYPES[type];
     if (!config || !trader?.isValid) return false;
@@ -57,8 +61,8 @@ function spawnTrader(player, type, location) {
     try {
         const trader = player.dimension.spawnEntity(TRADER_TYPE, location);
 
-        // Trade tables are component groups. Apply them on the next tick so the
-        // entity has finished spawning before its active trade component changes.
+        // Trade tables are component groups. Apply them after the entity has
+        // completed spawning to avoid a blank/non-interactive trade state.
         system.run(() => {
             if (!applyTraderType(trader, type)) {
                 reply(player, "§cHändler konnte nicht initialisiert werden.");
@@ -72,15 +76,17 @@ function spawnTrader(player, type, location) {
     }
 }
 
-// Also repairs traders created by older versions or by /summon.
+// Repair traders created by older versions or by /summon. The entity JSON
+// already gives new traders the food trade table, so only role-less traders
+// need recovery here. Existing role tags are never re-applied periodically,
+// which prevents trade uses from being reset.
 world.afterEvents.entitySpawn.subscribe((event) => {
     const trader = event.entity;
     if (trader.typeId !== TRADER_TYPE) return;
 
     system.run(() => {
         try {
-            const type = getTraderType(trader);
-            applyTraderType(trader, type);
+            if (!hasTraderRole(trader)) applyTraderType(trader, "food");
         } catch (error) {
             console.warn(`[Trader] Spawn initialization failed: ${error}`);
         }
@@ -88,13 +94,11 @@ world.afterEvents.entitySpawn.subscribe((event) => {
 });
 
 system.runInterval(() => {
-    // Lightweight recovery for traders that were already present when the
-    // script was reloaded and therefore did not receive entitySpawn.
-    for (const dimension of [world.getDimension("overworld"), world.getDimension("nether"), world.getDimension("the_end")]) {
+    for (const dimensionId of ["overworld", "nether", "the_end"]) {
         try {
+            const dimension = world.getDimension(dimensionId);
             for (const trader of dimension.getEntities({ type: TRADER_TYPE })) {
-                const type = getTraderType(trader);
-                applyTraderType(trader, type);
+                if (!hasTraderRole(trader)) applyTraderType(trader, "food");
             }
         } catch {}
     }
