@@ -23,25 +23,28 @@ Das Soldier-System verwendet eigene Kampf- und Bewegungslogik. Infanterie nutzt 
 
 ### 🐎 Kavallerie
 
-Kavallerie verwendet **kein eigenes Pferde-Entity mehr**. Beim Spawnen wird ein normales `minecraft:horse` erzeugt und explizit auf einen erwachsenen Wild-Zustand gebracht. Der Soldat wird über den nativen Minecraft-`/ride`-Befehl auf das Pferd gesetzt.
+Kavallerie verwendet ein normales erwachsenes `minecraft:horse`. Der Soldat wird über `/ride start_riding` auf das Mount gesetzt und die KI steuert anschließend ausschließlich das Pferd.
+
+Die Kavallerie-KI arbeitet als taktische Zustandsmaschine:
 
 ```text
-siedler:cavalry
-      │
-      └── /ride
-            ↓
-      minecraft:horse
+APPROACH → CHARGE → HIT → PASS → APPROACH → ...
+              │
+              └── STUCK → PASS (andere Seite)
 ```
 
-Wichtig für die Kompatibilität: Das Wild-Pferd besitzt eine `minecraft:rideable`-Komponente mit unterstützten Rider-Familien. Die Kavallerie besitzt deshalb zusätzlich die kompatible `baby_undead`-Familie. Dadurch kann `/ride ... start_riding ...` das Vanilla-Pferd verwenden, ohne die Kavallerie als `player` zu behandeln.
+- Zielpriorität für Spieler und feindliche Soldiers
+- Ziel-Hysterese verhindert unnötiges Wechseln zwischen Gegnern
+- direkte Annäherung auf größere Distanz
+- seitlich versetzte Annäherung verhindert dauerhaftes Hängenbleiben am Gegner
+- Charge mit erhöhtem Schaden und Knockback
+- echtes Passieren statt Kreisen auf dem Gegner
+- automatische Seitenwechsel bei festgefahrener Kavallerie
+- Mount-Zuordnung über `soldier:riderId` und Mount-Tags
+- eigenes Mount wird niemals als Ziel ausgewählt
+- Bewegung wird zentral über `ai.js` auf das Mount angewendet
 
-Beim Mount-Spawn wird die Vanilla-Horse-Initialisierung zusätzlich mit dem `minecraft:spawn_adult`-Event abgesichert. Damit wird verhindert, dass ein zufällig als Fohlen erzeugtes Pferd ohne passende Wild-/Rideable-Komponenten als Kavallerie-Mount verwendet wird.
-
-Das Pferd erhält die Tags `soldier_mount` und `cavalry_mount` sowie Dynamic Properties für Besitzer, Level und Rider. Dadurch kann die Kavallerie-KI das richtige Mount zuverlässig wiederfinden.
-
-Die Kavallerie-Bewegung wird weiterhin zentral auf das Pferd angewendet. Charge-, Circle- und Pass-Manöver bleiben erhalten. Das Mount wird bei der Zielsuche explizit als Nicht-Ziel behandelt.
-
-Das Mounting verwendet eindeutige temporäre Tags und den aktuellen `/ride`-Aufbau mit `teleport_ride` und `if_group_fits`. Falls die Rideable-Komponente den Rider im selben Tick noch nicht meldet, wird einmalig `minecraft:rideable.addRider()` als API-Fallback versucht.
+Das Mounting selbst verwendet eindeutige Tags, `/ride` und den Rideable-API-Fallback. Die Kavallerie-Entity besitzt die benötigte `baby_undead`-Familienkompatibilität für das Vanilla-Pferd, ohne als `player` behandelt zu werden.
 
 ### 🏹 Pfeilphysik
 
