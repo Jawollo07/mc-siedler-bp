@@ -81,7 +81,7 @@ export function disableBlockBreakingInMarkets() {
         const player = event.player;
         if (!player?.isValid) return;
 
-        const market = getMarketAt(player.location, player.dimension?.id);
+        const market = getMarketAt(event.block.location, player.dimension?.id);
         if (!market) return;
 
         event.cancel = true;
@@ -99,7 +99,7 @@ export function disableBlockPlacingInMarkets() {
         const player = event.player;
         if (!player?.isValid) return;
 
-        const market = getMarketAt(player.location, player.dimension?.id);
+        const market = getMarketAt(event.block.location, player.dimension?.id);
         if (!market) return;
 
         event.cancel = true;
