@@ -23,11 +23,13 @@ function registerCommands(registry) {
             mandatoryParameters: [
                 {
                     name: "player",
-                    type: CustomCommandParamType.Player
+                    type: CustomCommandParamType.Entity
                 }
             ]
         }, (origin, player) => {
-            if (!player) return { status: CustomCommandStatus.Failure };
+            if (!player || player.typeId !== "minecraft:player") {
+                return { status: CustomCommandStatus.Failure };
+            }
     
             system.run(() => tpPlayerToTeam(player));
     
@@ -41,11 +43,13 @@ function registerCommands(registry) {
         mandatoryParameters: [
             {
                 name: "player",
-                type: CustomCommandParamType.Player
+                type: CustomCommandParamType.Entity
             }
         ]
     }, (origin, player) => {
-        if (!player) return { status: CustomCommandStatus.Failure };
+        if (!player || player.typeId !== "minecraft:player") {
+            return { status: CustomCommandStatus.Failure };
+        }
 
         system.run(() => giveStarterKit(player));
 
