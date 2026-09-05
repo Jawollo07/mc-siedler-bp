@@ -19,15 +19,18 @@
 - [x] Ballistisches Zielen, Gravitation, Drag, Predictive Aim und Swept-Ray
 - [x] Spieler-Dashboard und Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
-- [x] Kavallerie verwendet ein normales `minecraft:horse`
-- [x] Kavallerie-Mount wird beim Spawn explizit als erwachsenes Vanilla-Pferd initialisiert
-- [x] Kavallerie-Soldat wird über den nativen `/ride`-Befehl auf das Pferd gesetzt
-- [x] Vanilla-Rider-Kompatibilität über die `baby_undead`-Familie hergestellt
-- [x] Eindeutige Mount-Tags für die Soldier–Horse-Zuordnung
-- [x] Kavallerie-Bewegung wird auf das Mount ausgeführt
-- [x] Charge- und Pass-Manöver
-- [x] Mount wird bei der Zielsuche ausgeschlossen
-- [x] Rideable-API als kontrollierter Fallback
+- [x] Kavallerie verwendet ein normales erwachsenes `minecraft:horse`
+- [x] Kavallerie-Mounting über `/ride`
+- [x] Vanilla-Rider-Kompatibilität über `baby_undead`
+- [x] Eindeutige Mount-Tags und `soldier:riderId`
+- [x] Kavallerie bewegt das Mount statt den Reiter direkt
+- [x] Taktische Kavallerie-Zustände: Approach, Charge, Hit, Pass
+- [x] Charge mit erhöhtem Schaden und Knockback
+- [x] Seitliches Passieren statt dauerhaftem Kreisen auf dem Gegner
+- [x] Zielpriorität und Target-Hysterese
+- [x] Stuck-Erkennung mit automatischem Seitenwechsel
+- [x] Eigenes Mount wird bei der Zielsuche ausgeschlossen
+- [x] Rideable-API als Mounting-Fallback
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
 
 ## 🔴 Phase 1 – Fundament & Stabilität
@@ -54,9 +57,9 @@
 - [x] Rekrutierung über Soldatenhändler
 - [x] Vanilla-Pferd als Kavallerie-Mount
 - [x] erwachsenes Wild-Pferd als stabiler Mount-Zustand
-- [x] Mount-Zuordnung über eindeutige Tags
+- [x] Mount-Zuordnung über eindeutige Tags und Rider-ID
 - [x] Mounting über `/ride`
-- [x] Rider-Kompatibilität mit Vanilla-Horse über unterstützte Entity-Familie
+- [x] Rider-Kompatibilität mit Vanilla-Horse
 
 ### 2.2 Bewegung & Kampf-KI
 
@@ -72,15 +75,17 @@
 - [x] Pfeilrotation und Swept-Ray
 - [x] automatische Pfeil-Bereinigung
 - [x] Kavallerie bewegt das Mount statt den Reiter direkt
-- [x] Charge- und Pass-Manöver
-- [x] eigenes Mount wird nicht als Ziel gewählt
-- [x] `/ride`-basierte Rider-Zuordnung
-- [x] Rider-Kompatibilität für Vanilla-Pferde korrigiert
-- [x] erwachsenes Mount gegen zufälliges Fohlen abgesichert
+- [x] taktische Approach-/Charge-/Hit-/Pass-Zustandsmaschine
+- [x] Charge-Cooldown und Charge-Timeout
+- [x] seitlicher Pass gegen direkte Zielkollision
+- [x] Zielprioritäten für Spieler und Soldiers
+- [x] Target-Hysterese gegen unnötigen Zielwechsel
+- [x] Stuck-Erkennung und automatischer Seitenwechsel
+- [x] eindeutige Mount-Zuordnung über Rider-ID
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
-- [ ] intelligente Zielprioritäten
+- [ ] echte Hindernisbewertung für Charge-Lanes
 - [ ] Ausweich- und Blockverhalten
 - [ ] reale Ingame-Kavallerie-Tests mit Hindernissen, Steigungen und mehreren Zielen
 
@@ -176,21 +181,22 @@
 
 ### Soldier-KI v2
 
-1. Wegfindung verbessern
-2. Hindernisse erkennen
-3. echte Nahkampf-Hitbox statt reiner Mittelpunkt-Distanz berücksichtigen
-4. Kampfpositionen dynamisch um das Ziel verteilen
-5. Gruppenformationen stabilisieren
-6. Angriffe, Treffer und Animationen synchronisieren
-7. KI mit realen Serverlogs testen
-8. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
-9. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
-10. Treffer- und Schadenszuordnung bei bewegten Zielen testen
-11. Kavallerie-Mount, Rider-Verbindung, Charge, Passieren und Bewegung real testen
-12. Vanilla-Pferd auf Hindernisse, Steigungen und Terrain-Wechsel testen
-13. Essentials-Konfiguration aus `index.js` herauslösen
-14. Essentials optional um Rang-/Team-Limits erweitern
+1. echte Wegfindung für Soldiers und Kavallerie
+2. Hindernisse und Gelände erkennen
+3. Höhen-/Treppenlogik verbessern
+4. Charge-Lane auf Hindernisse prüfen
+5. echte Nahkampf-Hitbox statt reiner Mittelpunkt-Distanz berücksichtigen
+6. Kampfpositionen dynamisch um Ziele verteilen
+7. Gruppenformationen stabilisieren
+8. Angriffe, Treffer und Animationen synchronisieren
+9. Kavallerie auf realen Serverlogs und Ingame-Szenarien testen
+10. Charge/Pass-Verhalten gegen mehrere Gegner testen
+11. Vanilla-Pferd auf Hindernisse, Steigungen und Terrain-Wechsel testen
+12. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
+13. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
+14. Essentials-Konfiguration aus `index.js` herauslösen
+15. Essentials optional um Rang-/Team-Limits erweitern
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem kompatiblen erwachsenen Vanilla-Mount reiten und dieses zuverlässig steuern.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern, eine gute Kampfposition einnehmen und angreifen. Kavallerie soll nicht in Gegnern stecken bleiben, sondern mit hoher Geschwindigkeit chargen, den Gegner passieren und anschließend für den nächsten Angriff neu ansetzen.**
