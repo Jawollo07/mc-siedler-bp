@@ -19,9 +19,14 @@ function registerCommands(registry) {
             name: "siedler:team_tp",
             description: "Teleportiert einen Spieler zu seinem Team",
             permissionLevel: OP_PERMISSION,
-            cheatsRequired: false
-        }, (origin) => {
-            const player = playerOnly(origin);
+            cheatsRequired: false,
+            mandatoryParameters: [
+                {
+                    name: "player",
+                    type: CustomCommandParamType.Player
+                }
+            ]
+        }, (origin, player) => {
             if (!player) return { status: CustomCommandStatus.Failure };
     
             system.run(() => tpPlayerToTeam(player));
@@ -32,9 +37,14 @@ function registerCommands(registry) {
         name: "siedler:starterkit",
         description: "Gibt dem Spieler ein Starterkit",
         permissionLevel: OP_PERMISSION,
-        cheatsRequired: false
-    }, (origin) => {
-        const player = playerOnly(origin);
+        cheatsRequired: false,
+        mandatoryParameters: [
+            {
+                name: "player",
+                type: CustomCommandParamType.Player
+            }
+        ]
+    }, (origin, player) => {
         if (!player) return { status: CustomCommandStatus.Failure };
 
         system.run(() => giveStarterKit(player));
@@ -47,8 +57,7 @@ function registerCommands(registry) {
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false
     }, (origin) => {
-        const player = playerOnly(origin);
-        if (!player) return { status: CustomCommandStatus.Failure };
+        if (!origin) return { status: CustomCommandStatus.Failure };
 
         system.run(() => {
             startGame();
