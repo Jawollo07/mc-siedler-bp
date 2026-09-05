@@ -21,10 +21,12 @@
 - [x] Resource Pack mit Custom-Soldaten
 - [x] Kavallerie verwendet ein normales erwachsenes `minecraft:horse`
 - [x] Kavallerie-Soldat wird über den nativen `/ride`-Befehl auf das Pferd gesetzt
+- [x] Vanilla-Rider-Kompatibilität über die `baby_undead`-Familie hergestellt
 - [x] Eindeutige Mount-Tags für die Soldier–Horse-Zuordnung
 - [x] Kavallerie-Bewegung wird auf das Mount ausgeführt
 - [x] Charge- und Pass-Manöver
 - [x] Mount wird bei der Zielsuche ausgeschlossen
+- [x] Rideable-API als kontrollierter Fallback
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
 
 ## 🔴 Phase 1 – Fundament & Stabilität
@@ -52,6 +54,7 @@
 - [x] Vanilla-Pferd als Kavallerie-Mount
 - [x] Mount-Zuordnung über eindeutige Tags
 - [x] Mounting über `/ride`
+- [x] Rider-Kompatibilität mit Vanilla-Horse über unterstützte Entity-Familie
 
 ### 2.2 Bewegung & Kampf-KI
 
@@ -70,6 +73,7 @@
 - [x] Charge- und Pass-Manöver
 - [x] eigenes Mount wird nicht als Ziel gewählt
 - [x] `/ride`-basierte Rider-Zuordnung
+- [x] Rider-Kompatibilität für Vanilla-Pferde korrigiert
 - [ ] echte Wegfindung über Hindernisse
 - [ ] Block-/Geländeerkennung
 - [ ] bessere Höhen-/Treppenlogik
@@ -111,7 +115,11 @@
 - [x] Monster-Token-TaxBonus
 - [x] +1 Emerald/Tag je besiegtem Monster-Token
 - [x] permanenter Bonus
+- [x] maximal 64 TaxBonus Emeralds/Tag
+- [x] Bonus nur für Team des Spielerkillers
 - [x] bestehende Teams erhalten `taxBonus: 0` bei Migration
+- [x] doppelte Tagesauszahlung nach Neustart verhindert
+- [x] Tägliche Steuer Übersicht
 
 ## 🟡 Phase 6 – Handel & Märkte
 
@@ -130,18 +138,17 @@
 - [x] Steuern/TaxBonus
 - [x] Soldaten nach Typ
 - [x] Soldier-XP und Level
-- [x] Serverstatistiken
+- [x] Serverstatistiken über Overworld, Nether und End
 
 ## 🟢 Phase 8 – Resource Pack
 
 - [x] Custom Soldier Entity
 - [x] Soldaten-Typen visuell unterscheiden
 - [x] Ausrüstung rendern
-- [x] individuelle Lauf- und Kampfanimationen
-- [x] Vanilla-Pillager/Humanoid-Bewegungsbasis
-- [x] Kavallerie als Custom-Soldier darstellen
-- [x] Custom-Pferde-Entity entfernt
-- [x] Pferdedarstellung an Vanilla `minecraft:horse` delegiert
+- [x] individuelle Laufanimationen
+- [x] Idle-/Bewegungsanimationen
+- [x] Kampfzustand an RP übergeben
+- [x] Kavallerie verwendet Vanilla-Pferd statt Custom-Mount
 
 ## 🔵 Phase 9 – Monster & Bedrohungen
 
@@ -155,13 +162,12 @@
 
 ## 🟣 Phase 10 – Essentials
 
-- [x] `/siedler:spawn`
-- [x] Homes und Todespunkt
-- [x] TPA
-- [x] `/msg` und `/reply`
-- [x] Admin-Essentials
-- [x] Team-Teleport und Spielstart
-- [x] Starterkit-Schutz vor automatischer Duplizierung
+- [x] Spielerfunktionen
+- [x] Start- und Starterkit-System
+- [x] Admin-Funktionen
+- [x] persistente Essentials-Daten
+- [x] TPA-Ablauf und Cleanup
+- [x] robuste Teleport- und Admin-Fehlerbehandlung
 
 ## 🎯 Nächster Schwerpunkt
 
@@ -169,16 +175,19 @@
 
 1. Wegfindung verbessern
 2. Hindernisse erkennen
-3. Kampfpositionen dynamisch verteilen
-4. Gruppenformationen stabilisieren
-5. Angriffe, Treffer und Animationen synchronisieren
-6. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
-7. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
-8. Kavallerie-Mount, `/ride`, Charge, Passieren und Bewegung real testen
-9. Vanilla-Pferde auf Hindernisse, Steigungen und Terrain-Wechsel testen
-10. Mount-Cleanup bei Soldaten-Tod/Entfernung robust machen
-11. Essentials-Konfiguration aus `index.js` herauslösen
+3. echte Nahkampf-Hitbox statt reiner Mittelpunkt-Distanz berücksichtigen
+4. Kampfpositionen dynamisch um das Ziel verteilen
+5. Gruppenformationen stabilisieren
+6. Angriffe, Treffer und Animationen synchronisieren
+7. KI mit realen Serverlogs testen
+8. Bogenschützen-Schaden und Verzauberungen vollständig mit dem Soldier-Level synchronisieren
+9. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
+10. Treffer- und Schadenszuordnung bei bewegten Zielen testen
+11. Kavallerie-Mount, Rider-Verbindung, Charge, Passieren und Bewegung real testen
+12. Vanilla-Pferd auf Hindernisse, Steigungen und Terrain-Wechsel testen
+13. Essentials-Konfiguration aus `index.js` herauslösen
+14. Essentials optional um Rang-/Team-Limits erweitern
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten. Kavallerie soll dabei ein normales erwachsenes Minecraft-Pferd verwenden und den Rider über das native `/ride`-System zuverlässig auf- und absetzen können. Eigene Pferde-Geometrien sollen dafür nicht notwendig sein.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern bzw. Abstand halten, in Reichweite stehen, angreifen und nach dem Angriff weiterkämpfen – ohne in einer Bewegungs-Schleife hängen zu bleiben. Kavallerie soll dabei tatsächlich auf einem kompatiblen erwachsenen Vanilla-Mount reiten und dieses zuverlässig steuern.**
