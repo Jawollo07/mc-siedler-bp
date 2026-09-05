@@ -75,9 +75,9 @@ export function isInMarket(entity) {
     ) !== null;
 }
 export function disableBlockBreakingInMarkets() {
-    if (!world.beforeEvents?.blockBreak) return;
+    if (!world.beforeEvents?.playerBreakBlock?.subscribe) return;
 
-    world.beforeEvents.blockBreak.subscribe((event) => {
+    world.beforeEvents.playerBreakBlock.subscribe((event) => {
         const player = event.player;
         if (!player?.isValid) return;
 
@@ -93,9 +93,9 @@ export function disableBlockBreakingInMarkets() {
     });
 }
 export function disableBlockPlacingInMarkets() {
-    if (!world.beforeEvents?.blockPlace) return;
+    if (!world.beforeEvents?.playerPlaceBlock?.subscribe) return;
 
-    world.beforeEvents.blockPlace.subscribe((event) => {
+    world.beforeEvents.playerPlaceBlock.subscribe((event) => {
         const player = event.player;
         if (!player?.isValid) return;
 
@@ -176,6 +176,7 @@ if (world.afterEvents?.entitySpawn) {
 
 // Run once every second as a safety net for monsters that walk/fly into a market.
 system.runInterval(cleanupMarketMonsters, 20);
-system.runInterval(() => {disableBlockBreakingInMarkets(); disableBlockPlacingInMarkets();}, 10);
+disableBlockBreakingInMarkets();
+disableBlockPlacingInMarkets();
 
 console.info("§a[Market] Rectangular monster-free market protection loaded");
