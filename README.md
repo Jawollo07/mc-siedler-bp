@@ -23,7 +23,7 @@ Das Soldier-System verwendet eigene Kampf- und Bewegungslogik. Infanterie nutzt 
 
 ### 🐎 Kavallerie
 
-Kavallerie verwendet **kein eigenes Pferde-Entity mehr**. Beim Spawnen wird ein normales, erwachsenes `minecraft:horse` erzeugt. Der Soldat wird über den nativen Minecraft-`/ride`-Befehl auf das Pferd gesetzt.
+Kavallerie verwendet **kein eigenes Pferde-Entity mehr**. Beim Spawnen wird ein normales `minecraft:horse` erzeugt und explizit auf einen erwachsenen Wild-Zustand gebracht. Der Soldat wird über den nativen Minecraft-`/ride`-Befehl auf das Pferd gesetzt.
 
 ```text
 siedler:cavalry
@@ -33,7 +33,9 @@ siedler:cavalry
       minecraft:horse
 ```
 
-Wichtig für die Kompatibilität: Vanilla-Pferde akzeptieren als Rider nur bestimmte Entity-Familien. Die Kavallerie besitzt deshalb zusätzlich die kompatible `baby_undead`-Familie. Dadurch kann `/ride ... start_riding ...` das Vanilla-Pferd verwenden, ohne die Kavallerie als `player` zu behandeln.
+Wichtig für die Kompatibilität: Das Wild-Pferd besitzt eine `minecraft:rideable`-Komponente mit unterstützten Rider-Familien. Die Kavallerie besitzt deshalb zusätzlich die kompatible `baby_undead`-Familie. Dadurch kann `/ride ... start_riding ...` das Vanilla-Pferd verwenden, ohne die Kavallerie als `player` zu behandeln.
+
+Beim Mount-Spawn wird die Vanilla-Horse-Initialisierung zusätzlich mit dem `minecraft:spawn_adult`-Event abgesichert. Damit wird verhindert, dass ein zufällig als Fohlen erzeugtes Pferd ohne passende Wild-/Rideable-Komponenten als Kavallerie-Mount verwendet wird.
 
 Das Pferd erhält die Tags `soldier_mount` und `cavalry_mount` sowie Dynamic Properties für Besitzer, Level und Rider. Dadurch kann die Kavallerie-KI das richtige Mount zuverlässig wiederfinden.
 
@@ -43,7 +45,7 @@ Das Mounting verwendet eindeutige temporäre Tags und den aktuellen `/ride`-Aufb
 
 ### 🏹 Pfeilphysik
 
-Bogenschützen berechnen eine ballistische Flugbahn mit Gravitation, Luftwiderstand und vorausschauendem Zielen. Pfeile werden als echte `minecraft:arrow`-Projekte erzeugt und während des Flugs überwacht.
+Bogenschützen berechnen eine ballistische Flugbahn mit Gravitation, Luftwiderstand und vorausschauendem Zielen. Pfeile werden als echte `minecraft:arrow`-Projektil erzeugt und während des Flugs überwacht.
 
 ## 🧰 Essentials
 
