@@ -38,7 +38,7 @@ function registerCommands(registry) {
         description: "Teleportiert einen Spieler zu seinem Team.",
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
-        mandatoryParameters: [{ name: "player", type: CustomCommandParamType.Entity }]
+        mandatoryParameters: [{ name: "player", type: CustomCommandParamType.String }]
     }, (origin, playerArg) => {
         const player = resolvePlayerArgument(playerArg);
         if (!player) return { status: CustomCommandStatus.Failure };
@@ -51,7 +51,7 @@ function registerCommands(registry) {
         description: "Gibt einem Spieler das Starterkit.",
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
-        mandatoryParameters: [{ name: "player", type: CustomCommandParamType.Entity }]
+        mandatoryParameters: [{ name: "player", type: CustomCommandParamType.String }]
     }, (origin, playerArg) => {
         const player = resolvePlayerArgument(playerArg);
         if (!player) return { status: CustomCommandStatus.Failure };
@@ -75,9 +75,14 @@ function registerCommands(registry) {
 }
 
 function resolvePlayerArgument(argument) {
-    const candidate = Array.isArray(argument) ? argument[0] : argument;
-    if (!candidate || candidate.typeId !== "minecraft:player" || !candidate.isValid) return null;
-    return candidate;
+    const value = String(Array.isArray(argument) ? argument[0] : argument ?? "").trim().toLowerCase();
+    if (!value) return null;
+
+    const players = world.getPlayers();
+    return players.find(player => player.id.toLowerCase() === value) ??
+        players.find(player => player.name.toLowerCase() === value) ??
+        players.find(player => player.name.toLowerCase().startsWith(value)) ??
+        null;
 }
 
 function isValidTeamCoords(coords) {
