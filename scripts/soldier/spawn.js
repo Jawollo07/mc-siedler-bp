@@ -10,7 +10,7 @@ import {
 } from "./config.js";
 
 const DEBUG = false;
-const CAVALRY_MOUNT_ID = "siedler:cavalry_horse";
+const CAVALRY_MOUNT_ID = "minecraft:horse";
 
 const SOLDIER_ENTITY_IDS = Object.freeze({
     infantry: "siedler:infantry",
@@ -72,17 +72,7 @@ export function spawnSoldier(
         if (typeData.mount) {
             try {
                 mount = spawnCavalryMount(dimension, location, owner, level);
-
-                const rideable = mount.getComponent("minecraft:rideable");
-                if (!rideable || typeof rideable.addRider !== "function") {
-                    throw new Error("minecraft:rideable.addRider() is unavailable");
-                }
-
-                if (!rideable.addRider(entity)) {
-                    throw new Error("Cavalry soldier is not accepted by the mount's rideable family_types");
-                }
-
-                mount.setDynamicProperty("soldier:riderId", entity.id);
+                mountCavalrySoldier(entity, mount);
             } catch (error) {
                 console.warn(`[Soldier] Cavalry mount failed: ${error}`);
                 try { if (mount?.isValid) mount.remove(); } catch {}
@@ -144,7 +134,61 @@ function spawnCavalryMount(dimension, location, owner, level) {
     mount.addTag("cavalry_mount");
     mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
     mount.setDynamicProperty("soldier:level", level);
+
+    // Keep the horse as a normal adult vanilla horse. The soldier is mounted
+    // through the vanilla /ride command instead of a custom horse entity.
+    try {
+        const ageable = mount.getComponent("minecraft:ageable");
+        if (ageable?.setBaby) ageable.setAdult?.();
+    } catch {}
+
     return mount;
+}
+
+function mountCavalrySoldier(soldier, mount) {
+    const riderTag = `cavalry_rider_${sanitizeTag(soldier.id)}`;
+    const mountTag = `cavalry_mount_${sanitizeTag(soldier.id)}`;
+
+    soldier.addTag(riderTag);
+    mount.addTag(mountTag);
+
+    try {
+        // Use Minecraft's native riding system. Temporary unique tags avoid
+        // relying on entity names or unsupported UUID selectors.
+        const result = mount.dimension.runCommand(
+            `ride @e[type=siedler:cavalry,tag=${riderTag},c=1] start_riding @e[type=minecraft:horse,tag=${mountTag},c=1]`
+        );
+        if (DEBUG) console.log(`[Soldier] Mounted cavalry using /ride: ${result?.successCount ?? 0}`);
+    } finally {
+        try { soldier.removeTag(riderTag); } catch {}
+        // Keep the permanent mount tag; cavalry_ai uses it for discovery.
+    }
+
+    if (!isRidingEntity(soldier, mount)) {
+        // Fallback for servers where /ride does not immediately update the
+        // rider state. This still uses the native rideable component rather
+        // than creating a custom horse entity.
+        const rideable = mount.getComponent("minecraft:rideable");
+        if (!rideable || typeof rideable.addRider !== "function" || !rideable.addRider(soldier)) {
+            throw new Error("/ride did not mount the cavalry soldier");
+        }
+    }
+
+    mount.setDynamicProperty("soldier:riderId", soldier.id);
+}
+
+function isRidingEntity(soldier, mount) {
+    try {
+        const rideable = mount.getComponent("minecraft:rideable");
+        if (!rideable) return false;
+        return rideable.getRiders?.().some(rider => rider.id === soldier.id) ?? false;
+    } catch {
+        return false;
+    }
+}
+
+function sanitizeTag(value) {
+    return String(value).replace(/[^A-Za-z0-9_-]/g, "_").slice(-48);
 }
 
 export function setSoldierHealth(entity, value) {
