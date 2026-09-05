@@ -10,6 +10,11 @@
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Permanenter Monster-Token-TaxBonus
 - [x] Händler und Soldatenhändler
+- [x] Handelsfenster für spezialisierte Händler repariert
+- [x] Händler-Trade-Tables werden über Component Groups sicher aktiviert
+- [x] Händler-Spawn wird nach dem Entity-Spawn initialisiert
+- [x] Alte/rollenlose Händler werden automatisch repariert
+- [x] Händler-Recovery setzt bestehende Trade-Nutzungen nicht zurück
 - [x] Soldier-Spawn, Owner-Zuordnung, Level 1–7 und XP
 - [x] Infanterie, Bogenschütze und Kavallerie
 - [x] Soldier-Ausrüstung und Befehle
@@ -135,6 +140,11 @@
 - [x] Markt-Schutz
 - [x] spezialisierte Händler
 - [x] Soldatenhändler
+- [x] funktionierende Trade-UI für Lebensmittel-, Baustoff-, Rohstoff-, Werkzeug-, Waffen- und Versorgungshändler
+- [x] Trade-Tables über Component Groups aktiviert
+- [x] Händler nach Spawn sicher initialisiert
+- [x] bestehende/rollenlose Händler automatisch repariert
+- [x] Trade-Nutzungen vor wiederholtem Reset geschützt
 
 ## 🟢 Phase 7 – Dashboard
 
