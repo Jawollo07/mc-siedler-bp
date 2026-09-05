@@ -135,12 +135,20 @@ function spawnCavalryMount(dimension, location, owner, level) {
     mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
     mount.setDynamicProperty("soldier:level", level);
 
-    // Keep the horse as a normal adult vanilla horse. The soldier is mounted
-    // through the vanilla /ride command instead of a custom horse entity.
+    // A vanilla horse spawns either wild-adult or baby. For cavalry we must
+    // explicitly put it into the adult/wild component group so the vanilla
+    // rideable component is guaranteed to exist. This also prevents the old
+    // "baby horse" issue from returning.
     try {
         const ageable = mount.getComponent("minecraft:ageable");
         if (ageable?.setAdult) ageable.setAdult();
     } catch {}
+
+    try {
+        mount.runCommand("event entity @s minecraft:spawn_adult");
+    } catch (error) {
+        if (DEBUG) console.warn(`[Soldier] Could not force adult horse event: ${error}`);
+    }
 
     return mount;
 }
@@ -153,9 +161,8 @@ function mountCavalrySoldier(soldier, mount) {
     mount.addTag(mountTag);
 
     try {
-        // Vanilla horses only accept rider families declared by their
-        // rideable component. The cavalry entity therefore includes the
-        // compatible baby_undead family without becoming a player entity.
+        // The vanilla horse's wild rideable component accepts baby_undead,
+        // which is the compatibility family assigned to siedler:cavalry.
         const result = mount.dimension.runCommand(
             `ride @e[type=siedler:cavalry,tag=${riderTag},c=1] start_riding @e[type=minecraft:horse,tag=${mountTag},c=1] teleport_ride if_group_fits`
         );
@@ -165,8 +172,8 @@ function mountCavalrySoldier(soldier, mount) {
     }
 
     if (!isRidingEntity(soldier, mount)) {
-        // Fallback for a server tick where the command result has not yet
-        // propagated through the entity component state.
+        // The Script API component is a fallback. The explicit adult event
+        // above makes sure the horse has a rideable component before this.
         const rideable = mount.getComponent("minecraft:rideable");
         if (rideable && typeof rideable.addRider === "function") {
             try { rideable.addRider(soldier); } catch {}
