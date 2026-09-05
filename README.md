@@ -1,149 +1,63 @@
 # 🏘️ Siedler Logic
 
-> Modulares Minecraft-Bedrock-Behavior-Pack für das Minecraft-Siedler-Projekt – mit Teams, Claims, Wirtschaft, Märkten, Händlern, Monstern, Soldaten und einem zentralen Essentials-System.
+> Modulares Minecraft-Bedrock-Behavior-Pack für das Minecraft-Siedler-Projekt.
 
 **Behavior Pack:** https://github.com/Jawollo07/mc-siedler-bp  
 **Resource Pack:** https://github.com/Jawollo07/mc-siedler-rp
 
-## 📖 Übersicht
+## 📖 Systeme
 
-Siedler Logic bildet die Gameplay- und Serverlogik des Projekts. Der aktuelle Fokus liegt auf der Verbindung von Wirtschaft, Territorium, Bevölkerung und Militär.
-
-Aktuelle Systeme:
-
-- 👥 Teams, Team-Chat, Farben und Beziehungen
-- 🏠 Claims und visuelle Claim-Grenzen
-- 💰 Emerald-basierte Wirtschaft, Steuern und permanenter Monster-Token-TaxBonus
-- 🏪 Marktplätze und spezialisierte Händler
-- ⚔️ Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
-- 🧑‍🌾 Soldatenhändler mit direkter Rekrutierungs-UI
-- 🏹 Infanterie, echte Bogenschützen mit ballistisch berechneten Pfeil-Projektilen und Kavallerie
-- 👹 Monster, Pillager-Trupps, Außenposten und Belagerungen
-- 🧰 Essentials mit Homes, Spawn, TPA, privaten Nachrichten, Todespunkten, Startsystem und Admin-Werkzeugen
-- 📊 Erweitertes Spieler-Dashboard und Serverstatistiken
-
-## 🧰 Essentials
-
-Das Essentials-System ist in mehrere Aufgabenbereiche gegliedert. Persistente Spielerdaten verwenden die Spieler-ID statt des Namens. Das Startsystem in `scripts/essentials/start.js` verwaltet Team-Teleports, Spielstart und Starterkits.
-
-### Startsystem
-
-```text
-/siedler:team_tp <spieler>
-/siedler:starterkit <spieler>
-/siedler:startgame
-```
-
-`/siedler:startgame` prüft Teams und Startkoordinaten, teleportiert nur online erreichbare Spieler und verhindert doppelte Starterkits über den Tag `siedler:starterkit_received`. Ungültige Teams werden protokolliert und übersprungen, statt den kompletten Startvorgang abzubrechen.
-
-Das Starterkit verwendet echte `ItemStack`-Objekte und erkennt teilweise volle Inventare. Ein manuell ausgeführtes `/siedler:starterkit` kann bewusst erneut vergeben werden; der automatische Spielstart gibt einem Spieler dagegen kein zweites Kit.
-
-### Spieler-Commands
-
-```text
-/siedler:spawn
-/siedler:sethome
-/siedler:home
-/siedler:delhome
-/siedler:back
-/siedler:tpa <spieler>
-/siedler:tpahere <spieler>
-/siedler:tpaccept
-/siedler:tpdeny
-/siedler:msg <spieler> <nachricht>
-/siedler:reply <nachricht>
-```
-
-TPA-Anfragen laufen nach 60 Sekunden ab. Mehrere eingehende Anfragen können gleichzeitig existieren; `tpaccept` und `tpdeny` verarbeiten die aktuellste Anfrage. Anfragen werden beim Verlassen eines Spielers automatisch bereinigt.
-
-Homes und Todespunkte werden als World Dynamic Properties gespeichert. Beim Laden werden ungültige Datensätze ignoriert, statt das komplette Essentials-System zu blockieren. Der letzte Todespunkt wird automatisch beim Tod eines Spielers aktualisiert.
-
-### Admin-Commands
-
-```text
-/siedler:admin_heal [spieler]
-/siedler:admin_feed [spieler]
-/siedler:admin_god [spieler]
-/siedler:admin_fly [spieler]
-/siedler:admin_kill <spieler>
-/siedler:admin_clear <spieler>
-/siedler:admin_day
-/siedler:admin_night
-/siedler:admin_sun
-/siedler:admin_rain
-```
-
-Admin-Commands sind auf `GameDirectors` beschränkt. Godmode und Flugmodus werden pro Spieler über die Laufzeit-ID verwaltet und bei einem erneuten Spawn für aktiven Godmode wiederhergestellt.
+- Teams, Team-Chat, Farben und Diplomatie
+- Claims und Claim-Grenzen
+- Wirtschaft, Steuern und permanenter Monster-Token-TaxBonus
+- Marktplätze und spezialisierte Händler
+- Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
+- Infanterie, Bogenschützen mit ballistischer Pfeilphysik und Kavallerie
+- Monster, Pillager-Trupps, Außenposten und Belagerungsgrundlage
+- Essentials mit Homes, Spawn, TPA, privaten Nachrichten, Todespunkten, Startsystem und Admin-Werkzeugen
+- Spieler-Dashboard und Serverstatistiken
 
 ## ⚔️ Soldier-KI
 
-Das Soldier-System verwendet eine eigene Kampf- und Bewegungslogik. Ein Soldat sucht feindliche Ziele, nähert sich ihnen und wechselt anschließend in den passenden Kampfzustand.
-
-### 🗡️ Infanterie
-
-Nahkämpfer laufen bis zur praktischen Entity-Kollisionsdistanz und greifen anschließend über `applyDamage()` mit Windup und Cooldown an. Die Kampfposition verwendet einen kleinen Arrival-Radius, damit Soldaten nicht vor dem Gegner stehen bleiben.
-
-### 🏹 Bogenschützen
-
-Bogenschützen verwenden eine **eigene Fernkampf-KI** und greifen nicht wie Infanteristen per `applyDamage()` an. Sie:
-
-- halten bevorzugt Abstand zum Gegner,
-- zielen auf das Ziel,
-- spawnen echte `minecraft:arrow`-Projektile,
-- setzen den Bogenschützen als Projectile-Owner,
-- übergeben dem Projektil einen vollständigen Geschwindigkeitsvektor,
-- verwenden eine diskrete ballistische Flugbahnberechnung mit Gravitation und Luftwiderstand,
-- berücksichtigen die aktuelle Bewegung des Ziels durch vorausschauendes Zielen,
-- starten Pfeile leicht vor dem Soldaten,
-- richten die sichtbare Pfeilrotation während des Fluges an der tatsächlichen Flugrichtung aus,
-- überwachen die Flugbahn jedes erzeugten Pfeils,
-- verwenden eine Anfangsgeschwindigkeit von `6.0` mit `0.05` Gravitation und `0.99` Luftwiderstand,
-- können Ziele bis zu einer Entfernung von `40` Blöcken erfassen.
-
-### 🏹 Pfeilphysik
-
-Die Pfeilgeschwindigkeit wird direkt als vollständiger initialer Velocity-Vektor an `projectile.shoot()` übergeben. Der ballistische Solver simuliert horizontale Bewegung, Luftwiderstand und Gravitation und berücksichtigt bewegte Ziele durch Flugzeit-Prognose.
-
-Pfeile werden zwischen ihrer letzten und aktuellen Position per Block-Ray geprüft. Dadurch werden schnelle Projektile gegen Tunneling durch dünne Blockflächen abgesichert. Nicht mehr relevante Pfeile werden automatisch bereinigt.
-
-### 👁️ Sichtweite & Hindernisse
-
-Fernkampfangriffe benötigen eine **freie Sichtlinie** zwischen Bogenschütze und Ziel. Vor dem Schuss wird per Block-Ray geprüft, ob ein nicht passierbarer Block die Schusslinie blockiert. Die Prüfung verwendet mehrere Zielhöhen, damit Teildeckung berücksichtigt wird.
+Das Soldier-System verwendet eigene Kampf- und Bewegungslogik. Infanterie nutzt Nahkampf, Bogenschützen eine eigene Fernkampf-KI mit echten `minecraft:arrow`-Projektilen und ballistischer Flugbahnberechnung.
 
 ### 🐎 Kavallerie
 
-Kavallerie besitzt eine eigene Mount- und Charge-KI. Sie verwendet **kein Vanilla-`minecraft:horse` mehr als Reittier**, weil dessen `minecraft:rideable.family_types` einen Soldier als Rider ablehnen kann und `EntityRideableComponent.addRider()` dann `false` liefert.
+Kavallerie verwendet jetzt **kein eigenes `siedler:cavalry_horse`-Mount mehr**. Beim Spawnen wird ein normales, erwachsenes `minecraft:horse` erzeugt. Der Soldat wird über den nativen Minecraft-`/ride`-Befehl auf das Pferd gesetzt.
 
-Stattdessen wird `siedler:cavalry_horse` als eigenes erwachsenes Mount gespawnt. Das Mount besitzt eine `minecraft:rideable`-Komponente mit `family_types: ["soldier"]`, sodass der Custom-Soldier zuverlässig als Reiter akzeptiert wird. Das Resource Pack rendert das Mount mit dem Vanilla-Horse-Modell und einer Pferdetextur.
+```text
+siedler:cavalry
+      │
+      └── /ride
+            ↓
+      minecraft:horse
+```
 
-Die Bewegung der Kavallerie wird zentral über die normale Soldier-Bewegungsroutine auf das Mount angewendet. Dadurch konkurrieren Charge-KI und Bewegungs-KI nicht miteinander. Die Kavallerie:
+Das Pferd erhält die Tags `soldier_mount` und `cavalry_mount` sowie Dynamic Properties für Besitzer und Level. Dadurch kann die Kavallerie-KI das richtige Mount zuverlässig wiederfinden.
 
-- bewegt sich auch außerhalb der direkten Nahkampfreichweite,
-- setzt den Bewegungszustand korrekt auf `move`,
-- führt Charge-Angriffe mit erhöhtem Schaden aus,
-- reitet beim Passieren des Ziels weiter statt sofort stehenzubleiben,
-- erkennt das eigene Mount niemals als Feindziel,
-- verwendet `minecraft:rideable.addRider()` statt des nicht verfügbaren `Entity.startRiding()`.
+Die Kavallerie-Bewegung wird weiterhin zentral auf das Pferd angewendet. Charge-, Circle- und Pass-Manöver bleiben erhalten. Das Mount wird bei der Zielsuche explizit als Nicht-Ziel behandelt.
 
-## 💰 Steuern & permanenter Monster-Token-TaxBonus
+Für die Mount-Zuordnung werden temporäre, eindeutige Tags verwendet, sodass keine Spieler-/Entity-Namen benötigt werden. Falls `/ride` auf einer Serverversion nicht unmittelbar als Rider-Zustand erkannt wird, existiert ein kontrollierter Fallback über `minecraft:rideable.addRider()`.
 
-Jedes Team kann eine Steuerkiste besitzen. Die tägliche Steuer wird aus der Bevölkerung und einem **permanenten TaxBonus** berechnet:
+### 🏹 Pfeilphysik
 
-`Tagessteuer = Dorfbewohner + TaxBonus`
+Bogenschützen berechnen eine ballistische Flugbahn mit Gravitation, Luftwiderstand und vorausschauendem Zielen. Pfeile werden als echte `minecraft:arrow`-Projekte erzeugt und während des Flugs überwacht.
 
-Der TaxBonus entsteht **ausschließlich durch besiegte Monster-Tokens**. Jeder besiegte Monster-Token erhöht den täglichen TaxBonus des Teams des Spielerkillers um **+1 Emerald**.
+## 🧰 Essentials
 
-Der Bonus bleibt dauerhaft bestehen und wird nicht bei der täglichen Auszahlung verbraucht. Maximal können **64 Emeralds/Tag** TaxBonus aufgebaut werden. Die komplette Tagesauszahlung bleibt auf **256 Emeralds** begrenzt.
+Das Essentials-System arbeitet bei persistenter Spielerdatenhaltung mit Spieler-IDs. Das Startsystem verwaltet Team-Teleports, Spielstart und Starterkits und behandelt ungültige Daten kontrolliert.
 
-Alle Teams besitzen die Variable `taxBonus`. Bereits vorhandene Teams werden beim Laden automatisch migriert; fehlt `taxBonus`, wird sie mit `0` initialisiert.
+## 💰 Steuern
+
+Der tägliche TaxBonus entsteht ausschließlich durch besiegte Monster-Tokens. Jeder besiegte Token erhöht den permanenten Bonus des Teams des Spielerkillers um `+1 Emerald/Tag`. Bestehende Teams werden bei der Migration mit `taxBonus: 0` ergänzt.
 
 ## 🧑‍🌾 Händler
 
-Händler werden als `siedler:trader` gespawnt. Es gibt sieben Rollen: `food`, `building`, `resources`, `tools`, `weapons`, `supplies` und `soldiers`.
+Händler werden als `siedler:trader` mit spezialisierten Rollen gespawnt. Der Soldatenhändler ermöglicht die Rekrutierung von Soldaten.
 
-## 📊 Spieler-Dashboard
+## 📊 Dashboard
 
-Mit `/siedler:stats` öffnet sich das zentrale Dashboard. Es enthält Spielerprofil, Team/Rangliste, Claims/Bevölkerung, Steuern/TaxBonus, Soldatenstatistiken und Serverstatistiken über die drei Dimensionen.
+`/siedler:stats` zeigt Spieler-, Team-, Claim-, Steuer-, Soldaten- und Serverstatistiken.
 
 ## 📦 Installation
 
@@ -154,7 +68,7 @@ Mit `/siedler:stats` öffnet sich das zentrale Dashboard. Es enthält Spielerpro
 | `@minecraft/server-ui` | `2.1.0` |
 | Entry Point | `scripts/core/main.js` |
 
-Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte der Server bzw. die Welt vollständig neu geladen werden.
+Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Welt vollständig neu geladen werden.
 
 ## 🎮 Wichtige Commands
 
@@ -163,7 +77,6 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte der Server
 /siedler:spawn
 /siedler:sethome
 /siedler:home
-/siedler:delhome
 /siedler:back
 /siedler:tpa <spieler>
 /siedler:tpahere <spieler>
@@ -174,9 +87,6 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte der Server
 /siedler:team_tp <spieler>
 /siedler:starterkit <spieler>
 /siedler:startgame
-/siedler:settax <team> <x> <y> <z>
-/siedler:taxinfo <team>
-/siedler:countvillagers <team>
 /siedler:token
 /siedler:trader <type>
 /siedler:spawn_soldier <type> [level]
@@ -189,7 +99,6 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte der Server
 
 ```text
 scripts/core/main.js
-│
 ├── Core
 ├── Teams
 ├── Taxes
@@ -197,9 +106,6 @@ scripts/core/main.js
 ├── Market
 ├── Monster
 ├── Essentials
-│   ├── index.js
-│   ├── start.js
-│   └── player_stats.js
 └── Soldier
     ├── ai.js
     ├── ranged_ai.js
@@ -214,4 +120,4 @@ scripts/core/main.js
     └── level.js
 ```
 
-Neue Systeme sollten möglichst modular unter `scripts/` liegen, über den zentralen Loader geladen werden und bestehende Systeme wiederverwenden. Die detaillierte Planung befindet sich in `plan.md`.
+Die detaillierte Planung befindet sich in `plan.md`.
