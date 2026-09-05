@@ -2,7 +2,7 @@ import { system, world } from "@minecraft/server";
 
 /**
  * Market places are protected rectangular areas where hostile entities are
- * not allowed.
+ * not allowed and players cannot modify blocks.
  *
  * Coordinates describe the two opposite corners of the market. Y is ignored
  * for the protection check, so the complete vertical area is protected.
@@ -75,26 +75,62 @@ export function isInMarket(entity) {
     ) !== null;
 }
 
+function sendMarketMessage(player, message) {
+    try {
+        player.sendMessage(`§8[§6Market§8]§r §c${message}`);
+    } catch {}
+}
+
 /**
  * Prevents players from breaking blocks inside markets.
- * Block placement intentionally remains enabled.
  */
 export function disableBlockBreakingInMarkets() {
-    if (!world.beforeEvents?.playerBreakBlock?.subscribe) return;
+    const event = world.beforeEvents?.playerBreakBlock;
+    if (!event || typeof event.subscribe !== "function") {
+        console.warn("§e[Market] playerBreakBlock-API nicht verfügbar; Abbau-Schutz deaktiviert.");
+        return;
+    }
 
-    world.beforeEvents.playerBreakBlock.subscribe((event) => {
-        const player = event.player;
+    event.subscribe((eventData) => {
+        const player = eventData.player;
         if (!player?.isValid) return;
 
-        const market = getMarketAt(event.block.location, player.dimension?.id);
+        const market = getMarketAt(
+            eventData.block.location,
+            player.dimension?.id
+        );
         if (!market) return;
 
-        event.cancel = true;
-        try {
-            player.sendMessage(
-                `§8[§6Market§8]§r §cDu kannst in diesem Bereich keine Blöcke abbauen.`
-            );
-        } catch {}
+        eventData.cancel = true;
+        sendMarketMessage(player, "Du kannst in diesem Bereich keine Blöcke abbauen.");
+    });
+}
+
+/**
+ * Prevents players from placing blocks inside markets.
+ *
+ * The placement event is cancelled before Minecraft changes the world, so
+ * there is no need for an after-event rollback or block scanner.
+ */
+export function disableBlockPlacingInMarkets() {
+    const event = world.beforeEvents?.playerPlaceBlock;
+    if (!event || typeof event.subscribe !== "function") {
+        console.warn("§e[Market] playerPlaceBlock-API nicht verfügbar; Platzierungs-Schutz deaktiviert.");
+        return;
+    }
+
+    event.subscribe((eventData) => {
+        const player = eventData.player;
+        if (!player?.isValid) return;
+
+        const market = getMarketAt(
+            eventData.block.location,
+            player.dimension?.id
+        );
+        if (!market) return;
+
+        eventData.cancel = true;
+        sendMarketMessage(player, "Du kannst in diesem Bereich keine Blöcke platzieren.");
     });
 }
 
@@ -165,5 +201,6 @@ if (world.afterEvents?.entitySpawn) {
 // Run once every second as a safety net for monsters that walk/fly into a market.
 system.runInterval(cleanupMarketMonsters, 20);
 disableBlockBreakingInMarkets();
+disableBlockPlacingInMarkets();
 
-console.info("§a[Market] Block-breaking protection and monster-free market protection loaded");
+console.info("§a[Market] Block breaking/placing protection and monster-free market protection loaded");
