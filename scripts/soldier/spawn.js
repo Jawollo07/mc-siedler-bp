@@ -139,7 +139,7 @@ function spawnCavalryMount(dimension, location, owner, level) {
     // through the vanilla /ride command instead of a custom horse entity.
     try {
         const ageable = mount.getComponent("minecraft:ageable");
-        if (ageable?.setBaby) ageable.setAdult?.();
+        if (ageable?.setAdult) ageable.setAdult();
     } catch {}
 
     return mount;
@@ -153,25 +153,28 @@ function mountCavalrySoldier(soldier, mount) {
     mount.addTag(mountTag);
 
     try {
-        // Use Minecraft's native riding system. Temporary unique tags avoid
-        // relying on entity names or unsupported UUID selectors.
+        // Vanilla horses only accept rider families declared by their
+        // rideable component. The cavalry entity therefore includes the
+        // compatible baby_undead family without becoming a player entity.
         const result = mount.dimension.runCommand(
-            `ride @e[type=siedler:cavalry,tag=${riderTag},c=1] start_riding @e[type=minecraft:horse,tag=${mountTag},c=1]`
+            `ride @e[type=siedler:cavalry,tag=${riderTag},c=1] start_riding @e[type=minecraft:horse,tag=${mountTag},c=1] teleport_ride if_group_fits`
         );
         if (DEBUG) console.log(`[Soldier] Mounted cavalry using /ride: ${result?.successCount ?? 0}`);
     } finally {
         try { soldier.removeTag(riderTag); } catch {}
-        // Keep the permanent mount tag; cavalry_ai uses it for discovery.
     }
 
     if (!isRidingEntity(soldier, mount)) {
-        // Fallback for servers where /ride does not immediately update the
-        // rider state. This still uses the native rideable component rather
-        // than creating a custom horse entity.
+        // Fallback for a server tick where the command result has not yet
+        // propagated through the entity component state.
         const rideable = mount.getComponent("minecraft:rideable");
-        if (!rideable || typeof rideable.addRider !== "function" || !rideable.addRider(soldier)) {
-            throw new Error("/ride did not mount the cavalry soldier");
+        if (rideable && typeof rideable.addRider === "function") {
+            try { rideable.addRider(soldier); } catch {}
         }
+    }
+
+    if (!isRidingEntity(soldier, mount)) {
+        throw new Error("/ride could not mount the cavalry soldier");
     }
 
     mount.setDynamicProperty("soldier:riderId", soldier.id);
