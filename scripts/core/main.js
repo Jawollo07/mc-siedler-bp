@@ -47,6 +47,7 @@ import ".././monster/index.js";
 import ".././monster/pillager_squads.js";
 import ".././monster/outpost_raids.js";
 import ".././monster/commands.js";
+import ".././monster/weakness_commands.js";
 import ".././monster/token.js";
 
 // -----------------------------------------------------------------------------
@@ -61,10 +62,10 @@ import ".././essentials/start.js";
 // -----------------------------------------------------------------------------
 import ".././soldier/index.js";
 import ".././soldier/trader.js";
-import "../soldier/level.js";
+import ".././soldier/level.js";
 
 const VERSION = version;
-const MODULE_COUNT = 19;
+const MODULE_COUNT = 20;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
 
