@@ -75,6 +75,28 @@ weakness: {
 
 `level` entspricht dem konfigurierten Weakness-Amplifier. `duration` und `interval` bestimmen, wie der permanente Effekt regelmäßig erneuert wird.
 
+### Weakness-Commands
+
+Die Weakness lässt sich ohne Neustart über OP-Commands verwalten. Alle Befehle sind auf `GameDirectors` beschränkt und Änderungen werden persistent gespeichert:
+
+```text
+/siedler:weakness_status
+/siedler:weakness_on
+/siedler:weakness_off
+/siedler:weakness_level <0-255>
+/siedler:weakness_duration <ticks>
+/siedler:weakness_interval <ticks>
+```
+
+Beispiele:
+
+```text
+/siedler:weakness_status
+/siedler:weakness_on
+/siedler:weakness_level 1
+/siedler:weakness_off
+```
+
 ## 🧰 Essentials
 
 Das Essentials-System arbeitet bei persistenter Spielerdatenhaltung mit Spieler-IDs. Das Startsystem verwaltet Team-Teleports, Spielstart und Starterkits und behandelt ungültige Daten kontrolliert.
@@ -130,6 +152,12 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Wel
 /siedler:move <x y z>
 /siedler:follow
 /siedler:stay
+/siedler:weakness_status
+/siedler:weakness_on
+/siedler:weakness_off
+/siedler:weakness_level <level>
+/siedler:weakness_duration <ticks>
+/siedler:weakness_interval <ticks>
 ```
 
 ## 🧩 Architektur
@@ -142,6 +170,8 @@ scripts/core/main.js
 ├── Claims
 ├── Market
 ├── Monster
+│   ├── commands.js
+│   └── weakness_commands.js
 ├── Essentials
 └── Soldier
     ├── ai.js
