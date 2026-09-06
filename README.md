@@ -56,6 +56,25 @@ Das Mounting selbst verwendet eindeutige Tags, `/ride` und den Rideable-API-Fall
 
 Bogenschützen berechnen eine ballistische Flugbahn mit Gravitation, Luftwiderstand und vorausschauendem Zielen. Pfeile werden als echte `minecraft:arrow`-Projektil erzeugt und während des Flugs überwacht.
 
+## 🧪 Monster-only Weakness
+
+Die konfigurierte Monster-Schwäche wird **nicht mehr als permanenter Vanilla-Weakness-Effekt auf Spieler angewendet**. Dadurch wird PvP nicht versehentlich abgeschwächt.
+
+Stattdessen wird bei einem Angriff geprüft, ob ein Spieler ein Nicht-Spieler-Entity/Mob trifft. Nur dann wird die konfigurierte Weakness-Reduktion auf den Schaden angewendet. Spieler-gegen-Spieler-Schaden bleibt unverändert.
+
+Die Einstellung befindet sich weiterhin in `scripts/monster/config.js` unter `weakness`:
+
+```js
+weakness: {
+    enabled: true,
+    level: 1,
+    duration: 220,
+    interval: 100
+}
+```
+
+`duration` und `interval` werden für die reine Monster-Schadensberechnung nicht mehr benötigt; sie bleiben aus Kompatibilitätsgründen in der zentralen Konfiguration erhalten.
+
 ## 🧰 Essentials
 
 Das Essentials-System arbeitet bei persistenter Spielerdatenhaltung mit Spieler-IDs. Das Startsystem verwaltet Team-Teleports, Spielstart und Starterkits und behandelt ungültige Daten kontrolliert.
