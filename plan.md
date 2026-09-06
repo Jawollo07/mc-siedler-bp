@@ -2,13 +2,14 @@
 
 > Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 05.09.2026
+**Stand:** 06.09.2026
 
 ## 📊 Aktueller Stand
 
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Permanenter Monster-Token-TaxBonus
+- [x] Monster-only Weakness: Spieler werden nicht mehr global mit Vanilla-Weakness belegt; die Schadensreduktion gilt nur gegen Mobs
 - [x] Händler und Soldatenhändler
 - [x] Handelsfenster für spezialisierte Händler repariert
 - [x] Händler-Trade-Tables werden über Component Groups sicher aktiviert
@@ -180,6 +181,7 @@
 - [x] Außenposten
 - [x] Belagerungsgrundlage
 - [x] Verteidigungswarnungen
+- [x] Monster-only Weakness / PvP-unabhängige Schadensreduktion
 
 ## 🟣 Phase 10 – Essentials
 
