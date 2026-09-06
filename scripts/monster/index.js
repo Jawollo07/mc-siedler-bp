@@ -155,76 +155,28 @@ if (entitySpawn && typeof entitySpawn.subscribe === "function") {
     console.warn("§e[Monster] EntitySpawn-API nicht verfügbar; normales Monster-Spawn-Filtering deaktiviert.");
 }
 
-/*
- * Monster-only Weakness:
- *
- * The old implementation continuously applied the vanilla Weakness effect to
- * players. That also affected PvP because vanilla Weakness changes a player's
- * melee damage against every target.
- *
- * Instead, the player remains visually/effect-wise normal and the configured
- * Weakness is simulated only when a player damages a non-player entity.
- * The original hit is cancelled and reapplied with the configured reduction.
- * This keeps player-vs-player damage completely untouched.
- */
-const adjustedMonsterDamage = new Set();
+// Permanent player Weakness. This intentionally uses the vanilla effect so
+// Weakness affects all melee targets, including PvP, exactly like normal
+// Minecraft Weakness. The effect is refreshed before it expires.
+system.runInterval(() => {
+    const weakness = MONSTER_CONFIG.weakness;
+    if (!MONSTER_CONFIG.enabled || !weakness?.enabled) return;
 
-function isMob(entity) {
-    if (!entity) return false;
-    try {
-        return entity.typeId !== "minecraft:player";
-    } catch {
-        return false;
-    }
-}
+    const duration = Math.max(1, Math.floor(Number(weakness.duration) || 220));
+    const amplifier = Math.max(0, Math.min(255, Math.floor(Number(weakness.level) || 0)));
 
-function getWeaknessReduction(amplifier) {
-    // Vanilla Weakness removes 4 attack damage per effect level.
-    return Math.max(0, 4 * (amplifier + 1));
-}
-
-const entityHurtBefore = world.beforeEvents?.entityHurt;
-if (entityHurtBefore && typeof entityHurtBefore.subscribe === "function") {
-    entityHurtBefore.subscribe((event) => {
-        const weakness = MONSTER_CONFIG.weakness;
-        if (!MONSTER_CONFIG.enabled || !weakness?.enabled) return;
-
-        const target = event?.hurtEntity;
-        const attacker = event?.damageSource?.damagingEntity;
-        if (!attacker || attacker.typeId !== "minecraft:player" || !isMob(target)) return;
-
-        // applyDamage() below fires entityHurt again. Allow that single nested
-        // event through so the adjusted damage is not cancelled recursively.
-        if (adjustedMonsterDamage.has(attacker.id)) {
-            adjustedMonsterDamage.delete(attacker.id);
-            return;
-        }
-
-        const originalDamage = Number(event?.damage);
-        if (!Number.isFinite(originalDamage) || originalDamage <= 0) return;
-
-        const amplifier = Math.max(0, Math.min(255, Math.floor(Number(weakness.level) || 0)));
-        const reduction = getWeaknessReduction(amplifier);
-        const adjustedDamage = Math.max(0, originalDamage - reduction);
-
-        event.cancel = true;
-
-        if (adjustedDamage <= 0) return;
-
+    for (const player of world.getAllPlayers()) {
         try {
-            adjustedMonsterDamage.add(attacker.id);
-            target.applyDamage(adjustedDamage);
+            player.addEffect("weakness", duration, {
+                amplifier,
+                showParticles: false
+            });
         } catch (error) {
-            adjustedMonsterDamage.delete(attacker.id);
             if (MONSTER_CONFIG.debug) {
-                console.warn(`[Monster] Monster-only Weakness konnte Schaden nicht neu anwenden: ${error}`);
+                console.warn(`[Monster] Schwäche konnte nicht gesetzt werden: ${error}`);
             }
         }
-    });
-
-    console.info("§a[Monster] Monster-only Weakness geladen (PvP bleibt unverändert)");
-} else {
-    console.warn("§e[Monster] entityHurt-BeforeEvent nicht verfügbar; Monster-only Weakness deaktiviert.");
-}
+    }
+}, Math.max(1, Number(MONSTER_CONFIG.weakness?.interval) || 100));
 
 console.info("§a[Monster] Modul geladen");
