@@ -10,6 +10,7 @@
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Permanenter Monster-Token-TaxBonus
 - [x] Permanente Vanilla-Weakness für Spieler gegen Mobs und im PvP
+- [x] Weakness per Admin-Commands aktivieren/deaktivieren und konfigurieren
 - [x] Händler und Soldatenhändler
 - [x] Handelsfenster für spezialisierte Händler repariert
 - [x] Händler-Trade-Tables werden über Component Groups sicher aktiviert
@@ -182,6 +183,9 @@
 - [x] Belagerungsgrundlage
 - [x] Verteidigungswarnungen
 - [x] Permanente Vanilla-Weakness für Spieler inklusive PvP
+- [x] Weakness-Status-Command
+- [x] Weakness On/Off-Commands
+- [x] Weakness-Level, Dauer und Erneuerungsintervall per Command konfigurierbar
 
 ## 🟣 Phase 10 – Essentials
 
