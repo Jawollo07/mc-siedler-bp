@@ -40,7 +40,7 @@ APPROACH → CHARGE → HIT → PASS → APPROACH → ...
 ```
 
 - Zielpriorität für Spieler und feindliche Soldiers
-- Ziel-Hysterese verhindert unnötiges Wechseln zwischen Gegnern
+- Ziel-Hysterese verhindert unnötiges Wechseln zwischen Zielen
 - direkte Annäherung auf größere Distanz
 - seitlich versetzte Annäherung verhindert dauerhaftes Hängenbleiben am Gegner
 - Charge mit erhöhtem Schaden und Knockback
@@ -56,13 +56,13 @@ Das Mounting selbst verwendet eindeutige Tags, `/ride` und den Rideable-API-Fall
 
 Bogenschützen berechnen eine ballistische Flugbahn mit Gravitation, Luftwiderstand und vorausschauendem Zielen. Pfeile werden als echte `minecraft:arrow`-Projektil erzeugt und während des Flugs überwacht.
 
-## 🧪 Monster-only Weakness
+## 🧪 Permanente Weakness
 
-Die konfigurierte Monster-Schwäche wird **nicht mehr als permanenter Vanilla-Weakness-Effekt auf Spieler angewendet**. Dadurch wird PvP nicht versehentlich abgeschwächt.
+Wenn die Weakness-Konfiguration aktiviert ist, erhalten alle Spieler dauerhaft den normalen Vanilla-`weakness`-Effekt. Der Effekt wird regelmäßig erneuert, damit er permanent bestehen bleibt.
 
-Stattdessen wird bei einem Angriff geprüft, ob ein Spieler ein Nicht-Spieler-Entity/Mob trifft. Nur dann wird die konfigurierte Weakness-Reduktion auf den Schaden angewendet. Spieler-gegen-Spieler-Schaden bleibt unverändert.
+Dadurch wird die Weakness **gegen alle Nahkampfziele angewendet – einschließlich PvP**. Spieler verursachen also sowohl gegen Mobs als auch gegen andere Spieler den durch die konfigurierte Weakness-Stufe reduzierten Nahkampfschaden.
 
-Die Einstellung befindet sich weiterhin in `scripts/monster/config.js` unter `weakness`:
+Die Einstellung befindet sich in `scripts/monster/config.js` unter `weakness`:
 
 ```js
 weakness: {
@@ -73,7 +73,7 @@ weakness: {
 }
 ```
 
-`duration` und `interval` werden für die reine Monster-Schadensberechnung nicht mehr benötigt; sie bleiben aus Kompatibilitätsgründen in der zentralen Konfiguration erhalten.
+`level` entspricht dem konfigurierten Weakness-Amplifier. `duration` und `interval` bestimmen, wie der permanente Effekt regelmäßig erneuert wird.
 
 ## 🧰 Essentials
 
