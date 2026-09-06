@@ -200,7 +200,5 @@ if (world.afterEvents?.entitySpawn) {
 
 // Run once every second as a safety net for monsters that walk/fly into a market.
 system.runInterval(cleanupMarketMonsters, 20);
-disableBlockBreakingInMarkets();
-disableBlockPlacingInMarkets();
 
-console.info("§a[Market] Block breaking/placing protection and monster-free market protection loaded");
+console.info("§a[Market] Monster-free market protection loaded");
