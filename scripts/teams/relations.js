@@ -116,8 +116,9 @@ function formError(player, action, error) {
     console.error(`[Teams] ${action}: ${error}`);
     player.sendMessage(`§cFehler beim ${action}: ${error}`);
 }
-
-registry.registerCommand({
+system.beforeEvents.startup.subscribe((event) => {
+    const registry = event.customCommandRegistry;
+    registry.registerCommand({
         name: "siedler:diplomacy",
         description: "Speichert die Diplomatie eines Teams.",
         permissionLevel: CustomCommandPermissionLevel.Any,
@@ -133,3 +134,4 @@ registry.registerCommand({
 
         return { status: CustomCommandStatus.Success };
     });
+});
