@@ -1,5 +1,12 @@
 import {getTeams, saveTeams} from "./index.js";
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
+import {
+    system,
+    world,
+    CommandPermissionLevel,
+    CustomCommandParamType,
+    CustomCommandStatus
+} from "@minecraft/server";
 
 export const TEAM_RELATION = Object.freeze({
     FRIENDLY: "friendly",
@@ -109,3 +116,20 @@ function formError(player, action, error) {
     console.error(`[Teams] ${action}: ${error}`);
     player.sendMessage(`§cFehler beim ${action}: ${error}`);
 }
+
+registry.registerCommand({
+        name: "siedler:diplomacy",
+        description: "Speichert die Diplomatie eines Teams.",
+        permissionLevel: CustomCommandPermissionLevel.Any,
+        cheatsRequired: false
+    }, (origin) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+
+        system.run(() => {
+            showDiplomacyMenu(player);
+            player.sendMessage(`§aDiplomatie für Team "${teamName}" wurde gesetzt.`);
+        });
+
+        return { status: CustomCommandStatus.Success };
+    });
