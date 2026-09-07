@@ -11,7 +11,7 @@
 - Claims und Claim-Grenzen
 - Claim-Protection mit Block-Recovery bei unerlaubtem Abbau und Item-Rückgabe bei unerlaubtem Platzieren
 - Wirtschaft, Steuern und permanenter Monster-Token-TaxBonus
-- Marktplätze und spezialisierte Händler
+- Ein zentraler Marktplatz und spezialisierte Händler
 - Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
 - Infanterie, Bogenschützen mit ballistischer Pfeilphysik und Kavallerie
 - Monster, Pillager-Trupps, Außenposten und Belagerungsgrundlage
@@ -40,19 +40,30 @@ Die Wiederherstellung verwendet aktuell den ursprünglichen **Blocktyp**. Komple
 
 ## 🏪 Marktplatz
 
-Der konfigurierte Marktplatz ist ein vollständig geschützter Bereich. Spieler können dort **keine Blöcke abbauen und keine Blöcke platzieren**. Monster werden zusätzlich aus dem Markt entfernt und neu gespawnte Monster werden dort ebenfalls sofort entfernt.
+Es gibt bewusst **einen zentralen Marktplatz**. Der konfigurierte Bereich ist vollständig geschützt: Spieler können dort **keine Blöcke abbauen und keine Blöcke platzieren**. Monster werden zusätzlich aus dem Markt entfernt und neu gespawnte Monster werden dort ebenfalls sofort entfernt.
 
-Spieler können sich mit `/siedler:market <id>` direkt zu einem aktiven Marktplatz teleportieren. Das Ziel wird automatisch in der Mitte des Marktplatzes bestimmt und die aktuelle Oberkante des Geländes wird als sichere Teleporthöhe verwendet.
-
-Die Markt-Commands werden direkt über `event.customCommandRegistry.registerCommand()` registriert. Es gibt keinen zusätzlichen `registerCommand`-Wrapper mehr. Die Adminbefehle setzen `GameDirectors` als Permission-Level und benötigen keine Cheats. Der Spieler-Teleport ist bewusst für normale Spieler ohne OP-Rechte verfügbar:
+Der Teleportpunkt wird unabhängig von den Marktplatz-Ecken einmalig durch einen Admin gesetzt und persistent als World Dynamic Property gespeichert:
 
 ```text
-/siedler:market <id>
+/market_tp_set
+```
+
+Dieser Befehl setzt die aktuelle Position und Dimension als Ziel. Normale Spieler können anschließend ohne OP-Rechte jederzeit mit
+
+```text
+/market_tp
+```
+
+zum gespeicherten Marktplatz-Teleportpunkt reisen. Der Teleportpunkt wird beim Server-/Weltneustart nicht verloren.
+
+Die Markt-Commands werden direkt über `event.customCommandRegistry.registerCommand()` registriert. Es gibt keinen zusätzlichen `registerCommand`-Wrapper. Der Set-Befehl ist auf `GameDirectors` beschränkt und benötigt keine Cheats; der eigentliche Teleport ist für normale Spieler verfügbar.
+
+```text
+/market_tp
+/market_tp_set
 /siedler:market_status
-/siedler:market_enable <id>
-/siedler:market_disable <id>
-/siedler:market_setcorner1 <id>
-/siedler:market_setcorner2 <id>
+/siedler:market_enable
+/siedler:market_disable
 /siedler:market_cleanup
 ```
 
@@ -93,22 +104,9 @@ Wenn die Weakness-Konfiguration aktiviert ist, erhalten alle Spieler dauerhaft d
 
 Dadurch wird die Weakness **gegen alle Nahkampfziele angewendet – einschließlich PvP**. Spieler verursachen also sowohl gegen Mobs als auch gegen andere Spieler den durch die konfigurierte Weakness-Stufe reduzierten Nahkampfschaden.
 
-Die Einstellung befindet sich in `scripts/monster/config.js` unter `weakness`:
-
-```js
-weakness: {
-    enabled: true,
-    level: 1,
-    duration: 220,
-    interval: 100
-}
-```
-
-`level` entspricht dem konfigurierten Weakness-Amplifier. `duration` und `interval` bestimmen, wie der permanente Effekt regelmäßig erneuert wird.
+Die Einstellung befindet sich in `scripts/monster/config.js` unter `weakness`.
 
 ### Weakness-Commands
-
-Die Weakness lässt sich ohne Neustart über OP-Commands verwalten. Alle Befehle sind auf `GameDirectors` beschränkt und Änderungen werden persistent gespeichert:
 
 ```text
 /siedler:weakness_status
@@ -168,12 +166,11 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Wel
 /siedler:trader_here <type>
 /siedler:trader_types
 /siedler:trader_remove
-/siedler:market <id>
+/market_tp
+/market_tp_set
 /siedler:market_status
-/siedler:market_enable <id>
-/siedler:market_disable <id>
-/siedler:market_setcorner1 <id>
-/siedler:market_setcorner2 <id>
+/siedler:market_enable
+/siedler:market_disable
 /siedler:market_cleanup
 /siedler:spawn_soldier <type> [level]
 /siedler:move <x y z>
