@@ -1,5 +1,7 @@
+import "./logger.js";
 import { system } from "@minecraft/server";
-import { version } from "./version.js"
+import { version } from "./version.js";
+
 /**
  * Siedler Logic – Main Loader
  *
@@ -8,6 +10,8 @@ import { version } from "./version.js"
  * - Keep the import order deterministic.
  * - Never let a non-critical startup task prevent the loader from finishing.
  * - Dynamic properties must be registered before modules that use them.
+ * - The logger is imported first so all subsequent module console output is
+ *   automatically normalized.
  */
 
 // -----------------------------------------------------------------------------
@@ -77,24 +81,11 @@ const WATCHDOG_INTERVAL = 200;
 let startupCompleted = false;
 let watchdogHandle;
 
-function log(message) {
-    console.info(`§6[Siedler Logic ${VERSION}] §7${message}`);
-}
-
-function logSuccess(message) {
-    console.info(`§6[Siedler Logic ${VERSION}] §a${message}`);
-}
-
-function logWarning(message) {
-    console.warn(`§6[Siedler Logic ${VERSION}] §e${message}`);
-}
-
 function safeRun(label, callback) {
     try {
         callback();
     } catch (error) {
-        console.error(`§6[Siedler Logic ${VERSION}] §c${label} failed:`);
-        console.error(error);
+        console.error(`[Loader] ${label} failed:`, error);
     }
 }
 
@@ -110,7 +101,7 @@ function startWatchdog() {
             return;
         }
 
-        logWarning("Startup is taking longer than expected. Continuing without blocking the server.");
+        console.warn("[Loader] Startup is taking longer than expected. Continuing without blocking the server.");
     }, WATCHDOG_INTERVAL);
 }
 
@@ -122,18 +113,18 @@ function finishStartup() {
     startupCompleted = true;
 
     safeRun("Startup status", () => {
-        console.info("§8----------------------------------------");
-        logSuccess("All modules initialized.");
-        log(`Loaded ${MODULE_COUNT} modules.`);
-        console.info("§7Teams · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier");
-        console.info("§7 Version: " + VERSION);
-        console.info("§8----------------------------------------");
+        console.info("----------------------------------------");
+        console.info("[Loader] ✓ All modules initialized.");
+        console.info(`[Loader] Loaded ${MODULE_COUNT} modules.`);
+        console.info("[Loader] Teams · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier");
+        console.info(`[Loader] Version: ${VERSION}`);
+        console.info("----------------------------------------");
     });
 }
 
 function startLoader() {
     safeRun("Loader initialization", () => {
-        log(`Starting ${MODULE_COUNT} modules...`);
+        console.info(`[Loader] Starting ${MODULE_COUNT} modules...`);
         startWatchdog();
     });
 
