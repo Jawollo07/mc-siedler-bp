@@ -1,7 +1,9 @@
 import { world, system } from "@minecraft/server";
 import { DEFAULT_CONFIG } from "./config.js";
 import { getClaimAt } from "../claims/utils.js";
+import { createLogger } from "../core/logger.js";
 
+const logger = createLogger("Monster");
 const clone = (value) => JSON.parse(JSON.stringify(value));
 export let MONSTER_CONFIG = clone(DEFAULT_CONFIG);
 
@@ -9,9 +11,9 @@ export function loadMonsterConfig() {
     try {
         const raw = world.getDynamicProperty("monster_config");
         MONSTER_CONFIG = raw ? mergeConfig(DEFAULT_CONFIG, JSON.parse(raw)) : clone(DEFAULT_CONFIG);
-        console.info("§a[Monster] Zentrale config.js geladen");
+        logger.success("Zentrale config.js geladen");
     } catch (error) {
-        console.warn(`[Monster] Ungültige gespeicherte Config, Standardwerte werden verwendet: ${error}`);
+        logger.exception("Ungültige gespeicherte Config, Standardwerte werden verwendet", error);
         MONSTER_CONFIG = clone(DEFAULT_CONFIG);
     }
 }
@@ -19,9 +21,10 @@ export function loadMonsterConfig() {
 export function saveMonsterConfig() {
     try {
         world.setDynamicProperty("monster_config", JSON.stringify(MONSTER_CONFIG));
+        logger.debug("Monster-Konfiguration gespeichert");
         return true;
     } catch (error) {
-        console.error(`[Monster] Config konnte nicht gespeichert werden: ${error}`);
+        logger.exception("Config konnte nicht gespeichert werden", error);
         return false;
     }
 }
@@ -32,9 +35,7 @@ function mergeConfig(base, override) {
     for (const [key, value] of Object.entries(override)) {
         if (value && typeof value === "object" && !Array.isArray(value) && result[key] && typeof result[key] === "object" && !Array.isArray(result[key])) {
             result[key] = mergeConfig(result[key], value);
-        } else if (value !== undefined) {
-            result[key] = value;
-        }
+        } else if (value !== undefined) result[key] = value;
     }
     return result;
 }
@@ -60,54 +61,30 @@ function isAllTokenDied() {
     return values.some((value) => value === true);
 }
 
-/*
- * @minecraft/server 2.x / Scripting V2:
- * world.beforeEvents.entitySpawn is not available on the server build used by
- * this pack. The supported spawn signal is world.afterEvents.entitySpawn.
- *
- * Because an after-event cannot be cancelled, invalid spawns are removed on
- * the next writable callback. This keeps the Monster module from aborting the
- * whole pack when the old before-event API is absent.
- */
 function disableAllMonsterSpawns() {
     const dimension = world.getDimension("overworld");
     for (const entity of dimension.getEntities({ type: "minecraft:monster" })) {
-        try {
-            entity.remove();
-        } catch (error) {
-            if (MONSTER_CONFIG.debug) {
-                console.warn(`[Monster] Spawn blockiert, Entity konnte nicht entfernt werden: ${error}`);
-            }
-        }
+        try { entity.remove(); }
+        catch (error) { if (MONSTER_CONFIG.debug) logger.warn(`Spawn-Blockierung konnte Entity nicht entfernen: ${error}`); }
     }
 }
+
 const entitySpawn = world.afterEvents?.entitySpawn;
 if (entitySpawn && typeof entitySpawn.subscribe === "function") {
     entitySpawn.subscribe((event) => {
         const entity = event?.entity;
         if (!entity) return;
-
         const typeId = entity.typeId;
+
         if (typeId === "minecraft:villager" || typeId === "minecraft:villager_v2") {
-            try {
-                entity.addTag("villager");
-            } catch (error) {
-                if (MONSTER_CONFIG.debug) {
-                    console.warn(`[Monster] Villager-Tag konnte nicht gesetzt werden: ${error}`);
-                }
-            }
+            try { entity.addTag("villager"); }
+            catch (error) { if (MONSTER_CONFIG.debug) logger.warn(`Villager-Tag konnte nicht gesetzt werden: ${error}`); }
         }
 
         if (!MONSTER_CONFIG.enabled) return;
-
         if (isAllTokenDied()) {
-            try {
-                disableAllMonsterSpawns();
-            } catch (error) {
-                if (MONSTER_CONFIG.debug) {
-                    console.warn(`[Monster] Spawn blockiert, Entity konnte nicht entfernt werden: ${error}`);
-                }
-            }
+            try { disableAllMonsterSpawns(); }
+            catch (error) { if (MONSTER_CONFIG.debug) logger.warn(`Spawn-Blockierung fehlgeschlagen: ${error}`); }
             return;
         }
 
@@ -120,63 +97,32 @@ if (entitySpawn && typeof entitySpawn.subscribe === "function") {
                 const claim = getClaimAt(entity.location);
                 if (claim) {
                     const claimConfig = MONSTER_CONFIG.claims ?? {};
-                    if (
-                        claimConfig.enabled === false ||
-                        claimConfig.allowMonsters === false ||
-                        claimConfig.blockedMobs?.[typeId]
-                    ) {
-                        shouldRemove = true;
-                    } else if (Math.random() >= getSpawnChance(typeId, true)) {
-                        shouldRemove = true;
-                    }
-                } else if (Math.random() >= getSpawnChance(typeId, false)) {
-                    shouldRemove = true;
-                }
+                    if (claimConfig.enabled === false || claimConfig.allowMonsters === false || claimConfig.blockedMobs?.[typeId]) shouldRemove = true;
+                    else if (Math.random() >= getSpawnChance(typeId, true)) shouldRemove = true;
+                } else if (Math.random() >= getSpawnChance(typeId, false)) shouldRemove = true;
             } catch (error) {
-                if (MONSTER_CONFIG.debug) {
-                    console.warn(`[Monster] Spawn-Prüfung fehlgeschlagen: ${error}`);
-                }
+                if (MONSTER_CONFIG.debug) logger.warn(`Spawn-Prüfung fehlgeschlagen für ${typeId}: ${error}`);
             }
         }
 
         if (!shouldRemove) return;
-
-        try {
-            entity.remove();
-        } catch (error) {
-            if (MONSTER_CONFIG.debug) {
-                console.warn(`[Monster] Entity konnte nicht entfernt werden (${typeId}): ${error}`);
-            }
-        }
+        try { entity.remove(); logger.debug(`Monster entfernt: type=${typeId}`); }
+        catch (error) { if (MONSTER_CONFIG.debug) logger.warn(`Entity konnte nicht entfernt werden (${typeId}): ${error}`); }
     });
-
-    console.info("§a[Monster] EntitySpawn-System geladen (API 2.x afterEvents)");
+    logger.success("EntitySpawn-System geladen (API 2.x afterEvents)");
 } else {
-    console.warn("§e[Monster] EntitySpawn-API nicht verfügbar; normales Monster-Spawn-Filtering deaktiviert.");
+    logger.warn("EntitySpawn-API nicht verfügbar; normales Monster-Spawn-Filtering deaktiviert.");
 }
 
-// Permanent player Weakness. This intentionally uses the vanilla effect so
-// Weakness affects all melee targets, including PvP, exactly like normal
-// Minecraft Weakness. The effect is refreshed before it expires.
 system.runInterval(() => {
     const weakness = MONSTER_CONFIG.weakness;
     if (!MONSTER_CONFIG.enabled || !weakness?.enabled) return;
-
     const duration = Math.max(1, Math.floor(Number(weakness.duration) || 220));
     const amplifier = Math.max(0, Math.min(255, Math.floor(Number(weakness.level) || 0)));
-
     for (const player of world.getAllPlayers()) {
-        try {
-            player.addEffect("weakness", duration, {
-                amplifier,
-                showParticles: false
-            });
-        } catch (error) {
-            if (MONSTER_CONFIG.debug) {
-                console.warn(`[Monster] Schwäche konnte nicht gesetzt werden: ${error}`);
-            }
-        }
+        try { player.addEffect("weakness", duration, { amplifier, showParticles: false }); }
+        catch (error) { if (MONSTER_CONFIG.debug) logger.warn(`Schwäche konnte nicht gesetzt werden: ${error}`); }
     }
 }, Math.max(1, Number(MONSTER_CONFIG.weakness?.interval) || 100));
 
-console.info("§a[Monster] Modul geladen");
+logger.success("Modul geladen");
