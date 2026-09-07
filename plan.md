@@ -60,6 +60,11 @@
 - [x] Soldier-Mehrfachauswahl und Gruppenmitgliederverwaltung
 - [x] `ModalFormData.toggle()` auf `ModalFormDataToggleOptions` mit `defaultValue` angepasst
 - [x] Native-Type-Conversion-Fehler in `soldier/ui.js` bei Toggle-Formularen behoben
+- [x] Externe ChatSend-API-Abhängigkeit entfernt
+- [x] Native `world.beforeEvents.chatSend` als bevorzugter Chat-Adapter
+- [x] Native `world.afterEvents.chatSend` als Logging-Fallback
+- [x] `/siedler:teamchat` als sicherer Team-Chat-Fallback bei fehlender Before-Chat-API
+- [x] Kein unsicheres `@team`-Intercepting über After-Events, um öffentliche Nachrichten nicht versehentlich doppelt oder zu spät zu verarbeiten
 
 ## 🎯 Nächster Schwerpunkt
 
