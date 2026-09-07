@@ -30,6 +30,20 @@ Unterstützte Ausgaben:
 
 Die Ausgaben erhalten einen einheitlichen Prefix mit Siedler-Version und Log-Level. Das Standard-Level ist `info`. Debug-Ausgaben können über `globalThis.SIEDLER_LOG_LEVEL = "debug"` aktiviert werden.
 
+### WARN-Rate-Limiting
+
+Wiederholte identische `WARN`-Meldungen werden automatisch gebremst. Standardmäßig wird dieselbe Warnung höchstens einmal innerhalb von **10 Sekunden** ausgegeben. Während der Sperrzeit unterdrückte Wiederholungen werden beim nächsten erlaubten Auftreten als Anzahl zusammengefasst.
+
+Das Verhalten gilt sowohl für `createLogger(...).warn()` als auch für bestehende `console.warn()`-Aufrufe über die Console-Bridge.
+
+Optional kann das Intervall vor dem Laden des Packs angepasst werden:
+
+```js
+globalThis.SIEDLER_WARN_RATE_LIMIT_MS = 5000;
+```
+
+Mit `0` wird das Rate-Limiting deaktiviert. Laufzeitseitig kann es über `setWarnRateLimit(milliseconds)` geändert werden.
+
 Modulbezogene Logger sind inzwischen auch für die Kernbereiche **Claims, Market, Taxes und Monster** aktiv. Beispiele sind `[Claims]`, `[Market]`, `[Market:Commands]`, `[Taxes]` und `[Monster]`. Häufige Diagnoseinformationen werden bevorzugt als `DEBUG` geloggt; Fehler verwenden `exception()` und erscheinen als `ERROR`.
 
 Weitere bereits migrierte Bereiche sind Soldier-Start/Spawn, Soldatenhändler, Anti-AFK und Diplomatie. Neue Module können `createLogger("Modulname")` verwenden.
