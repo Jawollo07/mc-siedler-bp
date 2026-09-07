@@ -42,9 +42,12 @@ Die Wiederherstellung verwendet aktuell den ursprünglichen **Blocktyp**. Komple
 
 Der konfigurierte Marktplatz ist ein vollständig geschützter Bereich. Spieler können dort **keine Blöcke abbauen und keine Blöcke platzieren**. Monster werden zusätzlich aus dem Markt entfernt und neu gespawnte Monster werden dort ebenfalls sofort entfernt.
 
-Die Markt-Commands werden direkt über `event.customCommandRegistry.registerCommand()` registriert. Es gibt keinen zusätzlichen `registerCommand`-Wrapper mehr. Alle Markt-Adminbefehle setzen `GameDirectors` als Permission-Level und benötigen keine Cheats:
+Spieler können sich mit `/siedler:market <id>` direkt zu einem aktiven Marktplatz teleportieren. Das Ziel wird automatisch in der Mitte des Marktplatzes bestimmt und die aktuelle Oberkante des Geländes wird als sichere Teleporthöhe verwendet.
+
+Die Markt-Commands werden direkt über `event.customCommandRegistry.registerCommand()` registriert. Es gibt keinen zusätzlichen `registerCommand`-Wrapper mehr. Die Adminbefehle setzen `GameDirectors` als Permission-Level und benötigen keine Cheats. Der Spieler-Teleport ist bewusst für normale Spieler ohne OP-Rechte verfügbar:
 
 ```text
+/siedler:market <id>
 /siedler:market_status
 /siedler:market_enable <id>
 /siedler:market_disable <id>
@@ -165,6 +168,7 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Wel
 /siedler:trader_here <type>
 /siedler:trader_types
 /siedler:trader_remove
+/siedler:market <id>
 /siedler:market_status
 /siedler:market_enable <id>
 /siedler:market_disable <id>
