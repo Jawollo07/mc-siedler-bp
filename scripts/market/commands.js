@@ -1,6 +1,5 @@
 import {
     system,
-    CustomCommandParamType,
     CustomCommandStatus,
     CommandPermissionLevel,
     world
@@ -12,6 +11,7 @@ import {
 } from "./market_place.js";
 
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
+const MARKET_TELEPORT_PROPERTY = "market_teleport";
 
 function playerOnly(origin) {
     try {
@@ -29,43 +29,39 @@ function reply(player, message) {
     } catch {}
 }
 
-function findMarket(id) {
-    return MARKET_PLACES.find((market) => market.id === id);
+function getMarket() {
+    return MARKET_PLACES[0] ?? null;
 }
 
-function formatBounds(market) {
-    const minX = Math.min(market.min.x, market.max.x);
-    const maxX = Math.max(market.min.x, market.max.x);
-    const minZ = Math.min(market.min.z, market.max.z);
-    const maxZ = Math.max(market.min.z, market.max.z);
-
-    return `X ${Math.round(minX)}..${Math.round(maxX)} | Z ${Math.round(minZ)}..${Math.round(maxZ)}`;
-}
-
-function getMarketTeleportLocation(market) {
-    const x = (market.min.x + market.max.x) / 2;
-    const z = (market.min.z + market.max.z) / 2;
+function getTeleportPoint() {
+    const raw = world.getDynamicProperty(MARKET_TELEPORT_PROPERTY);
+    if (typeof raw !== "string" || !raw) return null;
 
     try {
-        const dimension = world.getDimension(market.dimension);
-        const topBlock = dimension.getTopmostBlock({ x, z });
-
-        if (topBlock) {
-            return {
-                x: x + 0.5,
-                y: topBlock.location.y + 1,
-                z: z + 0.5
-            };
-        }
-    } catch (error) {
-        console.warn(`[Market] Failed to find safe teleport height for ${market.id}: ${error}`);
+        const point = JSON.parse(raw);
+        if (
+            !point ||
+            typeof point.x !== "number" ||
+            typeof point.y !== "number" ||
+            typeof point.z !== "number" ||
+            typeof point.dimension !== "string"
+        ) return null;
+        return point;
+    } catch {
+        return null;
     }
+}
 
-    return {
-        x: x + 0.5,
-        y: Math.max(market.min.y ?? 0, market.max.y ?? 0) + 1,
-        z: z + 0.5
+function setTeleportPoint(player) {
+    const point = {
+        x: player.location.x,
+        y: player.location.y,
+        z: player.location.z,
+        dimension: player.dimension.id
     };
+
+    world.setDynamicProperty(MARKET_TELEPORT_PROPERTY, JSON.stringify(point));
+    return point;
 }
 
 system.beforeEvents.startup.subscribe((event) => {
@@ -73,31 +69,46 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand(
         {
-            name: "siedler:market_status",
-            description: "Zeigt alle konfigurierten rechteckigen Marktplätze.",
-            permissionLevel: OP_PERMISSION,
+            name: "market_tp",
+            description: "Teleportiert dich zum Marktplatz.",
             cheatsRequired: false
         },
         (origin) => {
             const player = playerOnly(origin);
             if (!player) return { status: CustomCommandStatus.Failure };
 
-            system.run(() => {
-                if (MARKET_PLACES.length === 0) {
-                    reply(player, "§cKeine Marktplätze konfiguriert.");
-                    return;
-                }
+            const market = getMarket();
+            const point = getTeleportPoint();
 
-                reply(player, `§7Marktplätze: §e${MARKET_PLACES.length}`);
+            if (!market || !market.enabled) {
+                reply(player, "§cDer Marktplatz ist nicht verfügbar.");
+                return { status: CustomCommandStatus.Failure };
+            }
 
-                for (const market of MARKET_PLACES) {
-                    reply(
-                        player,
-                        `§7${market.id}: ${market.enabled ? "§aAN" : "§cAUS"} §8| §7${market.dimension}`
-                    );
-                    reply(player, `§7Bereich: §e${formatBounds(market)}`);
-                }
-            });
+            if (!point) {
+                reply(player, "§cNoch kein Marktplatz-Teleportpunkt gesetzt. Nutze /market_tp_set.");
+                return { status: CustomCommandStatus.Failure };
+            }
+
+            try {
+                const dimension = world.getDimension(point.dimension);
+                system.run(() => {
+                    try {
+                        player.teleport(
+                            { x: point.x, y: point.y, z: point.z },
+                            { dimension, checkForBlocks: true }
+                        );
+                        reply(player, "§aDu wurdest zum Marktplatz teleportiert.");
+                    } catch (error) {
+                        console.warn(`[Market] Teleport failed: ${error}`);
+                        reply(player, "§cTeleport zum Marktplatz fehlgeschlagen.");
+                    }
+                });
+            } catch (error) {
+                console.warn(`[Market] Invalid teleport dimension: ${error}`);
+                reply(player, "§cDie gespeicherte Marktplatz-Dimension ist ungültig.");
+                return { status: CustomCommandStatus.Failure };
+            }
 
             return { status: CustomCommandStatus.Success };
         }
@@ -105,38 +116,55 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand(
         {
-            name: "siedler:market",
-            description: "Teleportiert dich zu einem aktiven Marktplatz.",
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "id" }
-            ]
+            name: "market_tp_set",
+            description: "Setzt den Teleportpunkt des Marktplatzes auf deine Position.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
         },
-        (origin, args) => {
+        (origin) => {
             const player = playerOnly(origin);
             if (!player) return { status: CustomCommandStatus.Failure };
 
-            const market = findMarket(String(args[0] ?? "").trim());
-            if (!market || !market.enabled) {
-                reply(player, "§cAktiver Marktplatz wurde nicht gefunden.");
+            const market = getMarket();
+            if (!market) {
+                reply(player, "§cKein Marktplatz konfiguriert.");
                 return { status: CustomCommandStatus.Failure };
             }
 
-            const location = getMarketTeleportLocation(market);
-            const dimension = world.getDimension(market.dimension);
+            try {
+                const point = setTeleportPoint(player);
+                reply(player, `§aMarktplatz-Teleportpunkt gesetzt: §7${Math.floor(point.x)} ${Math.floor(point.y)} ${Math.floor(point.z)} §8(${point.dimension})`);
+                return { status: CustomCommandStatus.Success };
+            } catch (error) {
+                console.warn(`[Market] Failed to save teleport point: ${error}`);
+                reply(player, "§cTeleportpunkt konnte nicht gespeichert werden.");
+                return { status: CustomCommandStatus.Failure };
+            }
+        }
+    );
 
-            system.run(() => {
-                try {
-                    player.teleport(location, {
-                        dimension,
-                        checkForBlocks: true
-                    });
-                    reply(player, `§aDu wurdest zum Marktplatz '${market.id}' teleportiert.`);
-                } catch (error) {
-                    console.warn(`[Market] Teleport to ${market.id} failed: ${error}`);
-                    reply(player, "§cTeleport zum Marktplatz fehlgeschlagen.");
-                }
-            });
+    registry.registerCommand(
+        {
+            name: "siedler:market_status",
+            description: "Zeigt den konfigurierten Marktplatz und Teleportpunkt.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
+        },
+        (origin) => {
+            const player = playerOnly(origin);
+            if (!player) return { status: CustomCommandStatus.Failure };
 
+            const market = getMarket();
+            const point = getTeleportPoint();
+            if (!market) {
+                reply(player, "§cKein Marktplatz konfiguriert.");
+                return { status: CustomCommandStatus.Failure };
+            }
+
+            reply(player, `§7Marktplatz: ${market.enabled ? "§aAN" : "§cAUS"} §8| §7${market.dimension}`);
+            reply(player, point
+                ? `§7Teleport: §a${Math.floor(point.x)} ${Math.floor(point.y)} ${Math.floor(point.z)} §8| §7${point.dimension}`
+                : "§7Teleport: §cnicht gesetzt");
             return { status: CustomCommandStatus.Success };
         }
     );
@@ -144,25 +172,20 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand(
         {
             name: "siedler:market_enable",
-            description: "Aktiviert einen Marktplatz.",
+            description: "Aktiviert den Marktplatz.",
             permissionLevel: OP_PERMISSION,
-            cheatsRequired: false,
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "id" }
-            ]
+            cheatsRequired: false
         },
-        (origin, args) => {
+        (origin) => {
             const player = playerOnly(origin);
             if (!player) return { status: CustomCommandStatus.Failure };
-
-            const market = findMarket(String(args[0] ?? "").trim());
+            const market = getMarket();
             if (!market) {
-                reply(player, "§cMarktplatz wurde nicht gefunden.");
+                reply(player, "§cKein Marktplatz konfiguriert.");
                 return { status: CustomCommandStatus.Failure };
             }
-
             market.enabled = true;
-            reply(player, `§aMarktplatz '${market.id}' aktiviert.`);
+            reply(player, "§aMarktplatz aktiviert.");
             return { status: CustomCommandStatus.Success };
         }
     );
@@ -170,91 +193,20 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand(
         {
             name: "siedler:market_disable",
-            description: "Deaktiviert einen Marktplatz.",
+            description: "Deaktiviert den Marktplatz.",
             permissionLevel: OP_PERMISSION,
-            cheatsRequired: false,
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "id" }
-            ]
+            cheatsRequired: false
         },
-        (origin, args) => {
+        (origin) => {
             const player = playerOnly(origin);
             if (!player) return { status: CustomCommandStatus.Failure };
-
-            const market = findMarket(String(args[0] ?? "").trim());
+            const market = getMarket();
             if (!market) {
-                reply(player, "§cMarktplatz wurde nicht gefunden.");
+                reply(player, "§cKein Marktplatz konfiguriert.");
                 return { status: CustomCommandStatus.Failure };
             }
-
             market.enabled = false;
-            reply(player, `§cMarktplatz '${market.id}' deaktiviert.`);
-            return { status: CustomCommandStatus.Success };
-        }
-    );
-
-    registry.registerCommand(
-        {
-            name: "siedler:market_setcorner1",
-            description: "Setzt die erste Ecke des Marktplatzes auf deine aktuelle Position.",
-            permissionLevel: OP_PERMISSION,
-            cheatsRequired: false,
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "id" }
-            ]
-        },
-        (origin, args) => {
-            const player = playerOnly(origin);
-            if (!player) return { status: CustomCommandStatus.Failure };
-
-            const market = findMarket(String(args[0] ?? "").trim());
-            if (!market) {
-                reply(player, "§cMarktplatz wurde nicht gefunden.");
-                return { status: CustomCommandStatus.Failure };
-            }
-
-            market.min = {
-                x: Math.floor(player.location.x),
-                y: player.dimension.heightRange?.min ?? 0,
-                z: Math.floor(player.location.z)
-            };
-            market.dimension = player.dimension.id.replace(/^minecraft:/, "");
-
-            reply(player, `§aEcke 1 von '${market.id}' gesetzt.`);
-            reply(player, `§7${formatBounds(market)}`);
-            return { status: CustomCommandStatus.Success };
-        }
-    );
-
-    registry.registerCommand(
-        {
-            name: "siedler:market_setcorner2",
-            description: "Setzt die zweite Ecke des Marktplatzes auf deine aktuelle Position.",
-            permissionLevel: OP_PERMISSION,
-            cheatsRequired: false,
-            mandatoryParameters: [
-                { type: CustomCommandParamType.String, name: "id" }
-            ]
-        },
-        (origin, args) => {
-            const player = playerOnly(origin);
-            if (!player) return { status: CustomCommandStatus.Failure };
-
-            const market = findMarket(String(args[0] ?? "").trim());
-            if (!market) {
-                reply(player, "§cMarktplatz wurde nicht gefunden.");
-                return { status: CustomCommandStatus.Failure };
-            }
-
-            market.max = {
-                x: Math.floor(player.location.x),
-                y: player.dimension.heightRange?.max ?? 319,
-                z: Math.floor(player.location.z)
-            };
-            market.dimension = player.dimension.id.replace(/^minecraft:/, "");
-
-            reply(player, `§aEcke 2 von '${market.id}' gesetzt.`);
-            reply(player, `§7${formatBounds(market)}`);
+            reply(player, "§cMarktplatz deaktiviert.");
             return { status: CustomCommandStatus.Success };
         }
     );
@@ -262,22 +214,20 @@ system.beforeEvents.startup.subscribe((event) => {
     registry.registerCommand(
         {
             name: "siedler:market_cleanup",
-            description: "Entfernt sofort alle Monster aus allen aktiven Marktplätzen.",
+            description: "Entfernt sofort alle Monster aus dem Marktplatz.",
             permissionLevel: OP_PERMISSION,
             cheatsRequired: false
         },
         (origin) => {
             const player = playerOnly(origin);
             if (!player) return { status: CustomCommandStatus.Failure };
-
             system.run(() => {
                 cleanupMarketMonsters();
-                reply(player, "§aMonster-Bereinigung für alle aktiven Marktplätze ausgeführt.");
+                reply(player, "§aMonster-Bereinigung ausgeführt.");
             });
-
             return { status: CustomCommandStatus.Success };
         }
     );
 
-    console.info("[Market] Rectangular market commands registered");
+    console.info("[Market] Single-market commands registered");
 });
