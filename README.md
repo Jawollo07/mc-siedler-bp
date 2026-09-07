@@ -15,6 +15,22 @@
 - Essentials und Spieler-Dashboard
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 
+## 🪖 Soldatenverwaltung
+
+Der Soldatenstab öffnet eine zentrale Verwaltungsoberfläche für eigene Soldaten. Einzelne Soldaten können ausgewählt und direkt gesteuert werden. Zusätzlich gibt es eine Mehrfachauswahl, Gruppenverwaltung und Formationen.
+
+Die Mehrfachauswahl und die Mitgliederverwaltung verwenden `ModalFormData.toggle()` mit den aktuellen `ModalFormDataToggleOptions` und `defaultValue`. Dadurch ist die UI mit der verwendeten `@minecraft/server-ui`-API kompatibel und vermeidet Native-Type-Conversion-Fehler beim Öffnen der Auswahl- und Mitgliederfenster.
+
+Unterstützt werden:
+
+- einzelne Soldaten auswählen und Auswahl sichtbar markieren
+- mehrere Soldaten gleichzeitig auswählen
+- Folgen, Bleiben, Stoppen, Angreifen und Verteidigen
+- Gruppen aus der aktuellen Auswahl erstellen
+- ausgewählte Soldaten zu bestehenden Gruppen hinzufügen
+- Gruppenmitglieder über eine Toggle-Liste verwalten
+- Formationen Linie, Kolonne und Keil
+
 ## 🪖 Soldatenhändler
 
 Der Soldatenhändler ist ein `siedler:trader` und verwendet eine eigene `ActionFormData`-Rekrutierungsoberfläche.
@@ -105,6 +121,9 @@ scripts/core/main.js
     ├── spawn.js
     ├── config.js
     ├── commands.js
+    ├── command_manager.js
+    ├── groups.js
+    ├── ui.js
     ├── level.js
     └── trader.js
 ```
