@@ -8,6 +8,10 @@
 
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
 - [x] Teams, Diplomatie, Claims und Wirtschaft
+- [x] Verbesserte Diplomatie-UI mit Übersicht, Teamstatus, Beziehungsdetails und Bestätigung
+- [x] Diplomatie-Menü für alle Spieler über `/diplomacy`
+- [x] Normale Spieler können nur Beziehungen ihres eigenen Teams ändern
+- [x] Spieler ohne Team können Diplomatie nur ansehen
 - [x] Claim-Block-Recovery bei unerlaubtem Abbau
 - [x] Rückgabe unerlaubt platzierter Blöcke ins Spielerinventar
 - [x] Sicherer Fallback-Drop bei vollem Inventar
@@ -50,91 +54,7 @@
 - [x] Ein zentraler Marktplatz statt einer ID-basierten Markt-Teleportverwaltung
 - [x] Persistenter Marktplatz-Teleportpunkt über World Dynamic Property
 - [x] `/market_tp_set` für Admins zum Setzen des Marktplatz-Teleportpunkts
-- [x] `/market_tp` für normale Spieler zum Teleportieren
-
-## 🔴 Phase 1 – Fundament & Stabilität
-
-- [x] Zentraler Loader
-- [x] Fehlertolerantes Laden
-- [x] Persistente World Dynamic Properties
-- [x] aktuelle Bedrock Script API berücksichtigt
-- [x] Runtime-Caches werden bereinigt
-- [x] Start-/Starterkit-System validiert Teamdaten
-
-## 🔴 Phase 2 – Soldier-System
-
-### 2.1 Einheiten
-
-- [x] Infanterie
-- [x] Bogenschütze
-- [x] Kavallerie
-- [x] Level 1–7
-- [x] HP, Schaden, Reichweite und Geschwindigkeit pro Level
-- [x] Ausrüstung pro Level
-- [x] persistente XP
-- [x] automatische Level-Up-Logik
-- [x] Rekrutierung über Soldatenhändler
-- [x] Vanilla-Pferd als Kavallerie-Mount
-- [x] erwachsenes Wild-Pferd als stabiler Mount-Zustand
-- [x] Mount-Zuordnung über eindeutige Tags und Rider-ID
-- [x] Mounting über `/ride`
-- [x] Rider-Kompatibilität mit Vanilla-Horse
-
-### 2.2 Bewegung & Kampf-KI
-
-- [x] Zielsuche
-- [x] Feinderkennung
-- [x] Move / Follow / Stay / Attack / Retreat-Grundlage
-- [x] Nahkampf-Windup und Angriffscooldown
-- [x] `applyDamage()`-Schaden
-- [x] eigener Fernkampf für Bogenschützen
-- [x] echte sichtbare `minecraft:arrow`-Projektile
-- [x] ballistisches Schießen mit Gravitation und Luftwiderstand
-- [x] vorausschauendes Zielen auf bewegte Ziele
-- [x] Pfeilrotation und Swept-Ray
-- [x] automatische Pfeil-Bereinigung
-- [x] Kavallerie bewegt das Mount statt den Reiter direkt
-- [x] taktische Approach-/Charge-/Hit-/Pass-Zustandsmaschine
-- [x] Charge-Cooldown und Charge-Timeout
-- [x] seitlicher Pass gegen direkte Zielkollision
-- [x] Zielprioritäten für Spieler und Soldiers
-- [x] Target-Hysterese gegen unnötigen Zielwechsel
-- [x] Stuck-Erkennung und automatischer Seitenwechsel
-- [x] eindeutige Mount-Zuordnung über Rider-ID
-- [ ] echte Wegfindung über Hindernisse
-- [ ] Block-/Geländeerkennung
-- [ ] bessere Höhen-/Treppenlogik
-- [ ] echte Hindernisbewertung für Charge-Lanes
-- [ ] Ausweich- und Blockverhalten
-- [ ] reale Ingame-Kavallerie-Tests mit Hindernissen, Steigungen und mehreren Zielen
-
-### 2.3 Gruppen & Formationen
-
-- [x] Soldier-Auswahl
-- [x] Gruppenverwaltung
-- [x] Gruppenbefehle
-- [x] Formationsgrundlage
-- [ ] dynamische Formation während Bewegung
-- [ ] mehrere Gruppen gleichzeitig steuern
-- [ ] Formationswechsel im Kampf
-
-## 🟠 Phase 3 – Claims & Territorium
-
-- [x] Chunk-Claims
-- [x] Claim-Grenzen
-- [x] Claim-Informationen
-- [x] Schutz vor unerlaubtem Block-Abbau
-- [x] Schutz vor unerlaubtem Block-Platzieren
-- [x] automatische Wiederherstellung eines unerlaubt entfernten Blocks
-- [x] Recovery-Fallback für Server-Builds ohne zuverlässiges Before-Event
-- [x] Dimension und Spieler-ID in Recovery-Einträgen
-- [x] Recovery-Scanner mit Queue-Limit und Ablaufbereinigung
-- [x] keine Überschreibung einer späteren Platzierung bei der Block-Recovery
-- [x] unerlaubt platzierte Blöcke werden im After-Event-Fallback zurückgegeben
-- [x] Item-Rückgabe ohne Duplikation beim normalen Before-Event
-- [x] Item-Drop als Fallback bei vollem Inventar
-- [ ] vollständige Wiederherstellung von Blockzuständen und Block-Entity-Inhalten
-- [ ] persistenter Claim-Rollback für bereits vor Claim-Erstellung zerstörte Bereiche
+- [x] `/market` für normale Spieler zum Teleportieren
 
 ## 🟠 Phase 4 – Diplomatie
 
@@ -145,84 +65,14 @@
 - [x] Soldiers berücksichtigen Beziehungen
 - [x] Bündnisse
 - [x] Diplomatie-UI
-
-## 🟡 Phase 5 – Wirtschaft
-
-- [x] Emerald-Währung
-- [x] Dorfbewohner-basierte Steuer
-- [x] Team-Kasse
-- [x] Monster-Token-TaxBonus
-- [x] +1 Emerald/Tag je besiegtem Monster-Token
-- [x] permanenter Bonus
-- [x] maximal 64 TaxBonus Emeralds/Tag
-- [x] Bonus nur für Team des Spielerkillers
-- [x] bestehende Teams erhalten `taxBonus: 0` bei Migration
-- [x] doppelte Tagesauszahlung nach Neustart verhindert
-- [x] Tagessteuer nur bei mindestens einem online Teammitglied
-- [x] Tägliche Steuer Übersicht
-
-## 🟡 Phase 6 – Handel & Märkte
-
-- [x] Zentraler Marktplatz
-- [x] Markt-Schutz
-- [x] Blöcke im Markt nicht abbaubar
-- [x] Blöcke im Markt nicht platzierbar
-- [x] spezialisierte Händler
-- [x] Soldatenhändler
-- [x] funktionierende Trade-UI für Lebensmittel-, Baustoff-, Rohstoff-, Werkzeug-, Waffen- und Versorgungshändler
-- [x] Trade-Tables über Component Groups aktiviert
-- [x] Händler nach Spawn sicher initialisiert
-- [x] bestehende/rollenlose Händler automatisch repariert
-- [x] Trade-Nutzungen vor wiederholtem Reset geschützt
-- [x] Markt-Commands ohne zusätzlichen Registrierungs-Wrapper
-- [x] persistenter Teleportpunkt
-- [x] Admin-Command `/market_tp_set`
-- [x] Spieler-Command `/market_tp`
-
-## 🟢 Phase 7 – Dashboard
-
-- [x] `/siedler:stats`
-- [x] Spielerprofil
-- [x] Teamübersicht
-- [x] Team-Rangliste
-- [x] Claims/Bevölkerung
-- [x] Steuern/TaxBonus
-- [x] Soldaten nach Typ
-- [x] Soldier-XP und Level
-- [x] Serverstatistiken über Overworld, Nether und End
-
-## 🟢 Phase 8 – Resource Pack
-
-- [x] Custom Soldier Entity
-- [x] Soldaten-Typen visuell unterscheiden
-- [x] Ausrüstung rendern
-- [x] individuelle Laufanimationen
-- [x] Idle-/Bewegungsanimationen
-- [x] Kampfzustand an RP übergeben
-- [x] Kavallerie verwendet Vanilla-Pferd statt Custom-Mount
-
-## 🔵 Phase 9 – Monster & Bedrohungen
-
-- [x] Monster-Konfiguration
-- [x] Monster-Tokens
-- [x] Pillager-Trupps
-- [x] Captains
-- [x] Außenposten
-- [x] Belagerungsgrundlage
-- [x] Verteidigungswarnungen
-- [x] Permanente Vanilla-Weakness für Spieler inklusive PvP
-- [x] Weakness-Status-Command
-- [x] Weakness On/Off-Commands
-- [x] Weakness-Level, Dauer und Erneuerungsintervall per Command konfigurierbar
-
-## 🟣 Phase 10 – Essentials
-
-- [x] Spielerfunktionen
-- [x] Start- und Starterkit-System
-- [x] Admin-Funktionen
-- [x] persistente Essentials-Daten
-- [x] TPA-Ablauf und Cleanup
-- [x] robuste Teleport- und Admin-Fehlerbehandlung
+- [x] öffentliches `/diplomacy`-Menü für alle Spieler
+- [x] Diplomatie-Übersicht mit Beziehungszählern
+- [x] Teamstatus und Mitgliederanzahl
+- [x] Detailansicht einzelner Beziehungen
+- [x] Änderungsbestätigung vor dem Speichern
+- [x] Änderungen werden für beide Teams gespiegelt
+- [x] Normale Spieler können nur Beziehungen ihres eigenen Teams ändern
+- [x] Spieler ohne Team erhalten eine reine Leseansicht
 
 ## 🎯 Nächster Schwerpunkt
 
