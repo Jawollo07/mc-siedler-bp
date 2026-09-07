@@ -30,45 +30,23 @@ Unterstützte Ausgaben:
 
 Die Ausgaben erhalten einen einheitlichen Prefix mit Siedler-Version und Log-Level. Das Standard-Level ist `info`. Debug-Ausgaben können über `globalThis.SIEDLER_LOG_LEVEL = "debug"` aktiviert werden.
 
-Neue oder migrierte Module können `createLogger("Modulname")` verwenden. Dadurch entstehen eindeutige Bereiche wie `[Soldier]`, `[Soldier:Spawn]`, `[Soldier:Trader]`, `[Anti-AFK]` und `[Diplomacy]`. Verfügbare Methoden sind `debug`, `info`, `log`, `success`, `warn`, `error` und `exception`.
+Modulbezogene Logger sind inzwischen auch für die Kernbereiche **Claims, Market, Taxes und Monster** aktiv. Beispiele sind `[Claims]`, `[Market]`, `[Market:Commands]`, `[Taxes]` und `[Monster]`. Häufige Diagnoseinformationen werden bevorzugt als `DEBUG` geloggt; Fehler verwenden `exception()` und erscheinen als `ERROR`.
 
-Bereits auf modulbezogenes Logging umgestellt sind insbesondere Soldier-Start/Spawn, Soldatenhändler, Anti-AFK und Diplomatie. Häufige Diagnosemeldungen werden bevorzugt als `DEBUG` geloggt, damit der normale Serverbetrieb nicht unnötig mit Tick-/KI-Ausgaben geflutet wird.
+Weitere bereits migrierte Bereiche sind Soldier-Start/Spawn, Soldatenhändler, Anti-AFK und Diplomatie. Neue Module können `createLogger("Modulname")` verwenden.
 
 ## 🪖 Soldatenverwaltung
 
 Der Soldatenstab öffnet eine zentrale Verwaltungsoberfläche für eigene Soldaten. Einzelne Soldaten können ausgewählt und direkt gesteuert werden. Zusätzlich gibt es eine Mehrfachauswahl, Gruppenverwaltung und Formationen.
 
-Die Mehrfachauswahl und die Mitgliederverwaltung verwenden `ModalFormData.toggle()` mit den aktuellen `ModalFormDataToggleOptions` und `defaultValue`. Dadurch ist die UI mit der verwendeten `@minecraft/server-ui`-API kompatibel und vermeidet Native-Type-Conversion-Fehler beim Öffnen der Auswahl- und Mitgliederfenster.
-
-Unterstützt werden:
-
-- einzelne Soldaten auswählen und Auswahl sichtbar markieren
-- mehrere Soldaten gleichzeitig auswählen
-- Folgen, Bleiben, Stoppen, Angreifen und Verteidigen
-- Gruppen aus der aktuellen Auswahl erstellen
-- ausgewählte Soldaten zu bestehenden Gruppen hinzufügen
-- Gruppenmitglieder über eine Toggle-Liste verwalten
-- Formationen Linie, Kolonne und Keil
+Die Mehrfachauswahl und die Mitgliederverwaltung verwenden `ModalFormData.toggle()` mit den aktuellen `ModalFormDataToggleOptions` und `defaultValue`.
 
 ## 🪖 Soldatenhändler
 
-Der Soldatenhändler ist ein `siedler:trader` und verwendet eine eigene `ActionFormData`-Rekrutierungsoberfläche.
-
-Die Interaktion wird über `world.beforeEvents.playerInteractWithEntity` abgefangen. Die normale Vanilla-Interaktion wird beim Soldatenhändler abgebrochen und anschließend die Rekrutierungs-UI geöffnet. Das ist wichtig, weil der Soldatenhändler absichtlich keine Vanilla-`trade_table` benötigt.
-
-Der Händler wird über den Tag `soldier_trader` **oder** über die Variant-ID `6` erkannt. Die Händler-Recovery berücksichtigt diese Variant-ID ebenfalls und wandelt einen bestehenden Soldatenhändler nicht mehr versehentlich in einen Lebensmittelhändler um.
-
-Angeboten werden:
-
-- Infanterie Level 1–3
-- Bogenschütze Level 1–3
-- Kavallerie Level 1–3
-- Emerald-Zahlung aus dem Inventar
-- automatische Rückerstattung bei fehlgeschlagenem Soldier-Spawn
+Der Soldatenhändler ist ein `siedler:trader` und verwendet eine eigene `ActionFormData`-Rekrutierungsoberfläche. Die Interaktion wird über `world.beforeEvents.playerInteractWithEntity` abgefangen.
 
 ## 🐎 Kavallerie
 
-Kavallerie verwendet ein normales erwachsenes `minecraft:horse` und wird über `/ride` auf das Mount gesetzt. Die KI steuert das Mount und verwendet taktische Zustände wie Approach, Charge, Hit und Pass.
+Kavallerie verwendet ein normales erwachsenes `minecraft:horse` und wird über `/ride` auf das Mount gesetzt. Die KI verwendet taktische Zustände wie Approach, Charge, Hit und Pass.
 
 ## 🏪 Marktplatz
 
@@ -79,6 +57,8 @@ Es gibt einen zentralen Marktplatz mit persistentem Teleportpunkt:
 /market
 ```
 
+Der Marktplatz blockiert Blockabbau und Platzierung und entfernt feindliche Monster aus dem Schutzbereich.
+
 ## 🤝 Diplomatie
 
 Persistente Beziehungen zwischen Teams: Verbündet, Neutral und Feindlich. Das Menü ist über `/diplomacy` für Spieler verfügbar.
@@ -87,13 +67,17 @@ Persistente Beziehungen zwischen Teams: Verbündet, Neutral und Feindlich. Das M
 
 Das Anti-AFK-System erkennt Bewegung, Chat, Interaktionen, Blockänderungen und Kampfaktivität. Es warnt, markiert AFK-Spieler und kann sie automatisch kicken.
 
-## 🧑‍🌾 Händler
-
-Normale spezialisierte Händler verwenden Vanilla-Trade-Tables über Component Groups. Der Soldatenhändler ist davon getrennt und nutzt die eigene Rekrutierungs-UI.
-
 ## 💰 Steuern
 
-Die tägliche Steuer wird nur eingezogen, wenn mindestens ein Mitglied des jeweiligen Teams online ist.
+Die tägliche Steuer wird nur eingezogen, wenn mindestens ein Mitglied des jeweiligen Teams online ist. Die Steuer-Einlagerung verwendet einen eigenen `[Taxes]` Logger.
+
+## 🛡️ Claims
+
+Claims schützen die Team-Gebiete vor unerlaubtem Bauen, Abbauen und Interaktionen. Block-Recovery und Item-Rückgabe sind aktiviert. Claim-Verwaltung und Fehlerdiagnose verwenden einen eigenen `[Claims]` Logger.
+
+## 👹 Monster
+
+Das Monster-System verwaltet Spawn-Filtering, Claims, Pillager, Outposts und die permanente Weakness für Spieler. Konfigurations- und Spawnfehler werden über den `[Monster]` Logger erfasst.
 
 ## 📦 Installation
 
@@ -128,10 +112,10 @@ scripts/core/main.js
 ├── logger.js
 ├── dynamic_properties.js
 ├── Teams
-├── Taxes
-├── Claims
-├── Market
-├── Monster
+├── Taxes [Logger]
+├── Claims [Logger]
+├── Market [Logger]
+├── Monster [Logger]
 ├── Essentials
 ├── Anti-AFK
 └── Soldier
