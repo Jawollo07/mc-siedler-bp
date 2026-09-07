@@ -2,7 +2,8 @@ import {
     system,
     CustomCommandParamType,
     CustomCommandStatus,
-    CommandPermissionLevel
+    CommandPermissionLevel,
+    world
 } from "@minecraft/server";
 
 import {
@@ -41,6 +42,32 @@ function formatBounds(market) {
     return `X ${Math.round(minX)}..${Math.round(maxX)} | Z ${Math.round(minZ)}..${Math.round(maxZ)}`;
 }
 
+function getMarketTeleportLocation(market) {
+    const x = (market.min.x + market.max.x) / 2;
+    const z = (market.min.z + market.max.z) / 2;
+
+    try {
+        const dimension = world.getDimension(market.dimension);
+        const topBlock = dimension.getTopmostBlock({ x, z });
+
+        if (topBlock) {
+            return {
+                x: x + 0.5,
+                y: topBlock.location.y + 1,
+                z: z + 0.5
+            };
+        }
+    } catch (error) {
+        console.warn(`[Market] Failed to find safe teleport height for ${market.id}: ${error}`);
+    }
+
+    return {
+        x: x + 0.5,
+        y: Math.max(market.min.y ?? 0, market.max.y ?? 0) + 1,
+        z: z + 0.5
+    };
+}
+
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
@@ -69,6 +96,44 @@ system.beforeEvents.startup.subscribe((event) => {
                         `§7${market.id}: ${market.enabled ? "§aAN" : "§cAUS"} §8| §7${market.dimension}`
                     );
                     reply(player, `§7Bereich: §e${formatBounds(market)}`);
+                }
+            });
+
+            return { status: CustomCommandStatus.Success };
+        }
+    );
+
+    registry.registerCommand(
+        {
+            name: "siedler:market",
+            description: "Teleportiert dich zu einem aktiven Marktplatz.",
+            mandatoryParameters: [
+                { type: CustomCommandParamType.String, name: "id" }
+            ]
+        },
+        (origin, args) => {
+            const player = playerOnly(origin);
+            if (!player) return { status: CustomCommandStatus.Failure };
+
+            const market = findMarket(String(args[0] ?? "").trim());
+            if (!market || !market.enabled) {
+                reply(player, "§cAktiver Marktplatz wurde nicht gefunden.");
+                return { status: CustomCommandStatus.Failure };
+            }
+
+            const location = getMarketTeleportLocation(market);
+            const dimension = world.getDimension(market.dimension);
+
+            system.run(() => {
+                try {
+                    player.teleport(location, {
+                        dimension,
+                        checkForBlocks: true
+                    });
+                    reply(player, `§aDu wurdest zum Marktplatz '${market.id}' teleportiert.`);
+                } catch (error) {
+                    console.warn(`[Market] Teleport to ${market.id} failed: ${error}`);
+                    reply(player, "§cTeleport zum Marktplatz fehlgeschlagen.");
                 }
             });
 
