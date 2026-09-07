@@ -12,18 +12,8 @@ const LEVEL_NAMES = { 1: "Rekrut", 2: "Veteran", 3: "Elite" };
 
 function isSoldierTrader(entity) {
     if (!entity?.isValid || entity.typeId !== TRADER_TYPE) return false;
-
-    try {
-        if (entity.hasTag(SOLDIER_TRADER_TAG)) return true;
-    } catch {}
-
-    // Variant 6 is the authoritative fallback for traders that were spawned
-    // before the soldier_trader tag was added or whose tag was lost.
-    try {
-        return entity.getComponent("minecraft:variant")?.value === SOLDIER_TRADER_VARIANT;
-    } catch {
-        return false;
-    }
+    try { if (entity.hasTag(SOLDIER_TRADER_TAG)) return true; } catch {}
+    try { return entity.getComponent("minecraft:variant")?.value === SOLDIER_TRADER_VARIANT; } catch { return false; }
 }
 
 function getSoldierCount(player) {
@@ -56,14 +46,10 @@ function removeEmeralds(player, amount) {
             const item = inventory.getItem(i);
             if (!item || item.typeId !== EMERALD) continue;
             const remove = Math.min(item.amount, remaining);
-            const remainingInStack = item.amount - remove;
+            const left = item.amount - remove;
             remaining -= remove;
-            if (remainingInStack > 0) {
-                item.amount = remainingInStack;
-                inventory.setItem(i, item);
-            } else {
-                inventory.setItem(i, undefined);
-            }
+            inventory.setItem(i, left > 0 ? item : undefined);
+            if (left > 0) item.amount = left;
         }
         return remaining === 0;
     } catch (error) {
@@ -92,9 +78,7 @@ function refundEmeralds(player, amount) {
             remaining -= add;
         }
         if (remaining > 0) player.dimension.spawnItem(new ItemStack(EMERALD, remaining), player.location);
-    } catch (error) {
-        console.warn(`[Soldier Trader] Refund failed: ${error}`);
-    }
+    } catch (error) { console.warn(`[Soldier Trader] Refund failed: ${error}`); }
 }
 
 function spawnLocationNearTrader(trader, player) {
@@ -117,7 +101,7 @@ async function openSoldierTrader(player, trader) {
         }
     }
 
-    if (offers.length === 0) {
+    if (!offers.length) {
         player.sendMessage("§8[§cSoldatenhändler§8]§r §cKeine Soldatenangebote verfügbar.");
         return;
     }
@@ -126,19 +110,12 @@ async function openSoldierTrader(player, trader) {
         .title("§c⚔ Soldatenhändler")
         .body(`§7Rekrutiere Einheiten für deine Armee.\n\n§fAktive Soldaten: §e${getSoldierCount(player)}\n§fDeine Emeralds: §a${countEmeralds(player)}\n\n§8Kavallerie wird auf einem Pferd eingesetzt.`);
 
-    for (const offer of offers) {
-        form.button(`§e${TYPE_NAMES[offer.type]} §7${LEVEL_NAMES[offer.level]} (Lv. ${offer.level})\n§a${offer.data.cost} Emeralds`);
-    }
+    for (const offer of offers) form.button(`§e${TYPE_NAMES[offer.type]} §7${LEVEL_NAMES[offer.level]} (Lv. ${offer.level})\n§a${offer.data.cost} Emeralds`);
     form.button("§8Abbrechen");
 
     let result;
-    try {
-        result = await form.show(player);
-    } catch (error) {
-        console.warn(`[Soldier Trader] Form failed for ${player.name}: ${error}`);
-        return;
-    }
-
+    try { result = await form.show(player); }
+    catch (error) { console.warn(`[Soldier Trader] Form failed: ${error}`); return; }
     if (result.canceled || result.selection === undefined || result.selection >= offers.length) return;
 
     const selected = offers[result.selection];
@@ -158,20 +135,23 @@ async function openSoldierTrader(player, trader) {
         player.sendMessage("§8[§cSoldatenhändler§8]§r §cDie Einheit konnte nicht rekrutiert werden. Die Emeralds wurden zurückerstattet.");
         return;
     }
-
     player.sendMessage(`§8[§cSoldatenhändler§8]§r §a${TYPE_NAMES[selected.type]} ${LEVEL_NAMES[selected.level]} erfolgreich rekrutiert! §7(${cost} Emeralds)`);
     try { player.playSound("random.levelup"); } catch {}
 }
 
-// Dedicated soldier-trader interaction. We intentionally do not depend only
-// on the tag because existing traders from older versions can still have the
-// soldier variant without the new tag.
-world.afterEvents.playerInteractWithEntity.subscribe((event) => {
+// BEFORE is used deliberately: the trader entity has a vanilla trade behavior,
+// but the soldier trader has no vanilla trade_table. Waiting for the AFTER
+// interaction can therefore depend on Bedrock considering the vanilla trade
+// interaction successful. We cancel that interaction and always open our UI.
+world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
     const { player, target } = event;
-    if (!player?.isValid || !isSoldierTrader(target)) return;
+    if (!isSoldierTrader(target)) return;
 
-    // Let Bedrock finish the entity interaction first, then open our form.
-    system.run(() => openSoldierTrader(player, target));
+    event.cancel = true;
+    system.run(() => {
+        try { openSoldierTrader(player, target); }
+        catch (error) { console.warn(`[Soldier Trader] Interaction failed: ${error}`); }
+    });
 });
 
 console.info("§a[Soldier Trader] Soldier recruitment trader initialized");
