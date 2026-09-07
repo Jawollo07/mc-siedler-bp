@@ -161,7 +161,9 @@ async function openMultiSelection(player) {
     const soldiers = ownedSoldiers(player);
     if (!soldiers.length) { player.sendMessage("§cKeine eigenen Soldaten vorhanden."); return; }
     const form = new ModalFormData().title("§6Soldaten auswählen").label("§7Aktiviere Soldaten für deine aktuelle Auswahl.");
-    for (const s of soldiers) form.toggle(`${isSelected(player,s) ? "§a✓ " : "§7○ "}${nameOf(s)}`, isSelected(player,s));
+    for (const s of soldiers) {
+        form.toggle(`${isSelected(player,s) ? "§a✓ " : "§7○ "}${nameOf(s)}`, { defaultValue: isSelected(player,s) });
+    }
     const r = await show(form, player); if (r.canceled) return openSoldierMenu(player);
     clearSelection(player);
     const selected = soldiers.filter((_,i) => r.formValues?.[i] === true);
@@ -222,7 +224,9 @@ async function openGroupActions(player,group) {
 
 async function manageMembers(player,group) {
     const soldiers=ownedSoldiers(player); const form=new ModalFormData().title(`§eMitglieder: ${group.name}`).label("§7Aktiviere die Soldaten, die in der Gruppe bleiben sollen.");
-    for(const s of soldiers)form.toggle(nameOf(s),group.soldierIds.includes(s.entity.id));
+    for(const s of soldiers) {
+        form.toggle(nameOf(s), { defaultValue: group.soldierIds.includes(s.entity.id) });
+    }
     const r=await show(form,player);if(r.canceled)return openGroupActions(player,group);
     const wanted=new Set(soldiers.filter((_,i)=>r.formValues?.[i]===true).map(s=>s.entity.id));
     for(const s of soldiers){const inside=group.soldierIds.includes(s.entity.id);if(wanted.has(s.entity.id)&&!inside)addSoldierToGroup(group.id,player.id,s);if(!wanted.has(s.entity.id)&&inside)removeSoldierFromGroup(group.id,player.id,s);}
