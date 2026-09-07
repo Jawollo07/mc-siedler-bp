@@ -58,6 +58,11 @@ import ".././essentials/player_stats.js";
 import ".././essentials/start.js";
 
 // -----------------------------------------------------------------------------
+// Anti-AFK
+// -----------------------------------------------------------------------------
+import ".././antiafk/index.js";
+
+// -----------------------------------------------------------------------------
 // Soldier system
 // -----------------------------------------------------------------------------
 import ".././soldier/index.js";
@@ -65,7 +70,7 @@ import ".././soldier/trader.js";
 import ".././soldier/level.js";
 
 const VERSION = version;
-const MODULE_COUNT = 20;
+const MODULE_COUNT = 21;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
 
@@ -120,7 +125,7 @@ function finishStartup() {
         console.info("§8----------------------------------------");
         logSuccess("All modules initialized.");
         log(`Loaded ${MODULE_COUNT} modules.`);
-        console.info("§7Teams · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Soldier");
+        console.info("§7Teams · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier");
         console.info("§7 Version: " + VERSION);
         console.info("§8----------------------------------------");
     });
