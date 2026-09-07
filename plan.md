@@ -8,9 +8,10 @@
 
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
 - [x] Zentralisiertes erweitertes Logging mit INFO/WARN/ERROR/DEBUG und Console-Bridge
-- [x] Modulbezogene `createLogger()`-Instanzen für Soldier, Soldier-Spawn, Soldatenhändler, Anti-AFK und Diplomatie
+- [x] Modulbezogene Logger für Soldier, Soldier-Spawn, Soldatenhändler, Anti-AFK und Diplomatie
 - [x] Modulbezogene Logger für Claims, Market, Taxes und Monster
-- [x] Debug-Ausgaben für gezielte Diagnose von häufigen Soldier-/Anti-AFK-/Claims-/Market-/Monster-Abläufen vorbereitet
+- [x] Zusätzliche Scoped Logger für Claims-Protection, Market-Trader, Teams-Chat, Essentials-Start und Soldier-Level
+- [x] Debug-Ausgaben für gezielte Diagnose häufiger Abläufe vorbereitet
 - [x] WARN-Rate-Limiting für wiederholte identische Meldungen
 - [x] Konfigurierbares WARN-Intervall über `globalThis.SIEDLER_WARN_RATE_LIMIT_MS`
 - [x] Unterdrückte WARN-Wiederholungen werden beim nächsten erlaubten Auftreten zusammengefasst
@@ -77,7 +78,7 @@
 15. Essentials optional um Rang-/Team-Limits erweitern
 16. Persistentes Claim-Rollback als optionales Admin-System entwickeln
 17. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen erweitern
-18. Logging auf weitere Kernmodule wie Teams und Essentials ausweiten
+18. Logging auf weitere große Untermodule wie Teams-Core, Essentials-Core und Soldier-KI ausweiten
 19. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
 20. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
 
