@@ -44,6 +44,9 @@
 - [x] Rideable-API als Mounting-Fallback
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
 - [x] Marktplatz blockiert Abbau und Platzierung
+- [x] Markt-Commands direkt über `customCommandRegistry.registerCommand()` registriert
+- [x] Zusätzlichen `registerCommand`-Wrapper aus dem Markt-Command-Modul entfernt
+- [x] Markt-Commands verwenden weiterhin `GameDirectors` und `cheatsRequired: false`
 
 ## 🔴 Phase 1 – Fundament & Stabilität
 
@@ -166,6 +169,7 @@
 - [x] Händler nach Spawn sicher initialisiert
 - [x] bestehende/rollenlose Händler automatisch repariert
 - [x] Trade-Nutzungen vor wiederholtem Reset geschützt
+- [x] Markt-Commands ohne zusätzlichen Registrierungs-Wrapper
 
 ## 🟢 Phase 7 – Dashboard
 
