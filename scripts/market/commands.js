@@ -10,6 +10,7 @@ import {
     cleanupMarketMonsters
 } from "./market_place.js";
 
+const ANY_PERMISSION = CommandPermissionLevel.Any;
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 const MARKET_TELEPORT_PROPERTY = "market_teleport";
 
@@ -71,6 +72,7 @@ system.beforeEvents.startup.subscribe((event) => {
         {
             name: "market",
             description: "Teleportiert dich zum Marktplatz.",
+            permissionLevel: ANY_PERMISSION,
             cheatsRequired: false
         },
         (origin) => {
