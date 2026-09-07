@@ -155,9 +155,9 @@ system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
     registry.registerCommand({
-        name: "siedler:diplomacy",
+        name: "diplomacy",
         description: "Öffnet das Diplomatie-Menü.",
-        permissionLevel: CommandPermissionLevel.GameDirectors,
+        permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false
     }, (origin) => {
         const player = playerOnly(origin);
