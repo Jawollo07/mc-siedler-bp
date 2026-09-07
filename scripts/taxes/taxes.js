@@ -1,12 +1,14 @@
 import { world, ItemStack } from "@minecraft/server";
+import { createLogger } from "../core/logger.js";
 
+const logger = createLogger("Taxes");
 const MAX_TAX_AMOUNT = 256;
 
 export function addTaxes(coords, amount, teamName = "Unbekannt") {
     const safeAmount = Math.min(MAX_TAX_AMOUNT, Math.max(0, Math.floor(Number(amount))));
     if (!Number.isFinite(safeAmount) || safeAmount <= 0) return { success: false, inserted: 0, dropped: 0 };
     if (!coords || !Number.isFinite(Number(coords.x)) || !Number.isFinite(Number(coords.y)) || !Number.isFinite(Number(coords.z))) {
-        console.warn(`[Steuern] Ungültige Steuerkisten-Koordinaten für Team "${teamName}".`);
+        logger.warn(`Ungültige Steuerkisten-Koordinaten für Team "${teamName}".`);
         return { success: false, inserted: 0, dropped: 0 };
     }
 
@@ -14,7 +16,7 @@ export function addTaxes(coords, amount, teamName = "Unbekannt") {
         const dimension = world.getDimension("overworld");
         const block = dimension.getBlock({ x: Math.floor(Number(coords.x)), y: Math.floor(Number(coords.y)), z: Math.floor(Number(coords.z)) });
         if (!block || block.typeId !== "minecraft:chest") {
-            console.warn(`[Steuern] Keine Truhe für Team "${teamName}" bei ${coords.x} ${coords.y} ${coords.z}`);
+            logger.warn(`Keine Truhe für Team "${teamName}" bei ${coords.x} ${coords.y} ${coords.z}`);
             return { success: false, inserted: 0, dropped: 0 };
         }
 
@@ -40,11 +42,12 @@ export function addTaxes(coords, amount, teamName = "Unbekannt") {
             }
         }
 
-        if (dropped > 0) console.warn(`[Steuern] Steuerkiste von "${teamName}" war teilweise voll; ${dropped} Emeralds wurden daneben abgelegt.`);
-        console.info(`[Steuern] Team "${teamName}": ${inserted} Emeralds eingelagert, ${dropped} abgelegt.`);
+        if (dropped > 0) logger.warn(`Steuerkiste von "${teamName}" war teilweise voll; ${dropped} Emeralds wurden daneben abgelegt.`);
+        logger.info(`Team "${teamName}": ${inserted} Emeralds eingelagert, ${dropped} abgelegt.`);
+        logger.debug(`Steuerbuchung abgeschlossen: team=${teamName}, requested=${safeAmount}, inserted=${inserted}, dropped=${dropped}`);
         return { success: inserted > 0, inserted, dropped };
     } catch (error) {
-        console.error(`[Steuern] Fehler bei Team "${teamName}":`, error);
+        logger.exception(`Fehler bei Team "${teamName}"`, error);
         return { success: false, inserted: 0, dropped: 0 };
     }
 }
