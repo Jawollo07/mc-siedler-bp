@@ -18,7 +18,7 @@
 
 ## 📝 Erweitertes Logging
 
-Das Behavior Pack besitzt ein zentrales Logging-System unter `scripts/core/logger.js`. Es verbessert die normalen Bedrock-Console-Ausgaben, ohne dass alle bestehenden Module sofort umgebaut werden müssen.
+Das Behavior Pack besitzt ein zentrales Logging-System unter `scripts/core/logger.js`. Es verbessert die normalen Bedrock-Console-Ausgaben und ermöglicht zusätzlich modulbezogene Logger.
 
 Unterstützte Ausgaben:
 
@@ -28,7 +28,11 @@ Unterstützte Ausgaben:
 - `console.error()` → `ERROR`
 - `console.debug()` → `DEBUG`
 
-Die Ausgaben erhalten einen einheitlichen Prefix mit Siedler-Version und Log-Level. Das Standard-Level ist `info`. Debug-Ausgaben können über `globalThis.SIEDLER_LOG_LEVEL = "debug"` aktiviert werden. Neue Module können mit `createLogger("Modulname")` einen eigenen Logger mit `debug`, `info`, `log`, `success`, `warn`, `error` und `exception` verwenden.
+Die Ausgaben erhalten einen einheitlichen Prefix mit Siedler-Version und Log-Level. Das Standard-Level ist `info`. Debug-Ausgaben können über `globalThis.SIEDLER_LOG_LEVEL = "debug"` aktiviert werden.
+
+Neue oder migrierte Module können `createLogger("Modulname")` verwenden. Dadurch entstehen eindeutige Bereiche wie `[Soldier]`, `[Soldier:Spawn]`, `[Soldier:Trader]`, `[Anti-AFK]` und `[Diplomacy]`. Verfügbare Methoden sind `debug`, `info`, `log`, `success`, `warn`, `error` und `exception`.
+
+Bereits auf modulbezogenes Logging umgestellt sind insbesondere Soldier-Start/Spawn, Soldatenhändler, Anti-AFK und Diplomatie. Häufige Diagnosemeldungen werden bevorzugt als `DEBUG` geloggt, damit der normale Serverbetrieb nicht unnötig mit Tick-/KI-Ausgaben geflutet wird.
 
 ## 🪖 Soldatenverwaltung
 
