@@ -1,7 +1,6 @@
 import { system, world } from "@minecraft/server";
 import { createLogger } from "../core/logger.js";
 import { godMode } from "./state.js";
-import { loadPersistentState } from "./storage.js";
 import { registerTeleportCommands, registerTeleportEvents } from "./teleport.js";
 import { registerMessagingCommands } from "./messaging.js";
 import { registerAdminCommands } from "./admin.js";
@@ -19,15 +18,6 @@ const logger = createLogger("Essentials");
  * - messaging.js  MSG / Reply
  * - admin.js      Admin-Werkzeuge
  */
-
-system.runTimeout(() => {
-    try {
-        loadPersistentState();
-        logger.info("Persistenter Essentials-Zustand initialisiert.");
-    } catch (error) {
-        logger.exception("Initialisierung des persistenten Essentials-Zustands fehlgeschlagen", error);
-    }
-}, 1);
 
 registerTeleportEvents();
 
