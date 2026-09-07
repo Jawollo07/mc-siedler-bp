@@ -196,7 +196,7 @@ system.runInterval(tick, ANTI_AFK_CONFIG.checkIntervalTicks);
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
-    registerPlayerCommand(registry, "afk", "Aktiviert oder beendet deinen AFK-Status.", (origin) => {
+    registerPlayerCommand(registry, "siedler:afk", "Aktiviert oder beendet deinen AFK-Status.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
         const state = stateFor(player);
