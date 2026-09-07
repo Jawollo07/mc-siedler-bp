@@ -51,15 +51,15 @@ Der Teleportpunkt wird unabhängig von den Marktplatz-Ecken einmalig durch einen
 Dieser Befehl setzt die aktuelle Position und Dimension als Ziel. Normale Spieler können anschließend ohne OP-Rechte jederzeit mit
 
 ```text
-/market_tp
+/market
 ```
 
 zum gespeicherten Marktplatz-Teleportpunkt reisen. Der Teleportpunkt wird beim Server-/Weltneustart nicht verloren.
 
-Die Markt-Commands werden direkt über `event.customCommandRegistry.registerCommand()` registriert. Es gibt keinen zusätzlichen `registerCommand`-Wrapper. Der Set-Befehl ist auf `GameDirectors` beschränkt und benötigt keine Cheats; der eigentliche Teleport ist für normale Spieler verfügbar.
+Alle Custom Commands werden direkt über `event.customCommandRegistry.registerCommand()` registriert. Für jeden Command wird ein gültiges `CommandPermissionLevel` gesetzt; insbesondere ist `/market` explizit `Any` und `/market_tp_set` `GameDirectors`.
 
 ```text
-/market_tp
+/market
 /market_tp_set
 /siedler:market_status
 /siedler:market_enable
@@ -168,7 +168,7 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Wel
 /siedler:trader_here <type>
 /siedler:trader_types
 /siedler:trader_remove
-/market_tp
+/market
 /market_tp_set
 /siedler:market_status
 /siedler:market_enable
