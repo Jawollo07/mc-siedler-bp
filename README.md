@@ -78,11 +78,7 @@ Das Diplomatie-Menü ist jetzt für **alle Spieler** verfügbar:
 /diplomacy
 ```
 
-Der Command benötigt keine OP-Rechte und keine Cheats. Die vollständige Namespace-Variante ist:
-
-```text
-/diplomacy
-```
+Der Command benötigt keine OP-Rechte und keine Cheats.
 
 ## 💤 Anti-AFK
 
@@ -113,11 +109,22 @@ Standardmäßig gilt:
 /siedler:afk_reset
 ```
 
-`/afk` und `/siedler:afk` sind für normale Spieler verfügbar. Die Steuerungsbefehle sind auf `GameDirectors` beschränkt. Die Standardwerte und die Erkennung befinden sich in `scripts/antiafk/config.js` und `scripts/antiafk/index.js`.
-
 ## ⚔️ Soldier-KI
 
 Das Soldier-System verwendet eigene Kampf- und Bewegungslogik. Infanterie nutzt Nahkampf, Bogenschützen eine eigene Fernkampf-KI mit echten `minecraft:arrow`-Projektilen und ballistischer Flugbahnberechnung.
+
+### 🪖 Soldatenhändler
+
+Der Soldatenhändler verwendet eine eigene `ActionFormData`-Oberfläche und ist damit unabhängig von den normalen Vanilla-Trade-Tables. Die Interaktion wird über `playerInteractWithEntity` erkannt.
+
+- Auswahl von Infanterie, Bogenschützen und Kavallerie
+- Levelauswahl 1–3 mit den jeweiligen Emerald-Kosten
+- Anzeige der aktiven eigenen Soldaten und des Emerald-Guthabens
+- Zahlung wird sicher aus dem Spielerinventar entfernt
+- Fehlgeschlagene Rekrutierung erstattet die Emeralds
+- Kavallerie wird über das normale Kavallerie-System gespawnt
+- Alte Soldatenhändler werden auch ohne `soldier_trader`-Tag erkannt, wenn ihre Variant-ID `6` ist
+- Dadurch bleibt die Interaktion auch bei älteren/später migrierten Händler-Entities funktionsfähig
 
 ### 🐎 Kavallerie
 
@@ -152,19 +159,6 @@ Wenn die Weakness-Konfiguration aktiviert ist, erhalten alle Spieler dauerhaft d
 
 Dadurch wird die Weakness **gegen alle Nahkampfziele angewendet – einschließlich PvP**. Spieler verursachen also sowohl gegen Mobs als auch gegen andere Spieler den durch die konfigurierte Weakness-Stufe reduzierten Nahkampfschaden.
 
-Die Einstellung befindet sich in `scripts/monster/config.js` unter `weakness`.
-
-### Weakness-Commands
-
-```text
-/siedler:weakness_status
-/siedler:weakness_on
-/siedler:weakness_off
-/siedler:weakness_level <0-255>
-/siedler:weakness_duration <ticks>
-/siedler:weakness_interval <ticks>
-```
-
 ## 🧰 Essentials
 
 Das Essentials-System arbeitet bei persistenter Spielerdatenhaltung mit Spieler-IDs. Das Startsystem verwaltet Team-Teleports, Spielstart und Starterkits und behandelt ungültige Daten kontrolliert.
@@ -178,6 +172,8 @@ Die tägliche Steuer wird **nur eingezogen, wenn zum Zeitpunkt der Tagesabrechnu
 ## 🧑‍🌾 Händler
 
 Händler werden als `siedler:trader` mit spezialisierten Rollen gespawnt. Lebensmittel-, Baustoff-, Rohstoff-, Werkzeug-, Waffen- und Versorgungshändler verwenden eigene Vanilla-Trade-Tabellen und öffnen beim Interagieren das normale Bedrock-Handelsfenster. Die Trade-Tabelle wird über eine Component Group aktiviert, damit die Handels-KI korrekt funktioniert.
+
+Der Soldatenhändler ist davon getrennt und verwendet die eigene Soldaten-Rekrutierungsoberfläche.
 
 ## 📊 Dashboard
 
@@ -271,7 +267,8 @@ scripts/core/main.js
     ├── archer.js
     ├── cavalry.js
     ├── combat_range.js
-    └── level.js
+    ├── level.js
+    └── trader.js (Soldatenhändler-UI und Interaktion)
 ```
 
 Die detaillierte Planung befindet sich in `plan.md`.
