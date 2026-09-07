@@ -19,7 +19,7 @@ import {
     removeTpaRequest,
     removePlayerRequests
 } from "./state.js";
-import { loadPersistentState, saveHomes, saveDeaths } from "./storage.js";
+import { saveHomes, saveDeaths, loadPersistentState } from "./storage.js";
 import { playerFrom, findPlayer, sendCommandError } from "./players.js";
 
 const logger = createLogger("Essentials:Teleport");
@@ -36,6 +36,7 @@ function registerPlayerCommand(registry, name, description, callback, mandatoryP
 }
 
 export function registerTeleportCommands(registry) {
+    logger.debug("Registriere Teleport-Commands.");
     const playerParameter = [{ type: CustomCommandParamType.String, name: "spieler" }];
 
     registerPlayerCommand(registry, "siedler:spawn", "Teleportiert dich zum Weltspawn.", (origin) => {
@@ -45,7 +46,7 @@ export function registerTeleportCommands(registry) {
             try {
                 const spawn = world.getDefaultSpawnLocation();
                 player.teleport(spawn, { dimension: world.getDimension("overworld") });
-                logger.info(`${player.name} teleportiert sich zum Weltspawn.`);
+                logger.info(`Spawn-Teleport: ${player.name}.`);
                 player.sendMessage("§aDu wurdest zum Spawn teleportiert.");
             } catch (error) {
                 logger.exception(`Spawn-Teleport fehlgeschlagen für ${player.name}`, error);
@@ -61,17 +62,11 @@ export function registerTeleportCommands(registry) {
         system.run(() => {
             const location = player.location;
             if (Math.abs(location.x) > MAX_HOME_DISTANCE || Math.abs(location.z) > MAX_HOME_DISTANCE) {
-                logger.warn(`${player.name} konnte keinen Home setzen: Position außerhalb des Limits.`);
+                logger.warn(`Home abgelehnt: ${player.name} ist außerhalb des Positionslimits.`);
                 sendCommandError(player, "Diese Position ist zu weit vom Weltzentrum entfernt.");
                 return;
             }
-            homes.set(player.id, {
-                x: Math.floor(location.x) + 0.5,
-                y: Math.floor(location.y),
-                z: Math.floor(location.z) + 0.5,
-                dimension: player.dimension.id,
-                savedAt: Date.now()
-            });
+            homes.set(player.id, { x: Math.floor(location.x) + 0.5, y: Math.floor(location.y), z: Math.floor(location.z) + 0.5, dimension: player.dimension.id, savedAt: Date.now() });
             const saved = saveHomes();
             logger.info(`Home gesetzt: ${player.name} @ ${Math.floor(location.x)},${Math.floor(location.y)},${Math.floor(location.z)} (${player.dimension.id}), gespeichert=${saved}.`);
             player.sendMessage(saved ? "§aZuhause gesetzt." : "§cZuhause konnte nicht gespeichert werden.");
@@ -85,14 +80,14 @@ export function registerTeleportCommands(registry) {
         system.run(() => {
             const home = getHome(player);
             if (!home) {
-                logger.debug(`${player.name} wollte /home verwenden, hat aber keinen Home.`);
+                logger.debug(`${player.name}: /home ohne gespeicherten Home.`);
                 sendCommandError(player, "Du hast noch kein Zuhause. Nutze /siedler:sethome.");
                 return;
             }
             try {
                 const dimension = world.getDimension(home.dimension || "minecraft:overworld");
                 player.teleport({ x: home.x, y: home.y, z: home.z }, { dimension });
-                logger.info(`${player.name} teleportiert zu Home @ ${home.x},${home.y},${home.z} (${home.dimension}).`);
+                logger.info(`Home-Teleport: ${player.name} -> ${home.x},${home.y},${home.z} (${home.dimension}).`);
                 player.sendMessage("§aWillkommen zu Hause.");
             } catch (error) {
                 logger.exception(`Home-Teleport fehlgeschlagen für ${player.name}`, error);
@@ -107,7 +102,7 @@ export function registerTeleportCommands(registry) {
         if (!player) return { status: CustomCommandStatus.Failure };
         system.run(() => {
             if (!homes.delete(player.id)) {
-                logger.debug(`${player.name} wollte einen nicht vorhandenen Home löschen.`);
+                logger.debug(`${player.name}: kein Home zum Löschen.`);
                 sendCommandError(player, "Du hast kein Zuhause.");
                 return;
             }
@@ -128,6 +123,7 @@ export function registerTeleportCommands(registry) {
             return { status: CustomCommandStatus.Failure };
         }
         if (target.id === player.id) {
+            logger.debug(`TPA abgelehnt: ${player.name} wollte sich selbst anfragen.`);
             sendCommandError(player, "Du kannst dir selbst keine Anfrage senden.");
             return { status: CustomCommandStatus.Failure };
         }
@@ -151,6 +147,7 @@ export function registerTeleportCommands(registry) {
             return { status: CustomCommandStatus.Failure };
         }
         if (target.id === player.id) {
+            logger.debug(`TPAHere abgelehnt: ${player.name} wollte sich selbst anfragen.`);
             sendCommandError(player, "Du kannst dir selbst keine Anfrage senden.");
             return { status: CustomCommandStatus.Failure };
         }
@@ -220,14 +217,14 @@ export function registerTeleportCommands(registry) {
         system.run(() => {
             const death = deathPoints.get(player.id);
             if (!death) {
-                logger.debug(`${player.name} wollte /back nutzen, aber kein Todespunkt vorhanden.`);
+                logger.debug(`${player.name}: /back ohne gespeicherten Todespunkt.`);
                 sendCommandError(player, "Kein Todespunkt gespeichert.");
                 return;
             }
             try {
                 const dimension = world.getDimension(death.dimension || "minecraft:overworld");
                 player.teleport({ x: death.x, y: death.y, z: death.z }, { dimension });
-                logger.info(`${player.name} teleportiert zum Todespunkt @ ${death.x},${death.y},${death.z} (${death.dimension}).`);
+                logger.info(`Back-Teleport: ${player.name} -> ${death.x},${death.y},${death.z} (${death.dimension}).`);
                 player.sendMessage("§aZum letzten Todespunkt teleportiert.");
             } catch (error) {
                 logger.exception(`Back-Teleport fehlgeschlagen für ${player.name}`, error);
@@ -239,26 +236,27 @@ export function registerTeleportCommands(registry) {
 }
 
 export function registerTeleportEvents() {
-    system.runTimeout(loadPersistentState, 1);
+    system.runTimeout(() => {
+        try {
+            loadPersistentState();
+            logger.info(`Essentials-Persistenz geladen: ${homes.size} Homes, ${deathPoints.size} Todespunkte.`);
+        } catch (error) {
+            logger.exception("Laden des persistenten Essentials-Zustands fehlgeschlagen", error);
+        }
+    }, 1);
 
     world.afterEvents.entityDie?.subscribe?.((event) => {
         const player = event.deadEntity;
         if (player?.typeId !== "minecraft:player" || !player.isValid) return;
-        deathPoints.set(player.id, {
-            x: player.location.x,
-            y: player.location.y,
-            z: player.location.z,
-            dimension: player.dimension.id,
-            savedAt: Date.now()
-        });
+        deathPoints.set(player.id, { x: player.location.x, y: player.location.y, z: player.location.z, dimension: player.dimension.id, savedAt: Date.now() });
         const saved = saveDeaths();
-        logger.info(`Todespunkt gespeichert: ${player.name} @ ${Math.floor(player.location.x)},${Math.floor(player.location.y)},${Math.floor(player.location.z)} (${player.dimension.id}), gespeichert=${saved}.`);
+        logger.info(`Spieler gestorben: ${player.name} @ ${Math.floor(player.location.x)},${Math.floor(player.location.y)},${Math.floor(player.location.z)} (${player.dimension.id}); Todespunkt gespeichert=${saved}.`);
     });
 
     world.afterEvents.playerLeave?.subscribe?.((event) => {
         if (!event?.playerId) return;
         const removed = removePlayerRequests(event.playerId);
-        logger.debug(`Spieler verlassen: ${event.playerId}; ${removed} TPA-Referenzen bereinigt.`);
+        logger.info(`Spieler verlassen: ${event.playerId}; ${removed} TPA-/Messaging-Referenzen bereinigt.`);
     });
 
     system.runInterval(() => {
