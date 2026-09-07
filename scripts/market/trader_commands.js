@@ -78,8 +78,6 @@ world.afterEvents.entitySpawn.subscribe((event) => {
     if (trader.typeId !== TRADER_TYPE) return;
     system.run(() => {
         try {
-            // Never turn a soldier trader into a food trader. Variant 6 is
-            // retained as a migration fallback for old saved entities.
             if (!hasTraderRole(trader)) applyTraderType(trader, "food");
         } catch (error) {
             console.warn(`[Trader] Spawn initialization failed: ${error}`);
@@ -115,7 +113,7 @@ system.beforeEvents.startup.subscribe((event) => {
     });
 
     registry.registerCommand({
-        name: "siedler:trader_here",",
+        name: "siedler:trader_here",
         description: "Spawnt einen Händler vor dir.",
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
