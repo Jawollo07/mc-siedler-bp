@@ -9,7 +9,8 @@
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
 - [x] Zentralisiertes erweitertes Logging mit INFO/WARN/ERROR/DEBUG und Console-Bridge
 - [x] Modulbezogene `createLogger()`-Instanzen für Soldier, Soldier-Spawn, Soldatenhändler, Anti-AFK und Diplomatie
-- [x] Debug-Ausgaben für gezielte Diagnose von häufigen Soldier-/Anti-AFK-Abläufen vorbereitet
+- [x] Modulbezogene Logger für Claims, Market, Taxes und Monster
+- [x] Debug-Ausgaben für gezielte Diagnose von häufigen Soldier-/Anti-AFK-/Claims-/Market-/Monster-Abläufen vorbereitet
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Diplomatie-UI und `/diplomacy`
 - [x] Claim-Block-Recovery und Item-Rückgabe
