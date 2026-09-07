@@ -9,7 +9,7 @@
 
 - Teams, Team-Chat, Farben und Diplomatie
 - Claims und Claim-Grenzen
-- Claim-Protection mit Block-Recovery bei unerlaubtem Abbau
+- Claim-Protection mit Block-Recovery bei unerlaubtem Abbau und Item-Rückgabe bei unerlaubtem Platzieren
 - Wirtschaft, Steuern und permanenter Monster-Token-TaxBonus
 - Marktplätze und spezialisierte Händler
 - Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
@@ -29,6 +29,10 @@ Zusätzlich besitzt die Claim-Protection eine **Block-Recovery** als Fallback f�
 - Ein Recovery-Scanner prüft zusätzlich offene Wiederherstellungen.
 - Bereits neu platzierte Blöcke werden bei der Recovery nicht überschrieben.
 - Die Dimension und Spieler-ID werden zusammen mit dem Recovery-Eintrag gespeichert.
+- Unerlaubte Platzierungen werden entfernt.
+- Bei einem After-Event-Fallback wird der platzierte Block **einmalig ins Inventar des Spielers zurückgegeben**.
+- Ist das Inventar voll, wird der zurückgegebene Gegenstand stattdessen sicher beim Spieler gedroppt, damit er nicht verloren geht.
+- Beim normalen Before-Event wird nichts zusätzlich gegeben, da der Block durch das Canceln gar nicht aus dem Inventar entfernt wird. Dadurch entstehen keine Duplikate.
 - Die Recovery-Queue ist begrenzt und veraltete Einträge werden automatisch entfernt.
 - Explosionen innerhalb von Claims werden weiterhin bereits vor der Zerstörung abgebrochen.
 
@@ -170,7 +174,7 @@ scripts/core/main.js
 ├── Teams
 ├── Taxes
 ├── Claims
-│   ├── protection.js (Protection + Block-Recovery)
+│   ├── protection.js (Protection + Block-Recovery + Item-Rückgabe)
 │   └── display.js
 ├── Market
 ├── Monster
