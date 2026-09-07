@@ -34,7 +34,7 @@ Wichtige Logger-Bereiche sind aktuell:
 - `[Taxes]`
 - `[Monster]`
 - `[Teams]` / `[Teams:Chat]` / `[Diplomacy]`
-- `[Essentials:Start]`
+- `[Essentials]` / `[Essentials:Storage]` / `[Essentials:Players]` / `[Essentials:Teleport]` / `[Essentials:Messaging]` / `[Essentials:Admin]` / `[Essentials:Start]`
 - `[Soldier]` / `[Soldier:Spawn]` / `[Soldier:Trader]` / `[Soldier:Level]`
 - `[Anti-AFK]`
 
@@ -51,6 +51,21 @@ globalThis.SIEDLER_WARN_RATE_LIMIT_MS = 5000;
 Mit `0` wird das Rate-Limiting deaktiviert. Laufzeitseitig steht `setWarnRateLimit(milliseconds)` zur Verfügung.
 
 Neue Untermodule sollen möglichst einen eigenen Scoped Logger verwenden und Tick-/Event-Diagnose auf `DEBUG` halten, damit die Serverkonsole nicht unnötig belastet wird.
+
+## 🧰 Essentials
+
+Das Essentials-System ist modular aufgebaut. `scripts/essentials/index.js` dient nur noch als Einstiegspunkt und verdrahtet die einzelnen Bereiche:
+
+- `state.js` – Homes, Todespunkte, TPA-Anfragen, Reply-Ziele sowie God-/Fly-Zustände
+- `storage.js` – Laden und Speichern der Dynamic Properties inklusive Validierung
+- `players.js` – sichere Spielerauflösung per ID, exaktem Namen oder eindeutigem Prefix
+- `teleport.js` – `/siedler:spawn`, Homes, `/siedler:back` und TPA/TPAHere
+- `messaging.js` – `/siedler:msg` und `/siedler:reply`
+- `admin.js` – Heal, Feed, God, Fly, Kill, Clear sowie Zeit-/Wetterbefehle
+- `start.js` – Startsystem
+- `player_stats.js` – Spieler-Dashboard und Statistiken
+
+Die Essentials-Module besitzen jeweils eigene Scoped Logs. Dadurch lassen sich beispielsweise Home-, TPA-, Speicher- und Admin-Probleme getrennt analysieren, ohne die komplette Serverkonsole durchsuchen zu müssen.
 
 ## 🪖 Soldatenverwaltung
 
@@ -114,6 +129,17 @@ Nach Änderungen an Scripts oder Entity-Definitionen muss der Server/die Welt vo
 /diplomacy
 /afk
 /siedler:stats
+/siedler:spawn
+/siedler:sethome
+/siedler:home
+/siedler:delhome
+/siedler:tpa <spieler>
+/siedler:tpahere <spieler>
+/siedler:tpaccept
+/siedler:tpdeny
+/siedler:msg <spieler> <nachricht>
+/siedler:reply <nachricht>
+/siedler:back
 /siedler:trader <type>
 /siedler:trader_here <type>
 /siedler:trader_types
@@ -143,8 +169,14 @@ scripts/core/main.js
 │   └── trader_commands.js [Logger]
 ├── Monster [Logger]
 ├── Essentials
+│   ├── index.js [Orchestrator]
+│   ├── state.js
+│   ├── storage.js [Logger]
+│   ├── players.js [Logger]
+│   ├── teleport.js [Logger]
+│   ├── messaging.js [Logger]
+│   ├── admin.js [Logger]
 │   ├── start.js [Logger]
-│   ├── index.js
 │   └── player_stats.js
 ├── Anti-AFK [Logger]
 └── Soldier
