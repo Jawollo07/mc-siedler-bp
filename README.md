@@ -15,6 +15,34 @@
 - Essentials und Spieler-Dashboard
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
+- Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
+
+## 💬 Chat-System
+
+Das Chat-System verwendet die native Bedrock Script API. Eine externe `ChatSend-API` oder ein separates Chat-Plugin wird nicht benötigt.
+
+### Native Chat-Unterstützung
+
+Wenn `world.beforeEvents.chatSend` verfügbar ist, übernimmt Siedler Logic:
+
+- `@team Nachricht` als privaten Team-Chat
+- öffentliche Chat-Nachrichten mit Team-Kontext
+- zentrale Chat-Logs über `[Essentials:Chat]`
+- eigene Formatierung des öffentlichen Chats
+
+Microsoft dokumentiert `world.beforeEvents.chatSend` weiterhin als native Chat-Schnittstelle; sie kann je nach Server-/API-Build jedoch noch fehlen oder als Pre-Release-Funktion eingeschränkt sein. Deshalb besitzt Siedler Logic einen sicheren Fallback. citeturn0search0turn0search2
+
+### Fallback ohne Before-Chat-API
+
+Wenn die native Before-Chat-API nicht vorhanden ist, bleibt der normale Vanilla-Chat unangetastet. Der Team-Chat kann dann über folgenden Befehl verwendet werden:
+
+```text
+/siedler:teamchat "Nachricht an mein Team"
+```
+
+Falls `world.afterEvents.chatSend` verfügbar ist, wird der öffentliche Chat weiterhin automatisch über `[Essentials:Chat]` geloggt. Dieser After-Event wird bewusst nicht verwendet, um `@team` nachträglich zu verstecken, da die Nachricht zu diesem Zeitpunkt bereits gesendet wurde. citeturn1search4turn1search6
+
+Damit gibt es keinen harten Ausfall des Chat-Systems mehr, wenn die native Before-Chat-API auf einem bestimmten Bedrock-Server nicht verfügbar ist.
 
 ## 📝 Logging
 
@@ -34,7 +62,7 @@ Wichtige Logger-Bereiche sind aktuell:
 - `[Taxes]`
 - `[Monster]`
 - `[Teams]` / `[Teams:Chat]` / `[Diplomacy]`
-- `[Essentials]` / `[Essentials:Storage]` / `[Essentials:Players]` / `[Essentials:Teleport]` / `[Essentials:Messaging]` / `[Essentials:Admin]` / `[Essentials:Start]`
+- `[Essentials]` / `[Essentials:Storage]` / `[Essentials:Players]` / `[Essentials:Teleport]` / `[Essentials:Messaging]` / `[Essentials:Admin]` / `[Essentials:Start]` / `[Essentials:Chat]`
 - `[Soldier]` / `[Soldier:Spawn]` / `[Soldier:Trader]` / `[Soldier:Level]`
 - `[Anti-AFK]`
 
@@ -64,6 +92,7 @@ Das Essentials-System ist modular aufgebaut. `scripts/essentials/index.js` dient
 - `admin.js` – Heal, Feed, God, Fly, Kill, Clear sowie Zeit-/Wetterbefehle
 - `start.js` – Startsystem
 - `player_stats.js` – Spieler-Dashboard und Statistiken
+- `../teams/chat.js` – native Public-/Team-Chat-Anbindung und Chat-Logging
 
 Die Essentials-Module besitzen jeweils eigene Scoped Logs. Dadurch lassen sich beispielsweise Home-, TPA-, Speicher- und Admin-Probleme getrennt analysieren, ohne die komplette Serverkonsole durchsuchen zu müssen.
 
@@ -140,6 +169,7 @@ Nach Änderungen an Scripts oder Entity-Definitionen muss der Server/die Welt vo
 /siedler:msg <spieler> <nachricht>
 /siedler:reply <nachricht>
 /siedler:back
+/siedler:teamchat "<nachricht>"
 /siedler:trader <type>
 /siedler:trader_here <type>
 /siedler:trader_types
@@ -157,7 +187,7 @@ scripts/core/main.js
 ├── dynamic_properties.js
 ├── Teams
 │   ├── index.js [Logger]
-│   ├── chat.js [Logger]
+│   ├── chat.js [Native Chat Adapter + Fallback + Logger]
 │   └── relations.js [Logger]
 ├── Taxes [Logger]
 ├── Claims
