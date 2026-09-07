@@ -16,6 +16,7 @@
 - Infanterie, Bogenschützen mit ballistischer Pfeilphysik und Kavallerie
 - Monster, Pillager-Trupps, Außenposten und Belagerungsgrundlage
 - Essentials mit Homes, Spawn, TPA, privaten Nachrichten, Todespunkten, Startsystem und Admin-Werkzeugen
+- **Anti-AFK-System mit Aktivitätserkennung, Warnung, AFK-Status und automatischem Kick**
 - Spieler-Dashboard und Serverstatistiken
 
 ## 🛡️ Claims & Block-Recovery
@@ -82,6 +83,37 @@ Der Command benötigt keine OP-Rechte und keine Cheats. Die vollständige Namesp
 ```text
 /diplomacy
 ```
+
+## 💤 Anti-AFK
+
+Das Anti-AFK-System erkennt Spieler-Inaktivität serverseitig und verhindert, dass Spieler dauerhaft einen Slot blockieren.
+
+Standardmäßig gilt:
+
+- Nach **4 Minuten** Inaktivität erhält der Spieler eine Warnung.
+- Nach **5 Minuten** wird der Spieler als **AFK** markiert.
+- Nach **10 Minuten** wird der Spieler automatisch gekickt, sofern AFK-Kicks aktiviert sind.
+- Bewegung von mindestens `0.75` Blöcken zählt als Aktivität.
+- Chat, Blockabbau, Blockplatzierung, Interaktionen und Angriffe zählen ebenfalls als Aktivität.
+- Die Erkennung verwendet Spieler-IDs und entfernt Zustände beim Verlassen des Servers.
+- Der manuelle AFK-Status über `/afk` kann jederzeit beendet werden.
+- Die Anti-AFK-Laufzeitoptionen können von Game Directors administrativ umgeschaltet werden.
+
+### Anti-AFK-Commands
+
+```text
+/afk
+/siedler:afk
+/siedler:afk_status
+/siedler:afk_on
+/siedler:afk_off
+/siedler:afk_kick_on
+/siedler:afk_kick_off
+/siedler:afk_kick_time <minuten>
+/siedler:afk_reset
+```
+
+`/afk` und `/siedler:afk` sind für normale Spieler verfügbar. Die Steuerungsbefehle sind auf `GameDirectors` beschränkt. Die Standardwerte und die Erkennung befinden sich in `scripts/antiafk/config.js` und `scripts/antiafk/index.js`.
 
 ## ⚔️ Soldier-KI
 
@@ -166,6 +198,15 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Wel
 
 ```text
 /diplomacy
+/afk
+/siedler:afk
+/siedler:afk_status
+/siedler:afk_on
+/siedler:afk_off
+/siedler:afk_kick_on
+/siedler:afk_kick_off
+/siedler:afk_kick_time <minuten>
+/siedler:afk_reset
 /siedler:stats
 /siedler:spawn
 /siedler:sethome
@@ -216,6 +257,9 @@ scripts/core/main.js
 ├── Market
 ├── Monster
 ├── Essentials
+├── Anti-AFK
+│   ├── index.js (Aktivitätserkennung, AFK-State, Warnung, Kick und Commands)
+│   └── config.js
 └── Soldier
     ├── ai.js
     ├── ranged_ai.js
