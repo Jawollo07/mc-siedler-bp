@@ -2,7 +2,9 @@ import { world, system, ItemStack } from "@minecraft/server";
 import { ActionFormData } from "@minecraft/server-ui";
 import { spawnSoldier } from "./spawn.js";
 import { SOLDIER_TYPES, SOLDIERS } from "./config.js";
+import { createLogger } from "../core/logger.js";
 
+const logger = createLogger("Soldier:Trader");
 const TRADER_TYPE = "siedler:trader";
 const SOLDIER_TRADER_TAG = "soldier_trader";
 const SOLDIER_TRADER_VARIANT = 6;
@@ -15,15 +17,11 @@ function isSoldierTrader(entity) {
     try { if (entity.hasTag(SOLDIER_TRADER_TAG)) return true; } catch {}
     try { return entity.getComponent("minecraft:variant")?.value === SOLDIER_TRADER_VARIANT; } catch { return false; }
 }
-
 function getSoldierCount(player) {
     let count = 0;
-    for (const data of SOLDIERS.values()) {
-        if (data?.ownerId === player.id && data.entity?.isValid) count++;
-    }
+    for (const data of SOLDIERS.values()) if (data?.ownerId === player.id && data.entity?.isValid) count++;
     return count;
 }
-
 function countEmeralds(player) {
     try {
         const inventory = player.getComponent("minecraft:inventory")?.container;
@@ -36,7 +34,6 @@ function countEmeralds(player) {
         return total;
     } catch { return 0; }
 }
-
 function removeEmeralds(player, amount) {
     try {
         const inventory = player.getComponent("minecraft:inventory")?.container;
@@ -53,11 +50,10 @@ function removeEmeralds(player, amount) {
         }
         return remaining === 0;
     } catch (error) {
-        console.warn(`[Soldier Trader] Payment failed: ${error}`);
+        logger.exception("Zahlung fehlgeschlagen", error);
         return false;
     }
 }
-
 function refundEmeralds(player, amount) {
     try {
         const inventory = player.getComponent("minecraft:inventory")?.container;
@@ -78,19 +74,16 @@ function refundEmeralds(player, amount) {
             remaining -= add;
         }
         if (remaining > 0) player.dimension.spawnItem(new ItemStack(EMERALD, remaining), player.location);
-    } catch (error) { console.warn(`[Soldier Trader] Refund failed: ${error}`); }
+    } catch (error) { logger.exception("Rückerstattung fehlgeschlagen", error); }
 }
-
 function spawnLocationNearTrader(trader, player) {
     const dx = player.location.x - trader.location.x;
     const dz = player.location.z - trader.location.z;
     const length = Math.hypot(dx, dz) || 1;
     return { x: trader.location.x + (dx / length) * 2.2, y: trader.location.y, z: trader.location.z + (dz / length) * 2.2 };
 }
-
 async function openSoldierTrader(player, trader) {
     if (!player?.isValid || !trader?.isValid) return;
-
     const offers = [];
     for (const type of ["infantry", "archer", "cavalry"]) {
         const typeData = SOLDIER_TYPES[type];
@@ -100,58 +93,53 @@ async function openSoldierTrader(player, trader) {
             if (data) offers.push({ type, level, data });
         }
     }
-
     if (!offers.length) {
         player.sendMessage("§8[§cSoldatenhändler§8]§r §cKeine Soldatenangebote verfügbar.");
+        logger.warn("Keine Soldatenangebote verfügbar.");
         return;
     }
-
     const form = new ActionFormData()
         .title("§c⚔ Soldatenhändler")
         .body(`§7Rekrutiere Einheiten für deine Armee.\n\n§fAktive Soldaten: §e${getSoldierCount(player)}\n§fDeine Emeralds: §a${countEmeralds(player)}\n\n§8Kavallerie wird auf einem Pferd eingesetzt.`);
-
     for (const offer of offers) form.button(`§e${TYPE_NAMES[offer.type]} §7${LEVEL_NAMES[offer.level]} (Lv. ${offer.level})\n§a${offer.data.cost} Emeralds`);
     form.button("§8Abbrechen");
-
     let result;
     try { result = await form.show(player); }
-    catch (error) { console.warn(`[Soldier Trader] Form failed: ${error}`); return; }
+    catch (error) { logger.exception("Rekrutierungsformular konnte nicht geöffnet werden", error); return; }
     if (result.canceled || result.selection === undefined || result.selection >= offers.length) return;
-
     const selected = offers[result.selection];
     const cost = selected.data.cost;
     if (countEmeralds(player) < cost) {
         player.sendMessage(`§8[§cSoldatenhändler§8]§r §cDu benötigst ${cost} Emeralds.`);
+        logger.debug(`Zu wenig Emeralds für ${selected.type} Lv.${selected.level}: benötigt=${cost}`);
         return;
     }
     if (!removeEmeralds(player, cost)) {
         player.sendMessage("§8[§cSoldatenhändler§8]§r §cDie Zahlung konnte nicht durchgeführt werden.");
+        logger.warn(`Zahlung abgelehnt für ${player.name}. Kosten=${cost}`);
         return;
     }
-
     const soldier = spawnSoldier(trader.dimension, spawnLocationNearTrader(trader, player), selected.type, selected.level, player);
     if (!soldier) {
         refundEmeralds(player, cost);
         player.sendMessage("§8[§cSoldatenhändler§8]§r §cDie Einheit konnte nicht rekrutiert werden. Die Emeralds wurden zurückerstattet.");
+        logger.error(`Recruit fehlgeschlagen für ${player.name}: ${selected.type} Lv.${selected.level}; Zahlung erstattet.`);
         return;
     }
     player.sendMessage(`§8[§cSoldatenhändler§8]§r §a${TYPE_NAMES[selected.type]} ${LEVEL_NAMES[selected.level]} erfolgreich rekrutiert! §7(${cost} Emeralds)`);
+    logger.info(`${player.name} rekrutierte ${selected.type} Lv.${selected.level} für ${cost} Emeralds.`);
     try { player.playSound("random.levelup"); } catch {}
 }
 
-// BEFORE is used deliberately: the trader entity has a vanilla trade behavior,
-// but the soldier trader has no vanilla trade_table. Waiting for the AFTER
-// interaction can therefore depend on Bedrock considering the vanilla trade
-// interaction successful. We cancel that interaction and always open our UI.
 world.beforeEvents.playerInteractWithEntity.subscribe((event) => {
     const { player, target } = event;
     if (!isSoldierTrader(target)) return;
-
     event.cancel = true;
+    logger.debug(`Soldatenhändler-Interaktion von ${player?.name ?? "unknown"}.`);
     system.run(() => {
         try { openSoldierTrader(player, target); }
-        catch (error) { console.warn(`[Soldier Trader] Interaction failed: ${error}`); }
+        catch (error) { logger.exception("Händler-Interaktion fehlgeschlagen", error); }
     });
 });
 
-console.info("§a[Soldier Trader] Soldier recruitment trader initialized");
+logger.success("Soldatenhändler initialisiert.");
