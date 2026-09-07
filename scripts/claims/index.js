@@ -2,29 +2,18 @@ import { system, world, CommandPermissionLevel, CustomCommandParamType, CustomCo
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { getChunkCoords, getChunkKey, getClaims, saveClaims, get4x4ChunksFromChunk, areChunksFree, countTeamClaims, forceRemoveClaimsForTeam, forceRemoveClaimAt } from "./utils.js";
 import { getTeams } from "../teams/index.js";
+import { createLogger } from "../core/logger.js";
 
+const logger = createLogger("Claims");
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 const ANY_PERMISSION = CommandPermissionLevel.Any;
 
-function playerOnly(origin) {
-    const player = origin?.sourceEntity;
-    return player?.typeId === "minecraft:player" ? player : null;
-}
-
-function getTeamNames() {
-    return Object.keys(getTeams()).sort((a, b) => a.localeCompare(b));
-}
+function playerOnly(origin) { const player = origin?.sourceEntity; return player?.typeId === "minecraft:player" ? player : null; }
+function getTeamNames() { return Object.keys(getTeams()).sort((a, b) => a.localeCompare(b)); }
 
 function showClaimMenu(player) {
     try {
-        const form = new ActionFormData()
-            .title("Claims")
-            .body("Verwalte die Grundstücke deines Servers.")
-            .button("§aGrundstück setzen")
-            .button("§cGrundstück entfernen")
-            .button("§eAktuellen Claim anzeigen")
-            .button("§6Alle Claims anzeigen");
-
+        const form = new ActionFormData().title("Claims").body("Verwalte die Grundstücke deines Servers.").button("§aGrundstück setzen").button("§cGrundstück entfernen").button("§eAktuellen Claim anzeigen").button("§6Alle Claims anzeigen");
         form.show(player).then((response) => {
             if (response.canceled) return;
             switch (response.selection) {
@@ -33,221 +22,101 @@ function showClaimMenu(player) {
                 case 2: return showClaimInfo(player);
                 case 3: return showClaimList(player);
             }
-        }).catch((error) => console.error(`[Claims] showClaimMenu error: ${error}`));
-    } catch (error) {
-        console.error(`[Claims] showClaimMenu error: ${error}`);
-    }
+        }).catch((error) => logger.exception("showClaimMenu fehlgeschlagen", error));
+    } catch (error) { logger.exception("showClaimMenu fehlgeschlagen", error); }
 }
 
 function showSetClaimForm(player) {
     try {
         const teams = getTeams();
         const teamNames = Object.keys(teams).sort((a, b) => a.localeCompare(b));
-        if (!teamNames.length) {
-            player.sendMessage("§cEs existieren noch keine Teams.");
-            return;
-        }
-
-        const form = new ModalFormData()
-            .title("Grundstück setzen")
-            .dropdown("Team", teamNames, { defaultValueIndex: 0 });
-
+        if (!teamNames.length) { player.sendMessage("§cEs existieren noch keine Teams."); return; }
+        const form = new ModalFormData().title("Grundstück setzen").dropdown("Team", teamNames, { defaultValueIndex: 0 });
         form.show(player).then((response) => {
             if (response.canceled) return;
             const index = Number(response.formValues?.[0] ?? -1);
             const teamName = teamNames[index];
-            if (!teamName) {
-                player.sendMessage("§cUngültiges Team ausgewählt.");
-                return;
-            }
+            if (!teamName) { player.sendMessage("§cUngültiges Team ausgewählt."); return; }
             setClaimForPlayer(player, teamName);
-        }).catch((error) => console.error(`[Claims] showSetClaimForm error: ${error}`));
-    } catch (error) {
-        console.error(`[Claims] showSetClaimForm error: ${error}`);
-    }
+        }).catch((error) => logger.exception("showSetClaimForm fehlgeschlagen", error));
+    } catch (error) { logger.exception("showSetClaimForm fehlgeschlagen", error); }
 }
 
 function showRemoveClaimForm(player) {
     try {
         const teams = getTeams();
         const teamNames = Object.keys(teams).sort((a, b) => a.localeCompare(b));
-        if (!teamNames.length) {
-            player.sendMessage("§cEs existieren noch keine Teams.");
-            return;
-        }
-
-        const form = new ModalFormData()
-            .title("Grundstück entfernen")
-            .dropdown("Team", teamNames, { defaultValueIndex: 0 });
-
+        if (!teamNames.length) { player.sendMessage("§cEs existieren noch keine Teams."); return; }
+        const form = new ModalFormData().title("Grundstück entfernen").dropdown("Team", teamNames, { defaultValueIndex: 0 });
         form.show(player).then((response) => {
             if (response.canceled) return;
             const index = Number(response.formValues?.[0] ?? -1);
             const teamName = teamNames[index];
-            if (!teamName) {
-                player.sendMessage("§cUngültiges Team ausgewählt.");
-                return;
-            }
+            if (!teamName) { player.sendMessage("§cUngültiges Team ausgewählt."); return; }
             removeClaimsForTeam(player, teamName);
-        }).catch((error) => console.error(`[Claims] showRemoveClaimForm error: ${error}`));
-    } catch (error) {
-        console.error(`[Claims] showRemoveClaimForm error: ${error}`);
-    }
+        }).catch((error) => logger.exception("showRemoveClaimForm fehlgeschlagen", error));
+    } catch (error) { logger.exception("showRemoveClaimForm fehlgeschlagen", error); }
 }
 
 function setClaimForPlayer(player, teamName) {
     system.run(() => {
         const teams = getTeams();
-        if (!teams[teamName]) {
-            player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`);
-            return;
-        }
+        if (!teams[teamName]) { player.sendMessage(`§cDas Team "${teamName}" existiert nicht.`); return; }
         const claims = getClaims();
-            const MAX_CHUNKS = 16; // 4x4
-            if (countTeamClaims(teamName, claims) >= MAX_CHUNKS) {
-                player.sendMessage(`§cTeam "${teamName}" hat bereits die maximalen ${MAX_CHUNKS} Chunks.`);
-                return;
-            }
-            // Use the player's current CHUNK as the center of the 4x4 claim
-            const centerChunk = getChunkCoords(player.location);
-            const chunks = get4x4ChunksFromChunk(centerChunk.x, centerChunk.z);
-            if (!areChunksFree(chunks, claims)) {
-                player.sendMessage("§cEiner oder mehrere der 16 Chunks sind bereits geclaimt.");
-                return;
-        }
+        const MAX_CHUNKS = 16;
+        if (countTeamClaims(teamName, claims) >= MAX_CHUNKS) { player.sendMessage(`§cTeam "${teamName}" hat bereits die maximalen ${MAX_CHUNKS} Chunks.`); return; }
+        const centerChunk = getChunkCoords(player.location);
+        const chunks = get4x4ChunksFromChunk(centerChunk.x, centerChunk.z);
+        if (!areChunksFree(chunks, claims)) { player.sendMessage("§cEiner oder mehrere der 16 Chunks sind bereits geclaimt."); return; }
         const claimedAt = Date.now();
-        for (const chunk of chunks) {
-            claims[getChunkKey(chunk.x, chunk.z)] = { team: teamName, claimedAt };
-        }
-            player.sendMessage(saveClaims(claims)
-                ? `§a4×4-Grundstück für Team ${teams[teamName].color || "§f"}${teamName}§a gesetzt.`
-                : "§cDas Grundstück konnte nicht gespeichert werden.");
+        for (const chunk of chunks) claims[getChunkKey(chunk.x, chunk.z)] = { team: teamName, claimedAt };
+        const saved = saveClaims(claims);
+        logger.info(`Claim gesetzt: team=${teamName}, player=${player.id}, chunks=${chunks.length}, saved=${saved}`);
+        player.sendMessage(saved ? `§a4×4-Grundstück für Team ${teams[teamName].color || "§f"}${teamName}§a gesetzt.` : "§cDas Grundstück konnte nicht gespeichert werden.");
     });
 }
 
 function removeClaimsForTeam(player, teamName) {
     system.run(() => {
-        const claims = getClaims();
-        let removed = 0;
-        for (const [key, claim] of Object.entries(claims)) {
-            if (claim?.team === teamName) {
-                delete claims[key];
-                removed++;
-            }
-        }
-        if (!removed) {
-            player.sendMessage(`§cTeam "${teamName}" hat kein Grundstück.`);
-            return;
-        }
-        player.sendMessage(saveClaims(claims)
-            ? `§eGrundstück von Team "${teamName}" entfernt (${removed} Chunks).`
-            : "§cDie Änderungen konnten nicht gespeichert werden.");
+        const claims = getClaims(); let removed = 0;
+        for (const [key, claim] of Object.entries(claims)) if (claim?.team === teamName) { delete claims[key]; removed++; }
+        if (!removed) { player.sendMessage(`§cTeam "${teamName}" hat kein Grundstück.`); return; }
+        const saved = saveClaims(claims);
+        logger.info(`Claims entfernt: team=${teamName}, player=${player.id}, chunks=${removed}, saved=${saved}`);
+        player.sendMessage(saved ? `§eGrundstück von Team "${teamName}" entfernt (${removed} Chunks).` : "§cDie Änderungen konnten nicht gespeichert werden.");
     });
 }
 
 function showClaimInfo(player) {
     system.run(() => {
-        const chunk = getChunkCoords(player.location);
-        const claim = getClaims()[getChunkKey(chunk.x, chunk.z)];
-        if (!claim) {
-            player.sendMessage(`§7Chunk ${chunk.x}, ${chunk.z} ist §afrei§7.`);
-            return;
-        }
+        const chunk = getChunkCoords(player.location); const claim = getClaims()[getChunkKey(chunk.x, chunk.z)];
+        if (!claim) { player.sendMessage(`§7Chunk ${chunk.x}, ${chunk.z} ist §afrei§7.`); return; }
         const team = getTeams()[claim.team];
+        logger.debug(`Claim-Info: player=${player.id}, chunk=${chunk.x},${chunk.z}, team=${claim.team}`);
         player.sendMessage(`§6Chunk ${chunk.x}, ${chunk.z} gehört zu Team ${team?.color || "§f"}${claim.team}§r.`);
     });
 }
 
 function showClaimList(player) {
     system.run(() => {
-        const claims = getClaims();
-        const teams = getTeams();
-        const byTeam = {};
-        for (const [key, claim] of Object.entries(claims)) {
-            if (claim?.team) (byTeam[claim.team] ??= []).push(key);
-        }
+        const claims = getClaims(); const teams = getTeams(); const byTeam = {};
+        for (const [key, claim] of Object.entries(claims)) if (claim?.team) (byTeam[claim.team] ??= []).push(key);
         const names = Object.keys(byTeam);
-        if (!names.length) {
-            player.sendMessage("§7Es sind noch keine Grundstücke vergeben.");
-            return;
-        }
+        if (!names.length) { player.sendMessage("§7Es sind noch keine Grundstücke vergeben."); return; }
+        logger.debug(`Claim-Liste abgerufen: player=${player.id}, teams=${names.length}`);
         player.sendMessage("§6--- Vergebene Grundstücke ---");
-        for (const name of names) {
-            player.sendMessage(`${teams[name]?.color || "§f"}${name}§r: ${byTeam[name].length} Chunks (${byTeam[name].join(", ")})`);
-        }
+        for (const name of names) player.sendMessage(`${teams[name]?.color || "§f"}${name}§r: ${byTeam[name].length} Chunks (${byTeam[name].join(", ")})`);
     });
 }
 
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
-
-    registry.registerCommand({ name: "siedler:claim", description: "Öffnet das Claim-Menü.", permissionLevel: ANY_PERMISSION, cheatsRequired: false }, (origin) => {
-        const player = playerOnly(origin);
-        if (!player) return { status: CustomCommandStatus.Failure };
-        system.run(() => showClaimMenu(player));
-        return { status: CustomCommandStatus.Success };
-    });
-
-    registry.registerCommand({ name: "siedler:claim_set", description: "Claimt ein 2x2-Chunk-Grundstück für ein Team (nur OPs).", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => {
-        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(team ?? "").trim();
-        if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; }
-        setClaimForPlayer(player, teamName);
-        return { status: CustomCommandStatus.Success };
-    });
-
-    registry.registerCommand({ name: "siedler:claim_remove", description: "Entfernt das gesamte Grundstück eines Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => {
-        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(team ?? "").trim();
-        if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; }
-        removeClaimsForTeam(player, teamName);
-        return { status: CustomCommandStatus.Success };
-    });
-
-    registry.registerCommand({ name: "siedler:claim_force_remove", description: "Löscht Claims eines nicht mehr existierenden Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => {
-        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        const teamName = String(team ?? "").trim();
-        if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; }
-
-        system.run(() => {
-            const result = forceRemoveClaimsForTeam(teamName);
-            if (!result.removed) {
-                player.sendMessage(`§cKeine Claims für Team "${teamName}" gefunden.`);
-                return;
-            }
-            player.sendMessage(result.saved
-                ? `§eClaims des Teams "${teamName}" force gelöscht (${result.removed} Chunks).`
-                : "§cDie Claims konnten nicht gespeichert werden.");
-        });
-        return { status: CustomCommandStatus.Success };
-    });
-
-    registry.registerCommand({ name: "siedler:claim_force_release", description: "Gibt den Claim im aktuellen Chunk frei.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
-        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-
-        system.run(() => {
-            const result = forceRemoveClaimAt(player.location);
-            const chunkLabel = `${result.chunk.x}, ${result.chunk.z}`;
-            if (!result.removed) {
-                player.sendMessage(`§cDer aktuelle Chunk (${chunkLabel}) ist nicht geclaimt.`);
-                return;
-            }
-            player.sendMessage(result.saved
-                ? `§eClaim im aktuellen Chunk (${chunkLabel}) wurde freigegeben.`
-                : "§cDer aktuelle Claim konnte nicht gespeichert werden.");
-        });
-        return { status: CustomCommandStatus.Success };
-    });
-
-    registry.registerCommand({ name: "siedler:claim_info", description: "Zeigt Informationen zum aktuellen Chunk.", permissionLevel: ANY_PERMISSION, cheatsRequired: false }, (origin) => {
-        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        showClaimInfo(player);
-        return { status: CustomCommandStatus.Success };
-    });
-
-    registry.registerCommand({ name: "siedler:claim_list", description: "Listet alle vergebenen Grundstücke.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => {
-        const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure };
-        showClaimList(player);
-        return { status: CustomCommandStatus.Success };
-    });
+    registry.registerCommand({ name: "siedler:claim", description: "Öffnet das Claim-Menü.", permissionLevel: ANY_PERMISSION, cheatsRequired: false }, (origin) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; system.run(() => showClaimMenu(player)); return { status: CustomCommandStatus.Success }; });
+    registry.registerCommand({ name: "siedler:claim_set", description: "Claimt ein 2x2-Chunk-Grundstück für ein Team (nur OPs).", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; const teamName = String(team ?? "").trim(); if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; } setClaimForPlayer(player, teamName); return { status: CustomCommandStatus.Success }; });
+    registry.registerCommand({ name: "siedler:claim_remove", description: "Entfernt das gesamte Grundstück eines Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; const teamName = String(team ?? "").trim(); if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; } removeClaimsForTeam(player, teamName); return { status: CustomCommandStatus.Success }; });
+    registry.registerCommand({ name: "siedler:claim_force_remove", description: "Löscht Claims eines nicht mehr existierenden Teams.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }] }, (origin, team) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; const teamName = String(team ?? "").trim(); if (!teamName) { player.sendMessage("§cKein Teamname angegeben."); return { status: CustomCommandStatus.Failure }; } system.run(() => { const result = forceRemoveClaimsForTeam(teamName); logger.info(`Force-Remove Claims: team=${teamName}, removed=${result.removed}, saved=${result.saved}`); if (!result.removed) { player.sendMessage(`§cKeine Claims für Team "${teamName}" gefunden.`); return; } player.sendMessage(result.saved ? `§eClaims des Teams "${teamName}" force gelöscht (${result.removed} Chunks).` : "§cDie Claims konnten nicht gespeichert werden."); }); return { status: CustomCommandStatus.Success }; });
+    registry.registerCommand({ name: "siedler:claim_force_release", description: "Gibt den Claim im aktuellen Chunk frei.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; system.run(() => { const result = forceRemoveClaimAt(player.location); const chunkLabel = `${result.chunk.x}, ${result.chunk.z}`; logger.info(`Force-Release: player=${player.id}, chunk=${chunkLabel}, removed=${result.removed}, saved=${result.saved}`); if (!result.removed) { player.sendMessage(`§cDer aktuelle Chunk (${chunkLabel}) ist nicht geclaimt.`); return; } player.sendMessage(result.saved ? `§eClaim im aktuellen Chunk (${chunkLabel}) wurde freigegeben.` : "§cDer aktuelle Claim konnte nicht gespeichert werden."); }); return { status: CustomCommandStatus.Success }; });
+    registry.registerCommand({ name: "siedler:claim_info", description: "Zeigt Informationen zum aktuellen Chunk.", permissionLevel: ANY_PERMISSION, cheatsRequired: false }, (origin) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; showClaimInfo(player); return { status: CustomCommandStatus.Success }; });
+    registry.registerCommand({ name: "siedler:claim_list", description: "Listet alle vergebenen Grundstücke.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; showClaimList(player); return { status: CustomCommandStatus.Success }; });
+    logger.success("Claim-Kommandos registriert");
 });
