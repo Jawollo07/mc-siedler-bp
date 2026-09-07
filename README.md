@@ -9,6 +9,7 @@
 
 - Teams, Team-Chat, Farben und Diplomatie
 - Claims und Claim-Grenzen
+- Claim-Protection mit Block-Recovery bei unerlaubtem Abbau
 - Wirtschaft, Steuern und permanenter Monster-Token-TaxBonus
 - Marktplätze und spezialisierte Händler
 - Soldaten mit KI, Befehlen, Leveln, XP und Ausrüstung
@@ -17,11 +18,25 @@
 - Essentials mit Homes, Spawn, TPA, privaten Nachrichten, Todespunkten, Startsystem und Admin-Werkzeugen
 - Spieler-Dashboard und Serverstatistiken
 
+## 🛡️ Claims & Block-Recovery
+
+Claim-Gebiete schützen Blöcke vor unerlaubtem Abbau und Platzieren. Der normale Schutz arbeitet über `world.beforeEvents.playerBreakBlock` bzw. `world.beforeEvents.playerPlaceBlock`, sodass die Weltänderung bereits vor der Ausführung abgebrochen wird.
+
+Zusätzlich besitzt die Claim-Protection eine **Block-Recovery** als Fallback für Server-Builds, bei denen eine Weltänderung trotz fehlendem oder nicht zuverlässig arbeitendem Before-Event stattfinden kann:
+
+- Der ursprüngliche Blocktyp wird vor einem unerlaubten Abbau zwischengespeichert.
+- Wird der Block trotzdem entfernt, wird er automatisch wiederhergestellt.
+- Ein Recovery-Scanner prüft zusätzlich offene Wiederherstellungen.
+- Bereits neu platzierte Blöcke werden bei der Recovery nicht überschrieben.
+- Die Dimension und Spieler-ID werden zusammen mit dem Recovery-Eintrag gespeichert.
+- Die Recovery-Queue ist begrenzt und veraltete Einträge werden automatisch entfernt.
+- Explosionen innerhalb von Claims werden weiterhin bereits vor der Zerstörung abgebrochen.
+
+Die Wiederherstellung verwendet aktuell den ursprünglichen **Blocktyp**. Komplexe Blockzustände (z. B. bestimmte Orientierungen oder Inhalte von Block-Entities) werden nicht als vollständiges Backup gespeichert.
+
 ## 🏪 Marktplatz
 
 Der konfigurierte Marktplatz ist ein vollständig geschützter Bereich. Spieler können dort **keine Blöcke abbauen und keine Blöcke platzieren**. Monster werden zusätzlich aus dem Markt entfernt und neu gespawnte Monster werden dort ebenfalls sofort entfernt.
-
-Die Block-Abbau- und Block-Platzierungs-Sperre wird über `world.beforeEvents.playerBreakBlock` und `world.beforeEvents.playerPlaceBlock` umgesetzt. Die Events werden vor der eigentlichen Weltänderung abgebrochen, sodass kein nachträgliches Zurücksetzen platzierter Blöcke notwendig ist.
 
 ## ⚔️ Soldier-KI
 
@@ -49,8 +64,6 @@ APPROACH → CHARGE → HIT → PASS → APPROACH → ...
 - Mount-Zuordnung über `soldier:riderId` und Mount-Tags
 - eigenes Mount wird niemals als Ziel ausgewählt
 - Bewegung wird zentral über `ai.js` auf das Mount angewendet
-
-Das Mounting selbst verwendet eindeutige Tags, `/ride` und den Rideable-API-Fallback. Die Kavallerie-Entity besitzt die benötigte `baby_undead`-Familienkompatibilität für das Vanilla-Pferd, ohne als `player` behandelt zu werden.
 
 ### 🏹 Pfeilphysik
 
@@ -88,15 +101,6 @@ Die Weakness lässt sich ohne Neustart über OP-Commands verwalten. Alle Befehle
 /siedler:weakness_interval <ticks>
 ```
 
-Beispiele:
-
-```text
-/siedler:weakness_status
-/siedler:weakness_on
-/siedler:weakness_level 1
-/siedler:weakness_off
-```
-
 ## 🧰 Essentials
 
 Das Essentials-System arbeitet bei persistenter Spielerdatenhaltung mit Spieler-IDs. Das Startsystem verwaltet Team-Teleports, Spielstart und Starterkits und behandelt ungültige Daten kontrolliert.
@@ -108,8 +112,6 @@ Der tägliche TaxBonus entsteht ausschließlich durch besiegte Monster-Tokens. J
 ## 🧑‍🌾 Händler
 
 Händler werden als `siedler:trader` mit spezialisierten Rollen gespawnt. Lebensmittel-, Baustoff-, Rohstoff-, Werkzeug-, Waffen- und Versorgungshändler verwenden eigene Vanilla-Trade-Tabellen und öffnen beim Interagieren das normale Bedrock-Handelsfenster. Die Trade-Tabelle wird über eine Component Group aktiviert, damit die Handels-KI korrekt funktioniert.
-
-Die Händler-Initialisierung wartet nach dem Spawn einen Tick, damit die Trade-Component sicher aktiv ist. Zusätzlich werden ältere bzw. per `/summon` erzeugte Händler ohne Handelsrolle automatisch repariert. Bereits vorhandene Händlerrollen werden nicht ständig neu angewendet, damit Handelsnutzungen nicht zurückgesetzt werden. Der Soldatenhändler verwendet weiterhin die eigene Rekrutierungslogik.
 
 ## 📊 Dashboard
 
@@ -168,10 +170,10 @@ scripts/core/main.js
 ├── Teams
 ├── Taxes
 ├── Claims
+│   ├── protection.js (Protection + Block-Recovery)
+│   └── display.js
 ├── Market
 ├── Monster
-│   ├── commands.js
-│   └── weakness_commands.js
 ├── Essentials
 └── Soldier
     ├── ai.js
