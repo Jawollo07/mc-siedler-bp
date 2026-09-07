@@ -72,11 +72,11 @@ function logPublicChat(player, message) {
     );
 }
 
-function registerTeamChatCommand(registry) {
+function registerTeamChatCommand(registry, name, description) {
     registry.registerCommand(
         {
-            name: "siedler:teamchat",
-            description: "Sendet eine Nachricht an dein Team.",
+            name,
+            description,
             permissionLevel: CommandPermissionLevel.Any,
             cheatsRequired: false,
             mandatoryParameters: [
@@ -86,14 +86,15 @@ function registerTeamChatCommand(registry) {
                 }
             ]
         },
-        (origin, nachricht) => {
+        (origin, args) => {
             const player = origin?.sourceEntity;
 
             if (!player || player.typeId !== "minecraft:player") {
                 return { status: CustomCommandStatus.Failure };
             }
 
-            system.run(() => sendTeamMessage(player, nachricht));
+            const message = String(args?.[0] ?? "").trim();
+            system.run(() => sendTeamMessage(player, message));
             return { status: CustomCommandStatus.Success };
         }
     );
@@ -102,8 +103,6 @@ function registerTeamChatCommand(registry) {
 let nativeBeforeChatRegistered = false;
 let nativeAfterChatRegistered = false;
 
-// Preferred path: native before-chat event. This allows Siedler Logic to
-// intercept @team messages and replace the public broadcast safely.
 const beforeChat = world.beforeEvents?.chatSend;
 
 if (beforeChat && typeof beforeChat.subscribe === "function") {
@@ -136,10 +135,6 @@ if (beforeChat && typeof beforeChat.subscribe === "function") {
     );
 }
 
-// Secondary path: if the before-chat API is unavailable, afterEvents.chatSend
-// can still provide public chat logging without changing vanilla chat delivery.
-// We deliberately do NOT interpret @team here because the message has already
-// been broadcast and could no longer be hidden safely.
 const afterChat = world.afterEvents?.chatSend;
 
 if (afterChat && typeof afterChat.subscribe === "function") {
@@ -159,23 +154,27 @@ if (afterChat && typeof afterChat.subscribe === "function") {
     });
 
     nativeAfterChatRegistered = true;
-    chatLogger.success(
-        nativeBeforeChatRegistered
-            ? "Public-Chat-After-Event verfügbar"
-            : "Public-Chat wird über die native After-Chat-API geloggt"
-    );
+    chatLogger.success("Öffentlicher Chat wird über die native After-Chat-API geloggt");
 } else if (!nativeBeforeChatRegistered) {
     chatLogger.warn(
         "Keine native Chat-Event-API verfügbar; öffentlicher Chat kann nicht automatisch geloggt werden."
     );
 }
 
-// Always register a command fallback. It makes team chat usable even on
-// server builds where chatSend is unavailable or still gated behind preview.
 system.beforeEvents.startup.subscribe((event) => {
     try {
-        registerTeamChatCommand(event.customCommandRegistry);
-        logger.success("Team-Chat-Fallback /siedler:teamchat registriert");
+        registerTeamChatCommand(
+            event.customCommandRegistry,
+            "siedler:teamchat",
+            "Sendet eine Nachricht an dein Team."
+        );
+        registerTeamChatCommand(
+            event.customCommandRegistry,
+            "siedler:tc",
+            "Kurzform für den Team-Chat."
+        );
+
+        logger.success("Team-Chat-Fallback registriert: /siedler:teamchat und /siedler:tc");
     } catch (error) {
         logger.exception("Team-Chat-Fallback konnte nicht registriert werden", error);
     }
@@ -183,6 +182,6 @@ system.beforeEvents.startup.subscribe((event) => {
 
 if (!nativeBeforeChatRegistered && !nativeAfterChatRegistered) {
     logger.warn(
-        "Chat-System läuft im Fallback-Modus: /siedler:teamchat ist verfügbar; native Chat-Events fehlen."
+        "Chat-System läuft im Fallback-Modus: /siedler:teamchat und /siedler:tc sind verfügbar; native Chat-Events fehlen."
     );
 }
