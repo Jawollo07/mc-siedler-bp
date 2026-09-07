@@ -64,12 +64,31 @@ function payTaxesOncePerDay(currentDay) {
     }
 }
 
+function isTeamMemberOnline(teamData) {
+    if (!Array.isArray(teamData?.players) || teamData.players.length === 0) return false;
+
+    for (const player of world.getAllPlayers()) {
+        if (teamData.players.includes(player.id)) return true;
+    }
+
+    return false;
+}
+
 function payAllTeamTaxes() {
     const teams = getTeams();
     let paidCount = 0;
+    let skippedOfflineCount = 0;
 
     for (const [teamName, data] of Object.entries(teams)) {
         if (!data?.taxChest) continue;
+
+        // Taxes are only collected while at least one member of the team is online.
+        if (!isTeamMemberOnline(data)) {
+            skippedOfflineCount++;
+            console.info(`[Steuern] Team "${teamName}" ist vollständig offline – Tagessteuer wird nicht eingezogen.`);
+            continue;
+        }
+
         try {
             const villagers = countVillagersInTeamClaims(teamName, "villager");
             const tax = calculateTax(villagers, data.taxBonus);
@@ -87,6 +106,7 @@ function payAllTeamTaxes() {
     }
 
     if (paidCount > 0) console.info(`[Steuern] ${paidCount} Team(s) haben ihre Tagessteuer erhalten.`);
+    if (skippedOfflineCount > 0) console.info(`[Steuern] ${skippedOfflineCount} Team(s) waren bei der Tagesabrechnung vollständig offline.`);
 }
 
 function notifyTeamMembers(teamName, teamData, tax, result) {
