@@ -55,6 +55,26 @@
 - [x] Persistenter Marktplatz-Teleportpunkt über World Dynamic Property
 - [x] `/market_tp_set` für Admins zum Setzen des Marktplatz-Teleportpunkts
 - [x] `/market` für normale Spieler zum Teleportieren
+- [x] Vollständiges Anti-AFK-System
+- [x] Serverweite Inaktivitätserkennung über Spielerbewegung
+- [x] Aktivitätserkennung über Chat, Blockabbau, Blockplatzierung, Interaktion und Kampf
+- [x] Konfigurierbare AFK-Warnung und AFK-Markierung
+- [x] Automatischer AFK-Kick nach konfigurierbarer Zeit
+- [x] Manueller AFK-Status über `/afk`
+- [x] Admin-Steuerung für Anti-AFK und Kick-Funktion
+- [x] Admin-Command zum Ändern der Kick-Zeit
+
+## 💤 Phase 5 – Anti-AFK
+
+- [x] Grundlegende Inaktivitätserkennung
+- [x] Bewegungsbasierte Aktivitätserkennung
+- [x] Chat-/Interaktions-/Kampfaktivität
+- [x] Warnung vor AFK-Kick
+- [x] AFK-Status
+- [x] Automatischer Kick
+- [x] `/afk` für Spieler
+- [x] Admin-Schalter für System und Kicks
+- [x] Konfigurierbare Kick-Zeit
 
 ## 🟠 Phase 4 – Diplomatie
 
@@ -94,6 +114,7 @@
 14. Essentials-Konfiguration aus `index.js` herauslösen
 15. Essentials optional um Rang-/Team-Limits erweitern
 16. Claim-Rollback für persistente historische Blockänderungen als optionales Admin-System entwickeln
+17. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen für bestimmte Rollen erweitern
 
 ### Leitprinzip
 
