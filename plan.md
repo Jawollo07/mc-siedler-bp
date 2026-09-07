@@ -2,12 +2,13 @@
 
 > Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 06.09.2026
+**Stand:** 07.09.2026
 
 ## 📊 Aktueller Stand
 
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
 - [x] Teams, Diplomatie, Claims und Wirtschaft
+- [x] Claim-Block-Recovery bei unerlaubtem Abbau
 - [x] Permanenter Monster-Token-TaxBonus
 - [x] Permanente Vanilla-Weakness für Spieler gegen Mobs und im PvP
 - [x] Weakness per Admin-Commands aktivieren/deaktivieren und konfigurieren
@@ -112,6 +113,15 @@
 - [x] Chunk-Claims
 - [x] Claim-Grenzen
 - [x] Claim-Informationen
+- [x] Schutz vor unerlaubtem Block-Abbau
+- [x] Schutz vor unerlaubtem Block-Platzieren
+- [x] automatische Wiederherstellung eines unerlaubt entfernten Blocks
+- [x] Recovery-Fallback für Server-Builds ohne zuverlässiges Before-Event
+- [x] Dimension und Spieler-ID in Recovery-Einträgen
+- [x] Recovery-Scanner mit Queue-Limit und Ablaufbereinigung
+- [x] keine Überschreibung einer späteren Platzierung bei der Block-Recovery
+- [ ] vollständige Wiederherstellung von Blockzuständen und Block-Entity-Inhalten
+- [ ] persistenter Claim-Rollback für bereits vor Claim-Erstellung zerstörte Bereiche
 
 ## 🟠 Phase 4 – Diplomatie
 
@@ -215,6 +225,7 @@
 13. Pfeilphysik mit realen Ingame-Flugtests feinjustieren
 14. Essentials-Konfiguration aus `index.js` herauslösen
 15. Essentials optional um Rang-/Team-Limits erweitern
+16. Claim-Rollback für persistente historische Blockänderungen als optionales Admin-System entwickeln
 
 ### Leitprinzip
 
