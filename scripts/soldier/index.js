@@ -1,3 +1,4 @@
+import { createLogger } from "../core/logger.js";
 import "./archer.js";
 import "./cavalry.js";
 import "./commands.js";
@@ -7,8 +8,10 @@ import { startSoldierAI } from "./ai.js";
 import { startCombatRangeFix } from "./combat_range.js";
 import { startRangedAI } from "./ranged_ai.js";
 
+const logger = createLogger("Soldier");
+
 startSoldierAI();
 startCombatRangeFix();
 startRangedAI();
 
-console.log("[SOLDIER] Loaded");
+logger.success("Soldier-System geladen (AI, Nahkampf, Fernkampf und Kavallerie).");
