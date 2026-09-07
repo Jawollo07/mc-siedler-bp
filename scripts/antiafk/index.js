@@ -12,9 +12,7 @@ let runtimeEnabled = ANTI_AFK_CONFIG.enabled;
 let runtimeKickEnabled = ANTI_AFK_CONFIG.kickEnabled;
 let runtimeKickAfterMs = ANTI_AFK_CONFIG.kickAfterMs;
 
-function now() {
-    return Date.now();
-}
+function now() { return Date.now(); }
 
 function playerIsValid(player) {
     return player?.typeId === "minecraft:player" && player.isValid;
@@ -35,8 +33,7 @@ function stateFor(player) {
             lastPosition: { ...player.location },
             afk: false,
             warned: false,
-            manualAfk: false,
-            lastStatusMessage: 0
+            manualAfk: false
         };
         players.set(player.id, state);
     }
@@ -48,15 +45,15 @@ function markActivity(player, reason = "activity") {
 
     const state = stateFor(player);
     state.lastActivity = now();
+    state.lastPosition = { ...player.location };
     state.warned = false;
+    state.lastReason = reason;
 
     if (state.afk) {
         state.afk = false;
         state.manualAfk = false;
         try { player.sendMessage(ANTI_AFK_CONFIG.messages.noLongerAfk); } catch {}
     }
-
-    state.lastReason = reason;
 }
 
 function setManualAfk(player) {
@@ -87,8 +84,10 @@ function markAfk(player, state) {
 function kickPlayer(player) {
     if (!playerIsValid(player)) return;
 
+    // Do not use player.runCommand("kick ...") here: the reason contains spaces
+    // and is parsed as multiple command parameters by Bedrock.
     try {
-        player.runCommand(`kick @s ${ANTI_AFK_CONFIG.messages.kicked.replace(/§./g, "")}`);
+        player.runCommand("kick @s");
     } catch (error) {
         console.warn(`[Anti-AFK] Kick failed for ${player.name}: ${error}`);
     }
@@ -99,13 +98,12 @@ function playerFrom(origin) {
     return playerIsValid(player) ? player : null;
 }
 
-function registerPlayerCommand(registry, name, description, callback, permissionLevel = CommandPermissionLevel.Any, optionalParameters = []) {
+function registerPlayerCommand(registry, name, description, callback) {
     registry.registerCommand({
         name,
         description,
-        permissionLevel,
-        cheatsRequired: false,
-        ...(optionalParameters.length ? { optionalParameters } : {})
+        permissionLevel: CommandPermissionLevel.Any,
+        cheatsRequired: false
     }, callback);
 }
 
@@ -171,8 +169,7 @@ world.afterEvents.playerSpawn?.subscribe?.((event) => {
         lastPosition: { ...player.location },
         afk: false,
         warned: false,
-        manualAfk: false,
-        lastStatusMessage: 0
+        manualAfk: false
     });
 });
 
@@ -180,7 +177,6 @@ world.afterEvents.playerLeave?.subscribe?.((event) => {
     if (event?.playerId) players.delete(event.playerId);
 });
 
-// Chat, interaction, combat and block actions count as meaningful activity.
 world.beforeEvents.chatSend?.subscribe?.((event) => markActivity(event.sender, "chat"));
 world.afterEvents.playerBreakBlock?.subscribe?.((event) => markActivity(event.player, "break-block"));
 world.afterEvents.playerPlaceBlock?.subscribe?.((event) => markActivity(event.player, "place-block"));
