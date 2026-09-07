@@ -5,9 +5,26 @@ import { SOLDIER_TYPES, SOLDIERS } from "./config.js";
 
 const TRADER_TYPE = "siedler:trader";
 const SOLDIER_TRADER_TAG = "soldier_trader";
+const SOLDIER_TRADER_VARIANT = 6;
 const EMERALD = "minecraft:emerald";
 const TYPE_NAMES = { infantry: "Infanterie", archer: "Bogenschütze", cavalry: "Kavallerie" };
 const LEVEL_NAMES = { 1: "Rekrut", 2: "Veteran", 3: "Elite" };
+
+function isSoldierTrader(entity) {
+    if (!entity?.isValid || entity.typeId !== TRADER_TYPE) return false;
+
+    try {
+        if (entity.hasTag(SOLDIER_TRADER_TAG)) return true;
+    } catch {}
+
+    // Variant 6 is the authoritative fallback for traders that were spawned
+    // before the soldier_trader tag was added or whose tag was lost.
+    try {
+        return entity.getComponent("minecraft:variant")?.value === SOLDIER_TRADER_VARIANT;
+    } catch {
+        return false;
+    }
+}
 
 function getSoldierCount(player) {
     let count = 0;
@@ -100,6 +117,11 @@ async function openSoldierTrader(player, trader) {
         }
     }
 
+    if (offers.length === 0) {
+        player.sendMessage("§8[§cSoldatenhändler§8]§r §cKeine Soldatenangebote verfügbar.");
+        return;
+    }
+
     const form = new ActionFormData()
         .title("§c⚔ Soldatenhändler")
         .body(`§7Rekrutiere Einheiten für deine Armee.\n\n§fAktive Soldaten: §e${getSoldierCount(player)}\n§fDeine Emeralds: §a${countEmeralds(player)}\n\n§8Kavallerie wird auf einem Pferd eingesetzt.`);
@@ -110,7 +132,13 @@ async function openSoldierTrader(player, trader) {
     form.button("§8Abbrechen");
 
     let result;
-    try { result = await form.show(player); } catch { return; }
+    try {
+        result = await form.show(player);
+    } catch (error) {
+        console.warn(`[Soldier Trader] Form failed for ${player.name}: ${error}`);
+        return;
+    }
+
     if (result.canceled || result.selection === undefined || result.selection >= offers.length) return;
 
     const selected = offers[result.selection];
@@ -130,13 +158,19 @@ async function openSoldierTrader(player, trader) {
         player.sendMessage("§8[§cSoldatenhändler§8]§r §cDie Einheit konnte nicht rekrutiert werden. Die Emeralds wurden zurückerstattet.");
         return;
     }
+
     player.sendMessage(`§8[§cSoldatenhändler§8]§r §a${TYPE_NAMES[selected.type]} ${LEVEL_NAMES[selected.level]} erfolgreich rekrutiert! §7(${cost} Emeralds)`);
     try { player.playSound("random.levelup"); } catch {}
 }
 
+// Dedicated soldier-trader interaction. We intentionally do not depend only
+// on the tag because existing traders from older versions can still have the
+// soldier variant without the new tag.
 world.afterEvents.playerInteractWithEntity.subscribe((event) => {
     const { player, target } = event;
-    if (target?.typeId !== TRADER_TYPE || !target.hasTag(SOLDIER_TRADER_TAG)) return;
+    if (!player?.isValid || !isSoldierTrader(target)) return;
+
+    // Let Bedrock finish the entity interaction first, then open our form.
     system.run(() => openSoldierTrader(player, target));
 });
 
