@@ -11,6 +11,9 @@
 - [x] Modulbezogene `createLogger()`-Instanzen für Soldier, Soldier-Spawn, Soldatenhändler, Anti-AFK und Diplomatie
 - [x] Modulbezogene Logger für Claims, Market, Taxes und Monster
 - [x] Debug-Ausgaben für gezielte Diagnose von häufigen Soldier-/Anti-AFK-/Claims-/Market-/Monster-Abläufen vorbereitet
+- [x] WARN-Rate-Limiting für wiederholte identische Meldungen
+- [x] Konfigurierbares WARN-Intervall über `globalThis.SIEDLER_WARN_RATE_LIMIT_MS`
+- [x] Unterdrückte WARN-Wiederholungen werden beim nächsten erlaubten Auftreten zusammengefasst
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Diplomatie-UI und `/diplomacy`
 - [x] Claim-Block-Recovery und Item-Rückgabe
@@ -74,9 +77,9 @@
 15. Essentials optional um Rang-/Team-Limits erweitern
 16. Persistentes Claim-Rollback als optionales Admin-System entwickeln
 17. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen erweitern
-18. Logging auf weitere Kernmodule wie Claims, Market, Taxes und Monster ausweiten
+18. Logging auf weitere Kernmodule wie Teams und Essentials ausweiten
 19. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
-20. Logging um Rate-Limiting bzw. deduplizierte Warnungen für wiederkehrende Fehler erweitern
+20. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
 
 ### Leitprinzip
 
