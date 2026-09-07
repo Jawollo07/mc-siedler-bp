@@ -9,8 +9,9 @@ const beforeEvents = world.beforeEvents;
 const recentPlacements = [];
 const recentBreaks = [];
 
-function queueChange(queue, block, player) {
+function queueChange(queue, block, player, returnItem = false) {
     if (!block?.location) return;
+
     queue.push({
         x: Math.floor(block.location.x),
         y: Math.floor(block.location.y),
@@ -18,8 +19,10 @@ function queueChange(queue, block, player) {
         dim: player?.dimension?.id ?? "minecraft:overworld",
         playerId: player?.id ?? null,
         blockType: block.typeId ?? "minecraft:air",
+        returnItem,
         ts: Date.now()
     });
+
     if (queue.length > 2000) queue.splice(0, queue.length - 2000);
 }
 
@@ -41,11 +44,37 @@ function findPlayer(id) {
     catch { return null; }
 }
 
+function returnPlacedItem(player, block) {
+    try {
+        if (!player || !block || typeof block.getItemStack !== "function") return false;
+
+        // The block has already been placed in the after-event fallback, so
+        // reconstruct exactly one item from the placed block before removing it.
+        const item = block.getItemStack(1, true);
+        if (!item) return false;
+
+        const inventory = player.getComponent("minecraft:inventory")?.container;
+        if (!inventory) return false;
+
+        const remainder = inventory.addItem(item);
+        if (!remainder) return true;
+
+        // Inventory was full. Drop the remainder at the player's position so
+        // the player never loses the item and no duplicate is created.
+        try {
+            player.dimension.spawnItem(remainder, player.location);
+            return true;
+        } catch {
+            return false;
+        }
+    } catch {
+        return false;
+    }
+}
+
 // -----------------------------------------------------------------------------
 // Block breaking
 // -----------------------------------------------------------------------------
-// Normal path: cancel before the block is removed. The recovery queue is a
-// fallback for server builds where a world change can still happen.
 const playerBreakBlock = beforeEvents?.playerBreakBlock;
 if (playerBreakBlock && typeof playerBreakBlock.subscribe === "function") {
     playerBreakBlock.subscribe((event) => {
@@ -65,8 +94,6 @@ if (playerBreakBlock && typeof playerBreakBlock.subscribe === "function") {
     console.warn("§e[Siedler Logic] playerBreakBlock-API nicht verfügbar; After-Event-Recovery wird verwendet.");
 }
 
-// After-event fallback: if an unauthorized break actually happened, restore
-// the block type captured by the protection system.
 const afterBreakCandidates = [
     world.afterEvents?.playerBreakBlock,
     world.afterEvents?.blockBreak
@@ -115,9 +142,10 @@ if (playerPlaceBlock && typeof playerPlaceBlock.subscribe === "function") {
         const claim = getClaimAt(event.block.location);
         if (!claim || hasAccess(event.player, claim)) return;
 
-        queueChange(recentPlacements, event.block, event.player);
+        // Cancel BEFORE placement. The item therefore remains in the player's
+        // inventory naturally; we must NOT add it again or it would duplicate.
         event.cancel = true;
-        deny(event.player, "§cDu darfst hier nichts bauen!");
+        deny(event.player, "§cDu darfst hier nichts bauen! Dein Block bleibt im Inventar.");
     });
 } else {
     console.info("§e[Siedler Logic] playerPlaceBlock-API nicht verfügbar; After-Event-Fallback für Platzierungen.");
@@ -139,11 +167,20 @@ if (playerPlaceBlock && typeof playerPlaceBlock.subscribe === "function") {
                     const claim = getClaimAt(block.location);
                     if (!claim || (player && hasAccess(player, claim))) return;
 
-                    queueChange(recentPlacements, block, player);
+                    // In the after-event fallback the item has already been
+                    // consumed. Return exactly one copy before removing the block.
+                    const returned = player ? returnPlacedItem(player, block) : false;
+
+                    queueChange(recentPlacements, block, player, returned);
                     try { block.setType("minecraft:air"); } catch {}
 
                     if (player) {
-                        deny(player, "§cDieses Grundstück ist geschützt! Platzierung rückgängig gemacht.");
+                        deny(
+                            player,
+                            returned
+                                ? "§cDieses Grundstück ist geschützt! Der Block wurde entfernt und zurückgegeben."
+                                : "§cDieses Grundstück ist geschützt! Platzierung rückgängig gemacht."
+                        );
                     }
                 } catch (err) {
                     console.warn(`[Claims] After-place fallback error: ${err}`);
@@ -207,8 +244,6 @@ if (explosion && typeof explosion.subscribe === "function") {
 // -----------------------------------------------------------------------------
 // Recovery scanner
 // -----------------------------------------------------------------------------
-// Final safety net. Unauthorized broken blocks are restored only when the
-// target is still air, so a later legitimate placement is never overwritten.
 system.runInterval(() => {
     const now = Date.now();
     const maxProcess = 100;
@@ -260,6 +295,8 @@ system.runInterval(() => {
             continue;
         }
 
+        // The item was already returned by the after-event handler. This queue
+        // only removes the placed block if it somehow survived that handler.
         try {
             const claim = getClaimAt({ x: entry.x + 0.5, y: entry.y, z: entry.z + 0.5 });
             if (!claim) {
@@ -295,4 +332,4 @@ system.runInterval(() => {
     }
 }, 20);
 
-console.info("§a[Siedler Logic] Claim-Protection geladen (inkl. Block-Recovery).");
+console.info("§a[Siedler Logic] Claim-Protection geladen (inkl. Block-Recovery und Item-Rückgabe).");
