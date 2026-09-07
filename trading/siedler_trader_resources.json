@@ -8,7 +8,7 @@
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:flint","quantity":16}],"max_uses":48,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:lapis_lazuli","quantity":16}],"max_uses":40,"trader_exp":2,"reward_exp":true}
     ]},
-    {"num_to_select":4,"trades":[
+    {"num_to_select":5,"trades":[
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:redstone","quantity":16}],"max_uses":40,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:quartz","quantity":16}],"max_uses":40,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":4}],"gives":[{"item":"minecraft:amethyst_shard","quantity":16}],"max_uses":24,"trader_exp":3,"reward_exp":true},
