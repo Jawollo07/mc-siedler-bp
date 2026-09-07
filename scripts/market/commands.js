@@ -32,17 +32,6 @@ function findMarket(id) {
     return MARKET_PLACES.find((market) => market.id === id);
 }
 
-function registerCommand(registry, definition, handler) {
-    registry.registerCommand(
-        {
-            ...definition,
-            permissionLevel: OP_PERMISSION,
-            cheatsRequired: false
-        },
-        handler
-    );
-}
-
 function formatBounds(market) {
     const minX = Math.min(market.min.x, market.max.x);
     const maxX = Math.max(market.min.x, market.max.x);
@@ -55,11 +44,12 @@ function formatBounds(market) {
 system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
-    registerCommand(
-        registry,
+    registry.registerCommand(
         {
             name: "siedler:market_status",
-            description: "Zeigt alle konfigurierten rechteckigen Marktplätze."
+            description: "Zeigt alle konfigurierten rechteckigen Marktplätze.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
         },
         (origin) => {
             const player = playerOnly(origin);
@@ -86,11 +76,12 @@ system.beforeEvents.startup.subscribe((event) => {
         }
     );
 
-    registerCommand(
-        registry,
+    registry.registerCommand(
         {
             name: "siedler:market_enable",
             description: "Aktiviert einen Marktplatz.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
             mandatoryParameters: [
                 { type: CustomCommandParamType.String, name: "id" }
             ]
@@ -111,11 +102,12 @@ system.beforeEvents.startup.subscribe((event) => {
         }
     );
 
-    registerCommand(
-        registry,
+    registry.registerCommand(
         {
             name: "siedler:market_disable",
             description: "Deaktiviert einen Marktplatz.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
             mandatoryParameters: [
                 { type: CustomCommandParamType.String, name: "id" }
             ]
@@ -136,11 +128,12 @@ system.beforeEvents.startup.subscribe((event) => {
         }
     );
 
-    registerCommand(
-        registry,
+    registry.registerCommand(
         {
             name: "siedler:market_setcorner1",
             description: "Setzt die erste Ecke des Marktplatzes auf deine aktuelle Position.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
             mandatoryParameters: [
                 { type: CustomCommandParamType.String, name: "id" }
             ]
@@ -168,11 +161,12 @@ system.beforeEvents.startup.subscribe((event) => {
         }
     );
 
-    registerCommand(
-        registry,
+    registry.registerCommand(
         {
             name: "siedler:market_setcorner2",
             description: "Setzt die zweite Ecke des Marktplatzes auf deine aktuelle Position.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false,
             mandatoryParameters: [
                 { type: CustomCommandParamType.String, name: "id" }
             ]
@@ -200,11 +194,12 @@ system.beforeEvents.startup.subscribe((event) => {
         }
     );
 
-    registerCommand(
-        registry,
+    registry.registerCommand(
         {
             name: "siedler:market_cleanup",
-            description: "Entfernt sofort alle Monster aus allen aktiven Marktplätzen."
+            description: "Entfernt sofort alle Monster aus allen aktiven Marktplätzen.",
+            permissionLevel: OP_PERMISSION,
+            cheatsRequired: false
         },
         (origin) => {
             const player = playerOnly(origin);
@@ -219,5 +214,5 @@ system.beforeEvents.startup.subscribe((event) => {
         }
     );
 
-    console.info("§a[Market] Rectangular market commands registered");
+    console.info("[Market] Rectangular market commands registered");
 });
