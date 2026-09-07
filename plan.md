@@ -7,6 +7,7 @@
 ## 📊 Aktueller Stand
 
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
+- [x] Zentralisiertes erweitertes Logging mit INFO/WARN/ERROR/DEBUG und Console-Bridge
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Diplomatie-UI und `/diplomacy`
 - [x] Claim-Block-Recovery und Item-Rückgabe
@@ -70,6 +71,8 @@
 15. Essentials optional um Rang-/Team-Limits erweitern
 16. Persistentes Claim-Rollback als optionales Admin-System entwickeln
 17. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen erweitern
+18. Logging schrittweise um modul-spezifische `createLogger()`-Instanzen erweitern
+19. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
 
 ### Leitprinzip
 
