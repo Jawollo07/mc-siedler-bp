@@ -13,6 +13,7 @@
 - [x] Sicherer Fallback-Drop bei vollem Inventar
 - [x] Keine Item-Duplikation beim normalen Before-Event-Cancel
 - [x] Permanenter Monster-Token-TaxBonus
+- [x] Tagessteuer nur bei mindestens einem online Teammitglied
 - [x] Permanente Vanilla-Weakness für Spieler gegen Mobs und im PvP
 - [x] Weakness per Admin-Commands aktivieren/deaktivieren und konfigurieren
 - [x] Händler und Soldatenhändler
@@ -157,6 +158,7 @@
 - [x] Bonus nur für Team des Spielerkillers
 - [x] bestehende Teams erhalten `taxBonus: 0` bei Migration
 - [x] doppelte Tagesauszahlung nach Neustart verhindert
+- [x] Tagessteuer nur bei mindestens einem online Teammitglied
 - [x] Tägliche Steuer Übersicht
 
 ## 🟡 Phase 6 – Handel & Märkte
