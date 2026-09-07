@@ -64,6 +64,8 @@
 - [x] Native `world.beforeEvents.chatSend` als bevorzugter Chat-Adapter
 - [x] Native `world.afterEvents.chatSend` als Logging-Fallback
 - [x] `/siedler:teamchat` als sicherer Team-Chat-Fallback bei fehlender Before-Chat-API
+- [x] `/siedler:tc` als Kurzform für den Team-Chat-Fallback
+- [x] Custom-Command-Argumente des Team-Chat-Fallbacks korrekt als Argument-Array verarbeitet
 - [x] Kein unsicheres `@team`-Intercepting über After-Events, um öffentliche Nachrichten nicht versehentlich doppelt oder zu spät zu verarbeiten
 
 ## 🎯 Nächster Schwerpunkt
