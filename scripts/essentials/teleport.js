@@ -7,8 +7,6 @@ import {
 } from "@minecraft/server";
 import { createLogger } from "../core/logger.js";
 import {
-    HOMES_KEY,
-    DEATH_POINTS_KEY,
     TPA_TIMEOUT,
     MAX_HOME_DISTANCE,
     homes,
@@ -21,7 +19,7 @@ import {
     removeTpaRequest,
     removePlayerRequests
 } from "./state.js";
-import { saveHomes, saveDeaths } from "./storage.js";
+import { loadPersistentState, saveHomes, saveDeaths } from "./storage.js";
 import { playerFrom, findPlayer, sendCommandError } from "./players.js";
 
 const logger = createLogger("Essentials:Teleport");
@@ -43,7 +41,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:spawn", "Teleportiert dich zum Weltspawn.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         system.run(() => {
             try {
                 const spawn = world.getDefaultSpawnLocation();
@@ -61,7 +58,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:sethome", "Setzt dein Zuhause.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         system.run(() => {
             const location = player.location;
             if (Math.abs(location.x) > MAX_HOME_DISTANCE || Math.abs(location.z) > MAX_HOME_DISTANCE) {
@@ -69,7 +65,6 @@ export function registerTeleportCommands(registry) {
                 sendCommandError(player, "Diese Position ist zu weit vom Weltzentrum entfernt.");
                 return;
             }
-
             homes.set(player.id, {
                 x: Math.floor(location.x) + 0.5,
                 y: Math.floor(location.y),
@@ -77,7 +72,6 @@ export function registerTeleportCommands(registry) {
                 dimension: player.dimension.id,
                 savedAt: Date.now()
             });
-
             const saved = saveHomes();
             logger.info(`Home gesetzt: ${player.name} @ ${Math.floor(location.x)},${Math.floor(location.y)},${Math.floor(location.z)} (${player.dimension.id}), gespeichert=${saved}.`);
             player.sendMessage(saved ? "§aZuhause gesetzt." : "§cZuhause konnte nicht gespeichert werden.");
@@ -88,7 +82,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:home", "Teleportiert dich nach Hause.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         system.run(() => {
             const home = getHome(player);
             if (!home) {
@@ -96,7 +89,6 @@ export function registerTeleportCommands(registry) {
                 sendCommandError(player, "Du hast noch kein Zuhause. Nutze /siedler:sethome.");
                 return;
             }
-
             try {
                 const dimension = world.getDimension(home.dimension || "minecraft:overworld");
                 player.teleport({ x: home.x, y: home.y, z: home.z }, { dimension });
@@ -113,7 +105,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:delhome", "Löscht dein Zuhause.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         system.run(() => {
             if (!homes.delete(player.id)) {
                 logger.debug(`${player.name} wollte einen nicht vorhandenen Home löschen.`);
@@ -130,7 +121,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:tpa", "Sendet eine Teleport-Anfrage.", (origin, args) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         const target = findPlayer(args?.[0]);
         if (!target) {
             logger.warn(`TPA abgelehnt: ${player.name} -> "${args?.[0] ?? ""}" nicht gefunden/eindeutig.`);
@@ -141,7 +131,6 @@ export function registerTeleportCommands(registry) {
             sendCommandError(player, "Du kannst dir selbst keine Anfrage senden.");
             return { status: CustomCommandStatus.Failure };
         }
-
         system.run(() => {
             queueTpaRequest(player, target);
             logger.info(`TPA erstellt: ${player.name} -> ${target.name}, Ablauf in ${TPA_TIMEOUT / 1000}s.`);
@@ -155,7 +144,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:tpahere", "Fordert einen Spieler auf, sich zu dir zu teleportieren.", (origin, args) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         const target = findPlayer(args?.[0]);
         if (!target) {
             logger.warn(`TPAHere abgelehnt: ${player.name} -> "${args?.[0] ?? ""}" nicht gefunden/eindeutig.`);
@@ -166,7 +154,6 @@ export function registerTeleportCommands(registry) {
             sendCommandError(player, "Du kannst dir selbst keine Anfrage senden.");
             return { status: CustomCommandStatus.Failure };
         }
-
         system.run(() => {
             queueTpaRequest(target, player);
             logger.info(`TPAHere erstellt: ${target.name} -> ${player.name}, Ablauf in ${TPA_TIMEOUT / 1000}s.`);
@@ -180,7 +167,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:tpaccept", "Nimmt die letzte Teleport-Anfrage an.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         system.run(() => {
             const request = getLatestTpaRequest(player);
             if (!request) {
@@ -188,7 +174,6 @@ export function registerTeleportCommands(registry) {
                 sendCommandError(player, "Keine offene Teleport-Anfrage.");
                 return;
             }
-
             const sender = findPlayer(request.from);
             if (!sender) {
                 removeTpaRequest(player.id, request.from);
@@ -196,7 +181,6 @@ export function registerTeleportCommands(registry) {
                 sendCommandError(player, "Der anfragende Spieler ist nicht mehr online.");
                 return;
             }
-
             try {
                 sender.teleport(player.location, { dimension: player.dimension });
                 logger.info(`TPA akzeptiert: ${sender.name} -> ${player.name}.`);
@@ -214,7 +198,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:tpdeny", "Lehnt die letzte Teleport-Anfrage ab.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         system.run(() => {
             const request = getLatestTpaRequest(player);
             if (!request) {
@@ -222,7 +205,6 @@ export function registerTeleportCommands(registry) {
                 sendCommandError(player, "Keine offene Teleport-Anfrage.");
                 return;
             }
-
             const sender = findPlayer(request.from);
             if (sender) sender.sendMessage(`§c${player.name} hat deine Teleport-Anfrage abgelehnt.`);
             logger.info(`TPA abgelehnt: ${request.from} -> ${player.name}.`);
@@ -235,7 +217,6 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:back", "Teleportiert dich zum letzten Todespunkt.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-
         system.run(() => {
             const death = deathPoints.get(player.id);
             if (!death) {
@@ -243,7 +224,6 @@ export function registerTeleportCommands(registry) {
                 sendCommandError(player, "Kein Todespunkt gespeichert.");
                 return;
             }
-
             try {
                 const dimension = world.getDimension(death.dimension || "minecraft:overworld");
                 player.teleport({ x: death.x, y: death.y, z: death.z }, { dimension });
@@ -264,7 +244,6 @@ export function registerTeleportEvents() {
     world.afterEvents.entityDie?.subscribe?.((event) => {
         const player = event.deadEntity;
         if (player?.typeId !== "minecraft:player" || !player.isValid) return;
-
         deathPoints.set(player.id, {
             x: player.location.x,
             y: player.location.y,
@@ -294,17 +273,9 @@ export function registerTeleportEvents() {
             }
             if (requests.size === 0) tpaRequests.delete(targetId);
         }
-
         for (const [id, target] of lastMessagedPlayer) {
             if (!target || !world.getPlayers().some(player => player.id === target)) lastMessagedPlayer.delete(id);
         }
-
         if (expired > 0) logger.debug(`${expired} TPA-Anfragen abgelaufen.`);
     }, 20);
-}
-
-function loadPersistentState() {
-    // Imported here indirectly to keep event registration in this module self-contained.
-    // The actual loader is dynamically resolved below to avoid circular state ownership.
-    return import("./storage.js").then(({ loadPersistentState: load }) => load());
 }
