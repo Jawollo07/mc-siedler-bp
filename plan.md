@@ -26,6 +26,10 @@
 - [x] Händler-Spawn wird nach dem Entity-Spawn initialisiert
 - [x] Alte/rollenlose Händler werden automatisch repariert
 - [x] Händler-Recovery setzt bestehende Trade-Nutzungen nicht zurück
+- [x] Soldatenhändler öffnet zuverlässig über Entity-Interaktion eine eigene Rekrutierungs-UI
+- [x] Soldatenhändler erkennt neben dem `soldier_trader`-Tag auch Variant-ID `6` als Fallback
+- [x] Soldatenhändler bietet Infanterie, Bogenschützen und Kavallerie sowie Level 1–3 an
+- [x] Soldatenhändler prüft und belastet Emeralds sicher und erstattet bei Spawn-Fehlern
 - [x] Soldier-Spawn, Owner-Zuordnung, Level 1–7 und XP
 - [x] Infanterie, Bogenschütze und Kavallerie
 - [x] Soldier-Ausrüstung und Befehle
@@ -59,7 +63,7 @@
 - [x] Serverweite Inaktivitätserkennung über Spielerbewegung
 - [x] Aktivitätserkennung über Chat, Blockabbau, Blockplatzierung, Interaktion und Kampf
 - [x] Konfigurierbare AFK-Warnung und AFK-Markierung
-- [x] Automatischer AFK-Kick nach konfigurierbarer Zeit
+- [x] Automatischer AFK-Kick nach konfigurierter Zeit
 - [x] Manueller AFK-Status über `/afk`
 - [x] Admin-Steuerung für Anti-AFK und Kick-Funktion
 - [x] Admin-Command zum Ändern der Kick-Zeit
