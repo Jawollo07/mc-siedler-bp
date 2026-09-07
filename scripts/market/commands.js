@@ -70,7 +70,7 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand(
         {
-            name: "market",
+            name: "siedler:market",
             description: "Teleportiert dich zum Marktplatz.",
             permissionLevel: ANY_PERMISSION,
             cheatsRequired: false
@@ -118,7 +118,7 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand(
         {
-            name: "market_tp_set",
+            name: "siedler:market_tp_set",
             description: "Setzt den Teleportpunkt des Marktplatzes auf deine Position.",
             permissionLevel: OP_PERMISSION,
             cheatsRequired: false

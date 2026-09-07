@@ -345,7 +345,7 @@ system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
 
     registry.registerCommand({
-        name: "diplomacy",
+        name: "siedler:diplomacy",
         description: "Öffnet das Diplomatie-Menü.",
         permissionLevel: CommandPermissionLevel.Any,
         cheatsRequired: false
