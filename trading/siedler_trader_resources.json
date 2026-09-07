@@ -1,6 +1,6 @@
 {
   "tiers":[{"total_exp_required":0,"groups":[
-    {"num_to_select":3,"trades":[
+    {"num_to_select":6,"trades":[
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:coal","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:raw_iron","quantity":8}],"max_uses":48,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:raw_copper","quantity":12}],"max_uses":48,"trader_exp":1,"reward_exp":true},
@@ -8,16 +8,16 @@
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:flint","quantity":16}],"max_uses":48,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:lapis_lazuli","quantity":16}],"max_uses":40,"trader_exp":2,"reward_exp":true}
     ]},
-    {"num_to_select":2,"trades":[
+    {"num_to_select":4,"trades":[
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:redstone","quantity":16}],"max_uses":40,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:quartz","quantity":16}],"max_uses":40,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":4}],"gives":[{"item":"minecraft:amethyst_shard","quantity":16}],"max_uses":24,"trader_exp":3,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":8}],"gives":[{"item":"minecraft:diamond","quantity":1}],"max_uses":12,"trader_exp":5,"reward_exp":true}
     ]},
-    {"num_to_select":2,"trades":[
+    {"num_to_select":5,"trades":[
       {"wants":[{"item":"minecraft:raw_iron","quantity":24}],"gives":[{"item":"minecraft:emerald","quantity":2}],"max_uses":40,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:raw_copper","quantity":32}],"gives":[{"item":"minecraft:emerald","quantity":2}],"max_uses":40,"trader_exp":2,"reward_exp":true},
-      {"wants":[{"item":"minecraft:raw_gold","quantity":16}],"gives":[{"item":"minecraft:emerald","quantity":2}],"max_uses":32,"trader_exp":3,"reward_exp":true},
+      {"wants":[{"item":"minecraft:redstone","quantity":32}],"gives":[{"item":"minecraft:emerald","quantity":2}],"max_uses":32,"trader_exp":3,"reward_exp":true},
       {"wants":[{"item":"minecraft:coal","quantity":32}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":48,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:diamond","quantity":1}],"gives":[{"item":"minecraft:emerald","quantity":6}],"max_uses":8,"trader_exp":6,"reward_exp":true}
     ]}
