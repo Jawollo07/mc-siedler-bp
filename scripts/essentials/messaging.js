@@ -29,6 +29,8 @@ function deliverMessage(sender, target, message) {
 }
 
 export function registerMessagingCommands(registry) {
+    logger.debug("Registriere Messaging-Commands: /siedler:msg, /siedler:reply.");
+
     registerPlayerCommand(registry, "siedler:msg", "Sendet eine private Nachricht.", (origin, args) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
@@ -42,6 +44,7 @@ export function registerMessagingCommands(registry) {
 
         const message = String(args?.[1] ?? "").trim();
         if (!message) {
+            logger.debug(`MSG abgelehnt: ${player.name} hat eine leere Nachricht eingegeben.`);
             sendCommandError(player, "Die Nachricht darf nicht leer sein.");
             return { status: CustomCommandStatus.Failure };
         }
@@ -67,6 +70,7 @@ export function registerMessagingCommands(registry) {
             return { status: CustomCommandStatus.Failure };
         }
         if (!message) {
+            logger.debug(`Reply abgelehnt: ${player.name} hat eine leere Nachricht eingegeben.`);
             sendCommandError(player, "Die Nachricht darf nicht leer sein.");
             return { status: CustomCommandStatus.Failure };
         }
