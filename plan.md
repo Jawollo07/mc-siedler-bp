@@ -46,9 +46,10 @@
 - [x] Marktplatz blockiert Abbau und Platzierung
 - [x] Markt-Commands direkt über `customCommandRegistry.registerCommand()` registriert
 - [x] Zusätzlichen `registerCommand`-Wrapper aus dem Markt-Command-Modul entfernt
-- [x] Markt-Commands verwenden weiterhin `GameDirectors` und `cheatsRequired: false`
-- [x] Spieler können sich per `/siedler:market <id>` zu einem aktiven Marktplatz teleportieren
-- [x] Markt-Teleport nutzt die Marktmitte und ermittelt automatisch eine sichere Geländehöhe
+- [x] Ein zentraler Marktplatz statt einer ID-basierten Markt-Teleportverwaltung
+- [x] Persistenter Marktplatz-Teleportpunkt über World Dynamic Property
+- [x] `/market_tp_set` für Admins zum Setzen des Marktplatz-Teleportpunkts
+- [x] `/market_tp` für normale Spieler zum Teleportieren
 
 ## 🔴 Phase 1 – Fundament & Stabilität
 
@@ -160,7 +161,7 @@
 
 ## 🟡 Phase 6 – Handel & Märkte
 
-- [x] Marktplätze
+- [x] Zentraler Marktplatz
 - [x] Markt-Schutz
 - [x] Blöcke im Markt nicht abbaubar
 - [x] Blöcke im Markt nicht platzierbar
@@ -172,8 +173,9 @@
 - [x] bestehende/rollenlose Händler automatisch repariert
 - [x] Trade-Nutzungen vor wiederholtem Reset geschützt
 - [x] Markt-Commands ohne zusätzlichen Registrierungs-Wrapper
-- [x] Spieler-Teleport zu aktiven Marktplätzen per `/siedler:market <id>`
-- [x] sichere Teleporthöhe über die Oberkante des Geländes
+- [x] persistenter Teleportpunkt
+- [x] Admin-Command `/market_tp_set`
+- [x] Spieler-Command `/market_tp`
 
 ## 🟢 Phase 7 – Dashboard
 
