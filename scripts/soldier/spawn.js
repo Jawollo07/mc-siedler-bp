@@ -3,12 +3,14 @@ import {
     world
 } from "@minecraft/server";
 
+import { createLogger } from "../core/logger.js";
 import {
     SOLDIER_TYPES,
     SOLDIER_CONFIG,
     SOLDIERS
 } from "./config.js";
 
+const logger = createLogger("Soldier:Spawn");
 const DEBUG = false;
 const CAVALRY_MOUNT_ID = "minecraft:horse";
 
@@ -29,13 +31,13 @@ export function spawnSoldier(
 
     const typeData = SOLDIER_TYPES[type];
     if (!typeData) {
-        console.warn(`[Soldier] Unknown type: ${type}`);
+        logger.warn("Unbekannter Soldatentyp:", type);
         return null;
     }
 
     const levelData = typeData.levels?.[level];
     if (!levelData) {
-        console.warn(`[Soldier] Level ${level} does not exist for ${type}`);
+        logger.warn(`Level ${level} existiert nicht für ${type}.`);
         return null;
     }
 
@@ -45,7 +47,7 @@ export function spawnSoldier(
         const entityId = SOLDIER_ENTITY_IDS[type] ?? "siedler:soldier";
         entity = dimension.spawnEntity(entityId, location);
     } catch (error) {
-        console.warn(`[Soldier] Spawn failed for ${type}: ${error}`);
+        logger.exception(`Spawn fehlgeschlagen für ${type}`, error);
         return null;
     }
 
@@ -74,7 +76,7 @@ export function spawnSoldier(
                 mount = spawnCavalryMount(dimension, location, owner, level);
                 mountCavalrySoldier(entity, mount);
             } catch (error) {
-                console.warn(`[Soldier] Cavalry mount failed: ${error}`);
+                logger.exception("Kavallerie-Mount fehlgeschlagen", error);
                 try { if (mount?.isValid) mount.remove(); } catch {}
                 mount = undefined;
             }
@@ -112,9 +114,10 @@ export function spawnSoldier(
             cavalryLastHit: 0
         });
 
+        logger.debug(`Soldat erstellt: ${type} Lv.${level}`, owner ? `Besitzer=${owner.name}` : "Besitzer=none");
         return entity;
     } catch (error) {
-        console.warn(`[Soldier] Initialization failed: ${error}`);
+        logger.exception("Soldaten-Initialisierung fehlgeschlagen", error);
         try { if (entity?.isValid) entity.remove(); } catch {}
         try { if (mount?.isValid) mount.remove(); } catch {}
         return null;
@@ -135,10 +138,6 @@ function spawnCavalryMount(dimension, location, owner, level) {
     mount.setDynamicProperty("soldier:ownerId", owner?.id ?? "");
     mount.setDynamicProperty("soldier:level", level);
 
-    // A vanilla horse spawns either wild-adult or baby. For cavalry we must
-    // explicitly put it into the adult/wild component group so the vanilla
-    // rideable component is guaranteed to exist. This also prevents the old
-    // "baby horse" issue from returning.
     try {
         const ageable = mount.getComponent("minecraft:ageable");
         if (ageable?.setAdult) ageable.setAdult();
@@ -147,7 +146,7 @@ function spawnCavalryMount(dimension, location, owner, level) {
     try {
         mount.runCommand("event entity @s minecraft:spawn_adult");
     } catch (error) {
-        if (DEBUG) console.warn(`[Soldier] Could not force adult horse event: ${error}`);
+        if (DEBUG) logger.warn("Konnte erwachsenes Pferde-Event nicht erzwingen:", error);
     }
 
     return mount;
@@ -161,19 +160,15 @@ function mountCavalrySoldier(soldier, mount) {
     mount.addTag(mountTag);
 
     try {
-        // The vanilla horse's wild rideable component accepts baby_undead,
-        // which is the compatibility family assigned to siedler:cavalry.
         const result = mount.dimension.runCommand(
             `ride @e[type=siedler:cavalry,tag=${riderTag},c=1] start_riding @e[type=minecraft:horse,tag=${mountTag},c=1] teleport_ride if_group_fits`
         );
-        if (DEBUG) console.log(`[Soldier] Mounted cavalry using /ride: ${result?.successCount ?? 0}`);
+        if (DEBUG) logger.debug(`Kavallerie auf Mount gesetzt: ${result?.successCount ?? 0}`);
     } finally {
         try { soldier.removeTag(riderTag); } catch {}
     }
 
     if (!isRidingEntity(soldier, mount)) {
-        // The Script API component is a fallback. The explicit adult event
-        // above makes sure the horse has a rideable component before this.
         const rideable = mount.getComponent("minecraft:rideable");
         if (rideable && typeof rideable.addRider === "function") {
             try { rideable.addRider(soldier); } catch {}
@@ -206,7 +201,7 @@ export function setSoldierHealth(entity, value) {
     try {
         const health = entity.getComponent("minecraft:health");
         if (!health) {
-            console.warn("[Soldier] Entity has no health component.");
+            logger.warn("Entity besitzt keine Health-Komponente.");
             return;
         }
         if (typeof health.setCurrentValue === "function") {
@@ -217,7 +212,7 @@ export function setSoldierHealth(entity, value) {
         const maxHealth = health.effectiveMax;
         if (value < maxHealth) entity.applyDamage(maxHealth - value);
     } catch (error) {
-        console.warn(`[Soldier] Failed to set health: ${error}`);
+        logger.exception("Gesundheit konnte nicht gesetzt werden", error);
     }
 }
 
@@ -242,10 +237,10 @@ export function applyEquipment(entity, equipment) {
             const amount = Math.max(1, Math.min(64, Number(data.amount ?? 1)));
             const command = `replaceitem entity @s ${slotType} 0 ${data.item} ${amount}`;
             const result = entity.runCommand(command);
-            if (DEBUG) console.log(`[Soldier] Equipped ${data.item} on ${slotName}`);
-            if (!result) console.warn(`[Soldier] No command result while equipping ${slotName}`);
+            if (DEBUG) logger.debug(`Ausrüstung gesetzt: ${data.item} → ${slotName}`);
+            if (!result) logger.warn(`Kein Command-Ergebnis beim Ausrüsten von ${slotName}.`);
         } catch (error) {
-            console.warn(`[Soldier] Failed to equip ${slotName}: ${error}`);
+            logger.exception(`Ausrüsten fehlgeschlagen: ${slotName}`, error);
         }
     }
 }
