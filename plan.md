@@ -47,6 +47,8 @@
 - [x] Markt-Commands direkt über `customCommandRegistry.registerCommand()` registriert
 - [x] Zusätzlichen `registerCommand`-Wrapper aus dem Markt-Command-Modul entfernt
 - [x] Markt-Commands verwenden weiterhin `GameDirectors` und `cheatsRequired: false`
+- [x] Spieler können sich per `/siedler:market <id>` zu einem aktiven Marktplatz teleportieren
+- [x] Markt-Teleport nutzt die Marktmitte und ermittelt automatisch eine sichere Geländehöhe
 
 ## 🔴 Phase 1 – Fundament & Stabilität
 
@@ -170,6 +172,8 @@
 - [x] bestehende/rollenlose Händler automatisch repariert
 - [x] Trade-Nutzungen vor wiederholtem Reset geschützt
 - [x] Markt-Commands ohne zusätzlichen Registrierungs-Wrapper
+- [x] Spieler-Teleport zu aktiven Marktplätzen per `/siedler:market <id>`
+- [x] sichere Teleporthöhe über die Oberkante des Geländes
 
 ## 🟢 Phase 7 – Dashboard
 
