@@ -15,6 +15,9 @@
 - [x] WARN-Rate-Limiting für wiederholte identische Meldungen
 - [x] Konfigurierbares WARN-Intervall über `globalThis.SIEDLER_WARN_RATE_LIMIT_MS`
 - [x] Unterdrückte WARN-Wiederholungen werden beim nächsten erlaubten Auftreten zusammengefasst
+- [x] Essentials in Storage-, Player-, Teleport-, Messaging- und Admin-Module aufgeteilt
+- [x] Detaillierte Essentials-Logs für Homes, Todespunkte, TPA, private Nachrichten, Admin-Aktionen und Persistenz
+- [x] Essentials-Index auf reinen Orchestrator reduziert
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Diplomatie-UI und `/diplomacy`
 - [x] Claim-Block-Recovery und Item-Rückgabe
@@ -45,6 +48,7 @@
 - [x] Taktische Kavallerie-Zustände: Approach, Charge, Hit, Pass
 - [x] Charge-Schaden und Knockback
 - [x] Pass-Verhalten und Stuck-Erkennung
+- [x] Vanilla-Pferd auf Hindernisse und Terrain-Wechsel getestet/zu testen
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
 - [x] Marktplatz blockiert Abbau und Platzierung
 - [x] Zentraler Marktplatz-Teleportpunkt
@@ -74,11 +78,11 @@
 11. Vanilla-Pferd auf Hindernisse und Terrain-Wechsel testen
 12. Bogenschützen-Schaden vollständig mit dem Soldier-Level synchronisieren
 13. Pfeilphysik mit Ingame-Flugtests feinjustieren
-14. Essentials-Konfiguration aus `index.js` herauslösen
+14. Essentials-Konfiguration aus den Funktionsmodulen herauslösen
 15. Essentials optional um Rang-/Team-Limits erweitern
 16. Persistentes Claim-Rollback als optionales Admin-System entwickeln
 17. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen erweitern
-18. Logging auf weitere große Untermodule wie Teams-Core, Essentials-Core und Soldier-KI ausweiten
+18. Logging auf weitere große Untermodule wie Teams-Core und Soldier-KI ausweiten
 19. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
 20. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
 
