@@ -9,6 +9,9 @@
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Claim-Block-Recovery bei unerlaubtem Abbau
+- [x] Rückgabe unerlaubt platzierter Blöcke ins Spielerinventar
+- [x] Sicherer Fallback-Drop bei vollem Inventar
+- [x] Keine Item-Duplikation beim normalen Before-Event-Cancel
 - [x] Permanenter Monster-Token-TaxBonus
 - [x] Permanente Vanilla-Weakness für Spieler gegen Mobs und im PvP
 - [x] Weakness per Admin-Commands aktivieren/deaktivieren und konfigurieren
@@ -120,6 +123,9 @@
 - [x] Dimension und Spieler-ID in Recovery-Einträgen
 - [x] Recovery-Scanner mit Queue-Limit und Ablaufbereinigung
 - [x] keine Überschreibung einer späteren Platzierung bei der Block-Recovery
+- [x] unerlaubt platzierte Blöcke werden im After-Event-Fallback zurückgegeben
+- [x] Item-Rückgabe ohne Duplikation beim normalen Before-Event
+- [x] Item-Drop als Fallback bei vollem Inventar
 - [ ] vollständige Wiederherstellung von Blockzuständen und Block-Entity-Inhalten
 - [ ] persistenter Claim-Rollback für bereits vor Claim-Erstellung zerstörte Bereiche
 
