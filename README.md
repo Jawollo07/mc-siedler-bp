@@ -16,37 +16,41 @@
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
 
-## 📝 Erweitertes Logging
+## 📝 Logging
 
-Das Behavior Pack besitzt ein zentrales Logging-System unter `scripts/core/logger.js`. Es verbessert die normalen Bedrock-Console-Ausgaben und ermöglicht zusätzlich modulbezogene Logger.
+Das zentrale Logging-System liegt unter `scripts/core/logger.js`. Neben der globalen Console-Bridge können Module eigene Logger mit `createLogger("Modulname")` verwenden.
 
-Unterstützte Ausgaben:
+Unterstützte Level:
 
-- `console.log()` → `INFO`
-- `console.info()` → `INFO`
-- `console.warn()` → `WARN`
-- `console.error()` → `ERROR`
-- `console.debug()` → `DEBUG`
+- `DEBUG` – häufige Diagnose- und Tick-Informationen
+- `INFO` – wichtige Zustandsänderungen und Startmeldungen
+- `WARN` – behebbare Probleme und API-/Konfigurationswarnungen
+- `ERROR` – Fehler und Exceptions
 
-Die Ausgaben erhalten einen einheitlichen Prefix mit Siedler-Version und Log-Level. Das Standard-Level ist `info`. Debug-Ausgaben können über `globalThis.SIEDLER_LOG_LEVEL = "debug"` aktiviert werden.
+Wichtige Logger-Bereiche sind aktuell:
+
+- `[Claims]` / `[Claims:Protection]`
+- `[Market]` / `[Market:Commands]` / `[Market:Trader]`
+- `[Taxes]`
+- `[Monster]`
+- `[Teams]` / `[Teams:Chat]` / `[Diplomacy]`
+- `[Essentials:Start]`
+- `[Soldier]` / `[Soldier:Spawn]` / `[Soldier:Trader]` / `[Soldier:Level]`
+- `[Anti-AFK]`
 
 ### WARN-Rate-Limiting
 
-Wiederholte identische `WARN`-Meldungen werden automatisch gebremst. Standardmäßig wird dieselbe Warnung höchstens einmal innerhalb von **10 Sekunden** ausgegeben. Während der Sperrzeit unterdrückte Wiederholungen werden beim nächsten erlaubten Auftreten als Anzahl zusammengefasst.
+Wiederholte identische `WARN`-Meldungen werden automatisch gebremst. Standardmäßig wird dieselbe Warnung höchstens einmal innerhalb von **10 Sekunden** ausgegeben. Unterdrückte Wiederholungen werden beim nächsten erlaubten Auftreten zusammengefasst.
 
-Das Verhalten gilt sowohl für `createLogger(...).warn()` als auch für bestehende `console.warn()`-Aufrufe über die Console-Bridge.
-
-Optional kann das Intervall vor dem Laden des Packs angepasst werden:
+Das gilt für `logger.warn()` und für bestehende `console.warn()`-Aufrufe über die Console-Bridge. Das Intervall kann vor dem Laden des Packs angepasst werden:
 
 ```js
 globalThis.SIEDLER_WARN_RATE_LIMIT_MS = 5000;
 ```
 
-Mit `0` wird das Rate-Limiting deaktiviert. Laufzeitseitig kann es über `setWarnRateLimit(milliseconds)` geändert werden.
+Mit `0` wird das Rate-Limiting deaktiviert. Laufzeitseitig steht `setWarnRateLimit(milliseconds)` zur Verfügung.
 
-Modulbezogene Logger sind inzwischen auch für die Kernbereiche **Claims, Market, Taxes und Monster** aktiv. Beispiele sind `[Claims]`, `[Market]`, `[Market:Commands]`, `[Taxes]` und `[Monster]`. Häufige Diagnoseinformationen werden bevorzugt als `DEBUG` geloggt; Fehler verwenden `exception()` und erscheinen als `ERROR`.
-
-Weitere bereits migrierte Bereiche sind Soldier-Start/Spawn, Soldatenhändler, Anti-AFK und Diplomatie. Neue Module können `createLogger("Modulname")` verwenden.
+Neue Untermodule sollen möglichst einen eigenen Scoped Logger verwenden und Tick-/Event-Diagnose auf `DEBUG` halten, damit die Serverkonsole nicht unnötig belastet wird.
 
 ## 🪖 Soldatenverwaltung
 
@@ -87,7 +91,7 @@ Die tägliche Steuer wird nur eingezogen, wenn mindestens ein Mitglied des jewei
 
 ## 🛡️ Claims
 
-Claims schützen die Team-Gebiete vor unerlaubtem Bauen, Abbauen und Interaktionen. Block-Recovery und Item-Rückgabe sind aktiviert. Claim-Verwaltung und Fehlerdiagnose verwenden einen eigenen `[Claims]` Logger.
+Claims schützen die Team-Gebiete vor unerlaubtem Bauen, Abbauen und Interaktionen. Block-Recovery und Item-Rückgabe sind aktiviert. Claim-Verwaltung und Schutzereignisse verwenden eigene `[Claims]`-Logger.
 
 ## 👹 Monster
 
@@ -126,24 +130,35 @@ scripts/core/main.js
 ├── logger.js
 ├── dynamic_properties.js
 ├── Teams
+│   ├── index.js [Logger]
+│   ├── chat.js [Logger]
+│   └── relations.js [Logger]
 ├── Taxes [Logger]
-├── Claims [Logger]
-├── Market [Logger]
+├── Claims
+│   ├── index.js [Logger]
+│   └── protection.js [Logger]
+├── Market
+│   ├── market_place.js [Logger]
+│   ├── commands.js [Logger]
+│   └── trader_commands.js [Logger]
 ├── Monster [Logger]
 ├── Essentials
-├── Anti-AFK
+│   ├── start.js [Logger]
+│   ├── index.js
+│   └── player_stats.js
+├── Anti-AFK [Logger]
 └── Soldier
     ├── ai.js
     ├── ranged_ai.js
     ├── cavalry_ai.js
-    ├── spawn.js
+    ├── spawn.js [Logger]
     ├── config.js
     ├── commands.js
     ├── command_manager.js
     ├── groups.js
     ├── ui.js
-    ├── level.js
-    └── trader.js
+    ├── level.js [Logger]
+    └── trader.js [Logger]
 ```
 
 Die detaillierte Planung befindet sich in `plan.md`.
