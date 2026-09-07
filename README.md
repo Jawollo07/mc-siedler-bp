@@ -67,6 +67,22 @@ Alle Custom Commands werden direkt über `event.customCommandRegistry.registerCo
 /siedler:market_cleanup
 ```
 
+## 🤝 Diplomatie
+
+Das Diplomatie-System verwaltet persistente Beziehungen zwischen Teams: **Verbündet**, **Neutral** und **Feindlich**. Änderungen werden für beide Teams gespiegelt gespeichert und von der Soldier-Zielsuche berücksichtigt.
+
+Das Diplomatie-Menü ist jetzt für **alle Spieler** verfügbar:
+
+```text
+/diplomacy
+```
+
+Der Command benötigt keine OP-Rechte und keine Cheats. Die vollständige Namespace-Variante ist:
+
+```text
+/diplomacy
+```
+
 ## ⚔️ Soldier-KI
 
 Das Soldier-System verwendet eigene Kampf- und Bewegungslogik. Infanterie nutzt Nahkampf, Bogenschützen eine eigene Fernkampf-KI mit echten `minecraft:arrow`-Projektilen und ballistischer Flugbahnberechnung.
@@ -149,6 +165,7 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Wel
 ## 🎮 Wichtige Commands
 
 ```text
+/diplomacy
 /siedler:stats
 /siedler:spawn
 /siedler:sethome
