@@ -44,6 +44,7 @@
 - [x] Vollständiges Anti-AFK-System
 - [x] Aktivitätserkennung, Warnung, AFK-Status und Kick
 - [x] Anti-AFK-Administration und konfigurierbare Kick-Zeit
+- [x] Anti-AFK-Kick ohne fehleranfälligen mehrteiligen Kick-Grund
 
 ## 🎯 Nächster Schwerpunkt
 
