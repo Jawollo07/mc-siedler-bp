@@ -125,6 +125,8 @@ Das Essentials-System arbeitet bei persistenter Spielerdatenhaltung mit Spieler-
 
 Der tägliche TaxBonus entsteht ausschließlich durch besiegte Monster-Tokens. Jeder besiegte Token erhöht den permanenten Bonus des Teams des Spielerkillers um `+1 Emerald/Tag`. Bestehende Teams werden bei der Migration mit `taxBonus: 0` ergänzt.
 
+Die tägliche Steuer wird **nur eingezogen, wenn zum Zeitpunkt der Tagesabrechnung mindestens ein Mitglied des jeweiligen Teams online ist**. Ist ein Team vollständig offline, wird für dieses Team an diesem Tageswechsel keine Steuer eingezogen. Die Prüfung erfolgt pro Team anhand der persistent gespeicherten Spieler-ID.
+
 ## 🧑‍🌾 Händler
 
 Händler werden als `siedler:trader` mit spezialisierten Rollen gespawnt. Lebensmittel-, Baustoff-, Rohstoff-, Werkzeug-, Waffen- und Versorgungshändler verwenden eigene Vanilla-Trade-Tabellen und öffnen beim Interagieren das normale Bedrock-Handelsfenster. Die Trade-Tabelle wird über eine Component Group aktiviert, damit die Handels-KI korrekt funktioniert.
