@@ -3,6 +3,7 @@ import { getTeams } from "./index.js";
 import { createLogger } from "../core/logger.js";
 
 const logger = createLogger("Teams:Chat");
+const chatLogger = createLogger("Essentials:Chat");
 
 function getPlayerTeam(player) {
     const teams = getTeams();
@@ -24,6 +25,10 @@ if (chatSend && typeof chatSend.subscribe === "function") {
         const color = team?.color || "§7";
         const isTeamChat = /^@team(?:\s|$)/i.test(message);
 
+        if (!isTeamChat) {
+            chatLogger.info(`Öffentlicher Chat: ${player.name} (${player.id})${team ? ` [Team: ${team.name}]` : " [kein Team]"}: ${message}`);
+        }
+
         system.run(() => {
             if (isTeamChat) {
                 if (!team) {
@@ -44,7 +49,7 @@ if (chatSend && typeof chatSend.subscribe === "function") {
                         recipients++;
                     }
                 }
-                logger.debug(`Team-Chat: team=${team.name}, sender=${player.id}, recipients=${recipients}`);
+                logger.info(`Team-Chat: ${player.name} (${player.id}) [${team.name}] (${recipients} Empfänger): ${teamMessage}`);
                 if (recipients === 0) player.sendMessage("§7Niemand von deinem Team ist online.");
                 return;
             }
@@ -52,6 +57,8 @@ if (chatSend && typeof chatSend.subscribe === "function") {
         });
     });
     logger.success("Team-Chat registriert");
+    chatLogger.success("Öffentlicher Chat wird geloggt");
 } else {
     logger.warn("ChatSend-API ist nicht verfügbar; Team-Chat bleibt deaktiviert.");
+    chatLogger.warn("Öffentlicher Chat kann nicht geloggt werden: ChatSend-API ist nicht verfügbar.");
 }
