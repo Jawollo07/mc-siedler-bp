@@ -14,6 +14,21 @@
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
+- Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
+
+## 📝 Erweitertes Logging
+
+Das Behavior Pack besitzt ein zentrales Logging-System unter `scripts/core/logger.js`. Es verbessert die normalen Bedrock-Console-Ausgaben, ohne dass alle bestehenden Module sofort umgebaut werden müssen.
+
+Unterstützte Ausgaben:
+
+- `console.log()` → `INFO`
+- `console.info()` → `INFO`
+- `console.warn()` → `WARN`
+- `console.error()` → `ERROR`
+- `console.debug()` → `DEBUG`
+
+Die Ausgaben erhalten einen einheitlichen Prefix mit Siedler-Version und Log-Level. Das Standard-Level ist `info`. Debug-Ausgaben können über `globalThis.SIEDLER_LOG_LEVEL = "debug"` aktiviert werden. Neue Module können mit `createLogger("Modulname")` einen eigenen Logger mit `debug`, `info`, `log`, `success`, `warn`, `error` und `exception` verwenden.
 
 ## 🪖 Soldatenverwaltung
 
@@ -106,7 +121,8 @@ Nach Änderungen an Scripts oder Entity-Definitionen muss der Server/die Welt vo
 
 ```text
 scripts/core/main.js
-├── Core
+├── logger.js
+├── dynamic_properties.js
 ├── Teams
 ├── Taxes
 ├── Claims
