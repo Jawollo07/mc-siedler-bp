@@ -42,6 +42,17 @@ Die Wiederherstellung verwendet aktuell den ursprünglichen **Blocktyp**. Komple
 
 Der konfigurierte Marktplatz ist ein vollständig geschützter Bereich. Spieler können dort **keine Blöcke abbauen und keine Blöcke platzieren**. Monster werden zusätzlich aus dem Markt entfernt und neu gespawnte Monster werden dort ebenfalls sofort entfernt.
 
+Die Markt-Commands werden direkt über `event.customCommandRegistry.registerCommand()` registriert. Es gibt keinen zusätzlichen `registerCommand`-Wrapper mehr. Alle Markt-Adminbefehle setzen `GameDirectors` als Permission-Level und benötigen keine Cheats:
+
+```text
+/siedler:market_status
+/siedler:market_enable <id>
+/siedler:market_disable <id>
+/siedler:market_setcorner1 <id>
+/siedler:market_setcorner2 <id>
+/siedler:market_cleanup
+```
+
 ## ⚔️ Soldier-KI
 
 Das Soldier-System verwendet eigene Kampf- und Bewegungslogik. Infanterie nutzt Nahkampf, Bogenschützen eine eigene Fernkampf-KI mit echten `minecraft:arrow`-Projektilen und ballistischer Flugbahnberechnung.
@@ -154,6 +165,12 @@ Nach Änderungen an Scripts, Commands oder Entity-Definitionen sollte Server/Wel
 /siedler:trader_here <type>
 /siedler:trader_types
 /siedler:trader_remove
+/siedler:market_status
+/siedler:market_enable <id>
+/siedler:market_disable <id>
+/siedler:market_setcorner1 <id>
+/siedler:market_setcorner2 <id>
+/siedler:market_cleanup
 /siedler:spawn_soldier <type> [level]
 /siedler:move <x y z>
 /siedler:follow
