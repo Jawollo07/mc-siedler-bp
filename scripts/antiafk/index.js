@@ -204,14 +204,6 @@ system.beforeEvents.startup.subscribe((event) => {
         return { status: CustomCommandStatus.Success };
     });
 
-    registerPlayerCommand(registry, "siedler:afk", "Aktiviert oder beendet deinen AFK-Status.", (origin) => {
-        const player = playerFrom(origin);
-        if (!player) return { status: CustomCommandStatus.Failure };
-        const state = stateFor(player);
-        system.run(() => state.manualAfk ? setManualActive(player) : setManualAfk(player));
-        return { status: CustomCommandStatus.Success };
-    });
-
     registerPlayerCommand(registry, "siedler:afk_status", "Zeigt den Anti-AFK-Status.", (origin) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
