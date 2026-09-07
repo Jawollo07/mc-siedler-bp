@@ -30,19 +30,20 @@ Wenn `world.beforeEvents.chatSend` verfügbar ist, übernimmt Siedler Logic:
 - zentrale Chat-Logs über `[Essentials:Chat]`
 - eigene Formatierung des öffentlichen Chats
 
-Microsoft dokumentiert `world.beforeEvents.chatSend` weiterhin als native Chat-Schnittstelle; sie kann je nach Server-/API-Build jedoch noch fehlen oder als Pre-Release-Funktion eingeschränkt sein. Deshalb besitzt Siedler Logic einen sicheren Fallback. citeturn0search0turn0search2
+Die native Chat-Schnittstelle kann je nach Server-/API-Build fehlen oder als Pre-Release-Funktion eingeschränkt sein. Deshalb besitzt Siedler Logic einen sicheren Fallback.
 
 ### Fallback ohne Before-Chat-API
 
-Wenn die native Before-Chat-API nicht vorhanden ist, bleibt der normale Vanilla-Chat unangetastet. Der Team-Chat kann dann über folgenden Befehl verwendet werden:
+Wenn die native Before-Chat-API nicht vorhanden ist, bleibt der normale Vanilla-Chat unangetastet. Der Team-Chat kann dann über folgende Befehle verwendet werden:
 
 ```text
 /siedler:teamchat "Nachricht an mein Team"
+/siedler:tc "Nachricht an mein Team"
 ```
 
-Falls `world.afterEvents.chatSend` verfügbar ist, wird der öffentliche Chat weiterhin automatisch über `[Essentials:Chat]` geloggt. Dieser After-Event wird bewusst nicht verwendet, um `@team` nachträglich zu verstecken, da die Nachricht zu diesem Zeitpunkt bereits gesendet wurde. citeturn1search4turn1search6
+Falls `world.afterEvents.chatSend` verfügbar ist, wird der öffentliche Chat weiterhin automatisch über `[Essentials:Chat]` geloggt. Der After-Event wird bewusst nicht verwendet, um `@team` nachträglich zu verstecken, da die Nachricht zu diesem Zeitpunkt bereits gesendet wurde.
 
-Damit gibt es keinen harten Ausfall des Chat-Systems mehr, wenn die native Before-Chat-API auf einem bestimmten Bedrock-Server nicht verfügbar ist.
+Damit gibt es keinen harten Ausfall des Team-Chats, wenn die native Before-Chat-API auf einem bestimmten Bedrock-Server nicht verfügbar ist.
 
 ## 📝 Logging
 
@@ -92,7 +93,7 @@ Das Essentials-System ist modular aufgebaut. `scripts/essentials/index.js` dient
 - `admin.js` – Heal, Feed, God, Fly, Kill, Clear sowie Zeit-/Wetterbefehle
 - `start.js` – Startsystem
 - `player_stats.js` – Spieler-Dashboard und Statistiken
-- `../teams/chat.js` – native Public-/Team-Chat-Anbindung und Chat-Logging
+- `../teams/chat.js` – native Public-/Team-Chat-Anbindung, Fallback und Chat-Logging
 
 Die Essentials-Module besitzen jeweils eigene Scoped Logs. Dadurch lassen sich beispielsweise Home-, TPA-, Speicher- und Admin-Probleme getrennt analysieren, ohne die komplette Serverkonsole durchsuchen zu müssen.
 
@@ -170,6 +171,7 @@ Nach Änderungen an Scripts oder Entity-Definitionen muss der Server/die Welt vo
 /siedler:reply <nachricht>
 /siedler:back
 /siedler:teamchat "<nachricht>"
+/siedler:tc "<nachricht>"
 /siedler:trader <type>
 /siedler:trader_here <type>
 /siedler:trader_types
