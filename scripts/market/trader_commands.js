@@ -1,6 +1,7 @@
 import { system, world, CustomCommandParamType, CustomCommandStatus, CommandPermissionLevel } from "@minecraft/server";
 
 const TRADER_TYPE = "siedler:trader";
+const SOLDIER_TRADER_VARIANT = 6;
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 
 const TRADER_TYPES = {
@@ -24,14 +25,21 @@ function reply(player, message) {
     try { player.sendMessage(`§8[§bHändler§8]§r ${message}`); } catch {}
 }
 
+function isSoldierTrader(trader) {
+    if (!trader?.isValid || trader.typeId !== TRADER_TYPE) return false;
+    try { if (trader.hasTag(TRADER_TYPES.soldiers.tag)) return true; } catch {}
+    try { return trader.getComponent("minecraft:variant")?.value === SOLDIER_TRADER_VARIANT; } catch { return false; }
+}
+
 function hasTraderRole(trader) {
-    return Object.values(TRADER_TYPES).some(config => config.tag && trader.hasTag(config.tag));
+    return Object.values(TRADER_TYPES).some(config => {
+        try { return config.tag && trader.hasTag(config.tag); } catch { return false; }
+    }) || isSoldierTrader(trader);
 }
 
 function applyTraderType(trader, type) {
     const config = TRADER_TYPES[type];
     if (!config || !trader?.isValid) return false;
-
     try {
         trader.triggerEvent(config.event);
         if (config.tag && !trader.hasTag(config.tag)) trader.addTag(config.tag);
@@ -43,13 +51,6 @@ function applyTraderType(trader, type) {
     }
 }
 
-function getTraderType(trader) {
-    for (const [type, config] of Object.entries(TRADER_TYPES)) {
-        if (config.tag && trader.hasTag(config.tag)) return type;
-    }
-    return "food";
-}
-
 function spawnTrader(player, type, location) {
     const config = TRADER_TYPES[type];
     if (!config) {
@@ -57,12 +58,8 @@ function spawnTrader(player, type, location) {
         reply(player, `§7Verfügbar: ${Object.keys(TRADER_TYPES).join(", ")}`);
         return;
     }
-
     try {
         const trader = player.dimension.spawnEntity(TRADER_TYPE, location);
-
-        // Trade tables are component groups. Apply them after the entity has
-        // completed spawning to avoid a blank/non-interactive trade state.
         system.run(() => {
             if (!applyTraderType(trader, type)) {
                 reply(player, "§cHändler konnte nicht initialisiert werden.");
@@ -76,16 +73,13 @@ function spawnTrader(player, type, location) {
     }
 }
 
-// Repair traders created by older versions or by /summon. The entity JSON
-// already gives new traders the food trade table, so only role-less traders
-// need recovery here. Existing role tags are never re-applied periodically,
-// which prevents trade uses from being reset.
 world.afterEvents.entitySpawn.subscribe((event) => {
     const trader = event.entity;
     if (trader.typeId !== TRADER_TYPE) return;
-
     system.run(() => {
         try {
+            // Never turn a soldier trader into a food trader. Variant 6 is
+            // retained as a migration fallback for old saved entities.
             if (!hasTraderRole(trader)) applyTraderType(trader, "food");
         } catch (error) {
             console.warn(`[Trader] Spawn initialization failed: ${error}`);
@@ -121,7 +115,7 @@ system.beforeEvents.startup.subscribe((event) => {
     });
 
     registry.registerCommand({
-        name: "siedler:trader_here",
+        name: "siedler:trader_here",",
         description: "Spawnt einen Händler vor dir.",
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
