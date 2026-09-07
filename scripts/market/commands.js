@@ -69,7 +69,7 @@ system.beforeEvents.startup.subscribe((event) => {
 
     registry.registerCommand(
         {
-            name: "market_tp",
+            name: "market",
             description: "Teleportiert dich zum Marktplatz.",
             cheatsRequired: false
         },
