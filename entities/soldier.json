@@ -32,7 +32,7 @@
         "has_collision": true
       },
       "minecraft:movement": {
-        "value": 0.25
+        "value": 0.4
       },
       "minecraft:movement.basic": {},
       "minecraft:navigation.generic": {},
