@@ -10,6 +10,7 @@
 - Teams, Diplomatie, Claims und Wirtschaft
 - Claim-Protection mit Block-Recovery und Item-Rückgabe
 - Zentraler Marktplatz und spezialisierte Händler
+- **Verzauberungshändler-Villager mit verzauberten Büchern**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
@@ -17,6 +18,23 @@
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
+
+## 🛒 Händler
+
+Das Händler-System verwendet die Entity `siedler:trader` und bietet mehrere spezialisierte Händlerrollen. Der neue **Verzauberungshändler** verwendet die bestehende Villager-Darstellung des Siedler-Händlers und öffnet beim Interagieren das normale Bedrock-Handelsfenster.
+
+### Verzauberungshändler
+
+Der Typ `enchantments` ist über die bestehenden Trader-Commands verfügbar:
+
+```text
+/siedler:trader enchantments
+/siedler:trader_here enchantments
+```
+
+Der Händler verwendet `trading/siedler_trader_enchantments.json` und bietet verzauberte Bücher gegen Emeralds und ein normales Buch an. Die Verzauberung wird über die offizielle Bedrock-Trade-Table-Funktion `enchant_book_for_trading` erzeugt, sodass die Angebote wie bei einem normalen Verzauberung-/Bibliothekarhändler zufällig passende Verzauberungen erhalten.
+
+Der Händler besitzt die Variant-ID `7` und den Tag `trader_enchantments`. Dadurch kann die bestehende Händler-Recovery ihn erkennen und nicht versehentlich wieder zum Lebensmittelhändler machen.
 
 ## 📝 Logging
 
@@ -85,7 +103,7 @@ scripts/core/main.js
 ├── Market
 │   ├── market_place.js [Logger]
 │   ├── commands.js [Logger]
-│   └── trader_commands.js [Logger]
+│   └── trader_commands.js [Logger + Enchantment Trader]
 ├── Monster [Logger]
 ├── Essentials
 │   ├── index.js [Orchestrator]
@@ -111,4 +129,7 @@ scripts/core/main.js
     ├── ui.js
     ├── level.js [Logger]
     └── trader.js [Logger]
+
+trading/
+└── siedler_trader_enchantments.json [Verzauberungsbücher]
 ```
