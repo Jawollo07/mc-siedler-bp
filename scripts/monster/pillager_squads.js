@@ -27,6 +27,16 @@ function getPlayerTeam(player) {
     return Object.keys(teams).find((name) => Array.isArray(teams[name]?.players) && teams[name].players.includes(player.id)) ?? null;
 }
 
+function findClaimContaining(location) {
+    const chunk = getChunkCoords(location);
+    const claim = getClaims()[`${chunk.x},${chunk.z}`];
+    return claim?.team ? { team: claim.team, x: chunk.x * 16 + 8, y: location.y, z: chunk.z * 16 + 8 } : null;
+}
+
+function isInsideClaim(location) {
+    return !!findClaimContaining(location);
+}
+
 function getEnemyClaimNearPlayer(player) {
     const siege = CONFIG.siege;
     if (!siege.enabled || !siege.preferEnemyClaims || Math.random() > siege.enemyClaimChance) return null;
@@ -52,12 +62,6 @@ function getEnemyClaimNearPlayer(player) {
     return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
 }
 
-function findClaimContaining(location) {
-    const chunk = getChunkCoords(location);
-    const claim = getClaims()[`${chunk.x},${chunk.z}`];
-    return claim?.team ? { team: claim.team, x: chunk.x * 16 + 8, y: location.y, z: chunk.z * 16 + 8 } : null;
-}
-
 function findClaimPlayers(squad) {
     if (!squad.siegeClaim) return [];
     return world.getAllPlayers().filter((player) => player.dimension.id === squad.dimensionId && findClaimContaining(player.location)?.team === squad.siegeClaim.team);
@@ -67,9 +71,35 @@ function randomSpawnPosition(player, claim) {
     const base = claim ?? player.location;
     const min = claim ? 18 : CONFIG.minDistance;
     const max = claim ? CONFIG.siege.stagingRadius : CONFIG.maxDistance;
-    const angle = Math.random() * Math.PI * 2;
-    const distance = randomInt(min, max);
-    return { x: Math.floor(base.x + Math.cos(angle) * distance) + 0.5, y: Math.floor(player.location.y), z: Math.floor(base.z + Math.sin(angle) * distance) + 0.5 };
+
+    // A squad may be spawned near a claim, but NEVER inside one.
+    for (let attempt = 0; attempt < 40; attempt++) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = randomInt(min, max);
+        const location = {
+            x: Math.floor(base.x + Math.cos(angle) * distance) + 0.5,
+            y: Math.floor(player.location.y),
+            z: Math.floor(base.z + Math.sin(angle) * distance) + 0.5
+        };
+        if (!isInsideClaim(location)) return location;
+    }
+
+    return null;
+}
+
+function randomSquadMemberPosition(location) {
+    // Check every individual entity position too, so formation offsets can
+    // never accidentally place a Pillager inside a claim.
+    for (let attempt = 0; attempt < 30; attempt++) {
+        const offset = { x: (Math.random() - 0.5) * 6, y: 0, z: (Math.random() - 0.5) * 6 };
+        const memberLocation = {
+            x: location.x + offset.x,
+            y: location.y,
+            z: location.z + offset.z
+        };
+        if (!isInsideClaim(memberLocation)) return memberLocation;
+    }
+    return null;
 }
 
 function createComposition() {
@@ -118,6 +148,14 @@ function steerEntity(entity, destination, squad) {
 
 function performSquadAttack(squad, target) {
     if (!target || world.getAbsoluteTime() < squad.nextAttack) return;
+
+    // Siege squads may only damage players currently inside the targeted
+    // claim. An empty claim is therefore never attacked.
+    if (squad.siegeClaim) {
+        const claimPlayers = findClaimPlayers(squad);
+        if (!claimPlayers.some((player) => player.id === target.id)) return;
+    }
+
     const attackers = squad.entities.filter((entity) => { try { return entity.isValid && entity.dimension.id === target.dimension.id && distanceSq(entity.location, target.location) <= CONFIG.ai.attackRange ** 2; } catch { return false; } });
     if (!attackers.length) return;
     const attacker = attackers[Math.floor(Math.random() * attackers.length)];
@@ -132,13 +170,19 @@ function spawnSquadForPlayer(target) {
     if (!target || squads.size >= CONFIG.maxActiveSquads) return false;
     const siegeClaim = CONFIG.siege.enabled ? getEnemyClaimNearPlayer(target) : null;
     const location = randomSpawnPosition(target, siegeClaim);
+    if (!location) {
+        console.info(`[Pillager] Kein sicherer Spawnpunkt außerhalb eines Claims gefunden; Trupp nicht gespawnt.`);
+        return false;
+    }
+
     const composition = createComposition();
     const entities = [];
 
     try {
         for (const typeId of composition) {
-            const offset = { x: (Math.random() - 0.5) * 6, y: 0, z: (Math.random() - 0.5) * 6 };
-            entities.push(target.dimension.spawnEntity(typeId, { x: location.x + offset.x, y: location.y, z: location.z + offset.z }));
+            const memberLocation = randomSquadMemberPosition(location);
+            if (!memberLocation) throw new Error("Kein sicherer Spawnpunkt für ein Squad-Mitglied außerhalb eines Claims gefunden.");
+            entities.push(target.dimension.spawnEntity(typeId, memberLocation));
         }
         if (Math.random() < CONFIG.composition.captainChance) {
             const captain = entities.find((entity) => entity.typeId === "minecraft:pillager");
@@ -177,10 +221,17 @@ function updateSiegePhase(squad) {
     const center = squad.siegeClaim;
 
     if (squad.phase === "staging") {
+        // Never turn a siege into an assault while nobody is online in the
+        // targeted claim. The squad can wait outside, but it cannot attack.
+        if (!claimPlayers.length) {
+            squad.noTargetSince = now;
+            return;
+        }
         if (distanceSq(squad.leaderLocation, center) <= CONFIG.siege.stagingRadius ** 2 && now - squad.phaseStartedAt >= 100) {
             squad.phase = "assault";
             squad.phaseStartedAt = now;
-            for (const player of world.getAllPlayers()) if (player.dimension.id === squad.dimensionId && distanceSq(player.location, center) <= CONFIG.siege.targetRadius ** 2) player.sendMessage(`§c⚔ Der feindliche Trupp stürmt das Gebiet von Team §e${squad.siegeClaim.team}§c!`);
+            squad.noTargetSince = null;
+            for (const player of claimPlayers) player.sendMessage(`§c⚔ Der feindliche Trupp stürmt das Gebiet von Team §e${squad.siegeClaim.team}§c!`);
         }
         return;
     }
@@ -188,7 +239,8 @@ function updateSiegePhase(squad) {
     if (squad.phase === "assault") {
         if (claimPlayers.length) { squad.noTargetSince = null; return; }
         squad.noTargetSince ??= now;
-        if (now - squad.noTargetSince >= CONFIG.siege.noTargetTicks || now - squad.phaseStartedAt >= CONFIG.siege.retreatAfterTicks) {
+        // The claim became empty: stop the assault immediately and retreat.
+        if (now - squad.noTargetSince >= 1) {
             squad.phase = "retreat";
             squad.phaseStartedAt = now;
         }
