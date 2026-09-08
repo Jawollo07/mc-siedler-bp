@@ -88,6 +88,14 @@
 - [x] Anti-AFK-Custom-Commands auf `system.beforeEvents.startup` korrigiert
 - [x] Anti-AFK-Event-Subscriptions gegen fehlende versionsabhängige Events abgesichert
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
+- [x] **Pillager-Squads spawnen niemals direkt innerhalb eines Claims**
+- [x] **Jeder einzelne Pillager-Squad-Spawn wird vor dem Erzeugen gegen Claims geprüft**
+- [x] **Auch Formationsoffsets der Squad-Mitglieder werden gegen Claims geprüft**
+- [x] **Wenn kein sicherer Spawnpunkt außerhalb von Claims gefunden wird, wird der komplette Trupp verworfen**
+- [x] **Belagerungen wechseln nicht in den Angriff, solange im Ziel-Claim kein Spieler des Zielteams steht**
+- [x] **Wird ein Ziel-Claim während eines Angriffs leer, beendet der Trupp den Angriff sofort und zieht sich zurück**
+- [x] **Belagerungs-Schaden ist zusätzlich auf Spieler beschränkt, die aktuell im Ziel-Claim stehen**
+- [x] **README.md und plan.md um die neue Pillager-/Claim-Logik ergänzt**
 
 ## 🎯 Nächster Schwerpunkt
 
