@@ -46,6 +46,10 @@
 - [x] **Passive/neutral Tiere aus der autonomen Soldier-Zielsuche ausgeschlossen**
 - [x] **Explizite Monster-Whitelist für Zombies, Skelette, Creeper, Spinnen, Nether-, End-, Illager- und weitere feindliche Mobs**
 - [x] Nahkampf-KI mit Windup/Cooldown
+- [x] **Dedizierte mount-basierte Kavallerie-Steuerung gegen Konflikte mit Rider-A*-Bewegung**
+- [x] **Kavallerie-Lenkung, Geschwindigkeitsbegrenzung und Zielannäherung stabilisiert**
+- [x] **Kavallerie-Pfadfinder greift nicht mehr in die Mount-Steuerung ein**
+- [x] **Passive/neutral Tiere werden auch von der Kavallerie-Zielsuche ausgeschlossen**
 - [x] **Beschleunigte Soldier-Bewegung mit zusätzlichem Level-/Kavallerie-Boost**
 - [x] **Terrain-Erkennung für solide Blöcke vor dem Soldier**
 - [x] **Sprunglogik zum Überwinden von ein Block hohen Hindernissen und Stufen/Treppen**
