@@ -21,6 +21,8 @@
 - [x] Detaillierter Villager-Todeslogger unter Essentials
 - [x] Villager-Todeslogs enthalten NameTag, Entity-Typ, Entity-ID, Position, Dimension und Todesursache
 - [x] Villager-Todeslogs erfassen verursachende Entity und Projektil, sofern vom Death-Event verfügbar
+- [x] Villager-Todeslogs ermitteln das Team über den Claim an der Todesposition
+- [x] Villager-Todeslogs kennzeichnen Villager außerhalb eines Claims als `Kein Claim`
 - [x] Villager-Todeslogger verwendet den zentralen `[Essentials:VillagerDeath]` Logger
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Diplomatie-UI und `/diplomacy`
