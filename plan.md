@@ -39,6 +39,8 @@
 - [x] **`/siedler:soldier_tp` teleportiert alle eigenen Soldaten zum Spieler**
 - [x] **Soldier-Teleport verteilt Einheiten in einer Formation statt auf einer einzigen Position**
 - [x] **Kavallerie-Mount wird beim Soldier-Teleport mitgeführt**
+- [x] **Persistente Soldier-Registry rekonstruiert vorhandene Soldaten nach Serverneustart**
+- [x] **Stale Soldier-Einträge werden aus der Laufzeit-Registry entfernt**
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
 - [x] Nahkampf-KI mit Windup/Cooldown
 - [x] Bogenschützen-KI mit echter `minecraft:arrow`-Physik
