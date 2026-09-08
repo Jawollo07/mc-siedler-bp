@@ -85,6 +85,52 @@ Verfügbare Commands:
 /siedler:afk_reset
 ```
 
+## ⚔️ Soldier-System
+
+Das Soldier-System befindet sich unter `scripts/soldier/` und unterstützt Infanterie, Bogenschützen und Kavallerie mit Owner-Zuordnung, Leveln, XP, Ausrüstung, KI, Befehlen und Gruppenformationen.
+
+### Soldier-Commands
+
+```text
+/siedler:spawn_soldier <Type> [Level]
+/siedler:soldier_tool
+/siedler:soldier_info
+/siedler:soldier_xp <Amount>
+/siedler:soldier_tp
+```
+
+`/siedler:soldier_tp` teleportiert **alle eigenen, aktuell registrierten Soldaten** zum ausführenden Spieler. Die Soldaten werden dabei in einer kleinen Formation um den Spieler verteilt, damit sie nicht auf derselben Position übereinander spawnen. Bei Kavallerie wird das zugehörige Pferd ebenfalls mit teleportiert.
+
+Der Teleport berücksichtigt die `ownerId`-Zuordnung und kann daher keine fremden Soldaten teleportieren. Die Einheiten können dabei auch aus einer anderen Dimension zum Spieler geholt werden.
+
+### Bewegungs- und Kampf-Commands
+
+```text
+/siedler:move <Target>
+/siedler:follow
+/siedler:stay
+/siedler:attack [Radius]
+/siedler:defend [Radius]
+/siedler:patrol <Target>
+/siedler:stop
+```
+
+### Gruppen-Commands
+
+```text
+/siedler:group_create <Name> [Radius]
+/siedler:group_add <Group>
+/siedler:group_remove <Group>
+/siedler:group_delete <Group>
+/siedler:group_move <Group> <Target>
+/siedler:group_follow <Group>
+/siedler:group_stay <Group>
+/siedler:group_defend <Group> <Target> [Radius]
+/siedler:group_stop <Group>
+/siedler:group_formation <Group> <Formation> [Spacing]
+/siedler:group_list
+```
+
 ## 📝 Logging
 
 Das zentrale Logging-System liegt unter `scripts/core/logger.js`. Neben der globalen Console-Bridge können Module eigene Logger mit `createLogger("Modulname")` verwenden.
@@ -131,6 +177,10 @@ scripts/core/main.js
 ├── Essentials
 ├── Anti-AFK [system.beforeEvents.startup + Event-Guards]
 └── Soldier
+    ├── commands.js [inkl. /siedler:soldier_tp]
+    ├── groups.js
+    ├── command_manager.js
+    └── KI / Nahkampf / Fernkampf / Kavallerie
 
 trading/
 └── siedler_trader_enchantments.json [17/17 Pool-Angebote gleichzeitig verfügbar]
