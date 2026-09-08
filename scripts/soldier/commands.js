@@ -5,6 +5,7 @@ import { SOLDIERS } from "./config.js";
 import { getSoldierProgress, addSoldierXP } from "./level.js";
 import { initializeSoldierGroups, getSoldierGroups, createSoldierGroup, addSoldierToGroup, removeSoldierFromGroup, deleteSoldierGroup, commandGroupMove, commandGroupFollow, commandGroupStay, commandGroupDefend, commandGroupStop, setGroupFormation } from "./groups.js";
 import { giveSoldierTool } from "./ui.js";
+import { teleportBySelector } from "./teleport.js";
 
 system.beforeEvents.startup.subscribe((event) => registerSoldierCommands(event.customCommandRegistry));
 
@@ -33,33 +34,6 @@ function ownedSoldiersNear(player, radius = 8) {
     }
     return soldiers;
 }
-function teleportOwnedSoldiers(player) {
-    const soldiers = [...SOLDIERS.values()].filter(s => s?.entity?.isValid && s.ownerId === player.id);
-    if (!soldiers.length) return 0;
-    let moved = 0;
-    const count = soldiers.length;
-    const spacing = count > 16 ? 3 : 3.5;
-    const columns = Math.min(6, Math.max(1, Math.ceil(Math.sqrt(count))));
-    const rows = Math.ceil(count / columns);
-    for (let i = 0; i < count; i++) {
-        const soldier = soldiers[i];
-        const column = i % columns;
-        const row = Math.floor(i / columns);
-        const target = {
-            x: player.location.x + (column - (columns - 1) / 2) * spacing,
-            y: player.location.y,
-            z: player.location.z + (row - (rows - 1) / 2) * spacing
-        };
-        try {
-            if (soldier.mount?.isValid) soldier.mount.teleport(target, { dimension: player.dimension });
-            if (soldier.entity.isValid) soldier.entity.teleport(target, { dimension: player.dimension });
-            moved++;
-        } catch (error) {
-            system.run(() => player.sendMessage(`§cSoldat konnte nicht teleportiert werden: ${error}`));
-        }
-    }
-    return moved;
-}
 function nearestCandidate(soldier, radius = 32) {
     const entity = soldier?.entity;
     if (!entity?.isValid) return null;
@@ -86,11 +60,14 @@ function registerSoldierCommands(registry) {
     registry.registerCommand({ name: "siedler:soldier_tool", description: "Gibt den Soldatenstab zur Soldatenverwaltung", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false }, origin => {
         const player = playerOnly(origin); if (!player) return result(false); system.run(() => giveSoldierTool(player)); return result(true);
     });
-    registry.registerCommand({ name: "siedler:soldier_tp", description: "Teleportiert alle eigenen Soldaten zum Spieler", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false }, origin => {
+    registry.registerCommand({ name: "siedler:soldier_tp", description: "Teleportiert eigene Soldaten, Gruppen oder die Stab-Auswahl zum Spieler", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false, optionalParameters: [{ type: CustomCommandParamType.String, name: "Target" }] }, (origin, target) => {
         const player = playerOnly(origin); if (!player) return result(false);
-        const moved = teleportOwnedSoldiers(player);
-        system.run(() => player.sendMessage(moved > 0 ? `§a${moved} eigene Soldaten wurden zu dir teleportiert.` : "§7Keine eigenen Soldaten gefunden."));
-        return result(moved > 0);
+        const selection = teleportBySelector(player, target ?? "");
+        const label = !target ? "alle eigenen Soldaten" : String(target);
+        system.run(() => player.sendMessage(selection.moved > 0
+            ? `§a${selection.moved} Soldat(en) (${label}) wurden zu dir teleportiert.`
+            : `§7Keine passenden eigenen Soldaten für §f${label}§7 gefunden.`));
+        return result(selection.moved > 0);
     });
     registry.registerCommand({ name: "siedler:move", description: "Bewegt den Soldaten zu einem Zielort", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false, mandatoryParameters: [{ type: CustomCommandParamType.Location, name: "Target" }] }, (origin, target) => { const player = playerOnly(origin); return player ? result(commandMove(nearestOwnedSoldier(player), target)) : result(false); });
     registry.registerCommand({ name: "siedler:follow", description: "Lässt den Soldaten einem Spieler folgen", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false }, origin => { const player = playerOnly(origin); return player ? result(commandFollow(nearestOwnedSoldier(player))) : result(false); });
