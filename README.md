@@ -21,6 +21,7 @@
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
+- **Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik**
 
 ## 🛒 Händler
 
@@ -200,6 +201,29 @@ Die Auswahl wird immer anhand der `ownerId` geprüft. Fremde Soldaten können da
 /siedler:group_list
 ```
 
+## 👹 Pillager-Squads und Belagerungen
+
+Das Pillager-System liegt unter `scripts/monster/pillager_squads.js` und unterstützt normale feindliche Trupps sowie Belagerungen gegnerischer Claims.
+
+### Claim-sicherer Spawn
+
+Pillager-Squads werden **niemals direkt innerhalb eines Claims gespawnt**. Vor dem Squad-Spawn wird ein sicherer Punkt außerhalb aller Claims gesucht. Zusätzlich wird für **jedes einzelne Squad-Mitglied** der zufällige Formations-Offset erneut gegen die Claims geprüft. Wenn kein sicherer Punkt gefunden wird, wird der gesamte Trupp nicht gespawnt.
+
+Damit können auch die zufälligen Formationsoffsets nicht versehentlich ein Mitglied über eine Claim-Grenze setzen.
+
+### Belagerung nur bei Spielern im Claim
+
+Ein gegnerischer Claim kann weiterhin als Belagerungsziel ausgewählt werden. Die Belagerungsphase bleibt jedoch so lange im **Staging**, wie sich kein Spieler des Zielteams im entsprechenden Claim befindet.
+
+Sobald der Claim leer ist:
+
+- beginnt kein Angriff
+- wird ein laufender Angriff sofort beendet
+- der Trupp wechselt in **Retreat**
+- ein leerer Claim kann somit nicht von einem Pillager-Squad angegriffen werden
+
+Auch der eigentliche Schaden ist zusätzlich abgesichert: Ein Belagerungstrupp darf nur einen Spieler beschädigen, der im Moment des Angriffs tatsächlich im Ziel-Claim steht.
+
 ## 📝 Logging
 
 Das zentrale Logging-System liegt unter `scripts/core/logger.js`. Neben der globalen Console-Bridge können Module eigene Logger mit `createLogger("Modulname")` verwenden.
@@ -243,6 +267,8 @@ scripts/core/main.js
 │   ├── commands.js
 │   └── trader_commands.js [API-Guards + system.beforeEvents.startup]
 ├── Monster
+│   ├── pillager_squads.js [claim-sicherer Spawn + spielerabhängige Belagerung]
+│   └── outpost_raids.js
 ├── Essentials
 ├── Anti-AFK [system.beforeEvents.startup + Event-Guards]
 └── Soldier
