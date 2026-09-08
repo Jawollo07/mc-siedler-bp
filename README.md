@@ -13,6 +13,7 @@
 - **Verzauberungshändler-Villager mit vollständigem Pool aller definierten Angebote**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - **Beschleunigte Soldier-Bewegung mit Terrain-Unterstützung für Blöcke und Stufen**
+- **Lokale A*-Wegfindung für Hindernisse, Umwege und Höhenwechsel**
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
 - Detaillierter Villager-Todeslogger mit Todesursache, Verursacher und Claim-Team
@@ -104,9 +105,23 @@ Die Soldier-KI verwendet weiterhin reaktionsschnelle Impulse für Formation und 
 - Erkennung eines soliden Blocks direkt vor dem Soldier
 - kurzer Sprungimpuls, wenn oberhalb des Hindernisses ausreichend Platz vorhanden ist
 - dadurch Überwinden von **ein Block hohen Hindernissen und Stufen/Treppen**, während die normale Gravitation das Landen übernimmt
-- Sprung-Cooldown verhindert dauerhaftes Hochspringen auf derselben Stelle
 
-Die Entity `siedler:soldier` besitzt außerdem eine erhöhte `minecraft:movement`-Geschwindigkeit von `0.4`. Die Terrain-Hilfe ersetzt die vorhandene KI nicht, sondern ergänzt sie, damit Formation, Kampf und Befehle erhalten bleiben.
+### Echte Wegfindung
+
+`scripts/soldier/pathfinding.js` ergänzt die Impulsbewegung um eine **lokale A*-Wegfindung**. Der Pathfinder baut aus der Blockwelt ein begehbares Voxel-Raster und sucht darin einen kostengünstigen Weg zum Ziel. Dadurch können Soldiers bei einem versperrten direkten Weg automatisch ausweichen, statt dauerhaft gegen einen Block zu laufen.
+
+Die Wegfindung berücksichtigt:
+
+- freie Blöcke für Füße und Kopf
+- festen Untergrund
+- **Höhenwechsel um eine Blockhöhe**
+- Treppen und begehbare Geländeformen, soweit die Blockgeometrie als begehbare Zelle erkannt wird
+- diagonale Bewegung
+- lokale Umwege um Wände und Hindernisse
+- regelmäßiges Repathing, wenn sich das Ziel oder die Umgebung verändert
+- Begrenzung des Suchraums, damit viele Soldiers gleichzeitig nicht den Server mit globalen Suchläufen belasten
+
+Die A*-Wegfindung ersetzt die bestehende Kampf-KI nicht. Sie liefert lediglich die nächste sinnvolle Bewegungsposition an die vorhandene Beschleunigungs-, Formations- und Terrain-Bewegung. Dadurch bleiben Befehle wie `move`, `follow`, `attack`, `defend` und `patrol` kompatibel.
 
 ### Soldier-Commands
 
@@ -198,6 +213,7 @@ scripts/core/main.js
 └── Soldier
     ├── commands.js [inkl. /siedler:soldier_tp]
     ├── registry.js [persistente Entity-Erkennung nach Neustart]
+    ├── pathfinding.js [lokale A*-Wegfindung]
     ├── terrain_movement.js [Speed + Block/Stufen-Überwindung]
     ├── groups.js
     ├── command_manager.js
