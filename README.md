@@ -12,6 +12,7 @@
 - Zentraler Marktplatz und spezialisierte Händler
 - **Verzauberungshändler-Villager mit vollständigem Pool aller definierten Angebote**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
+- **Beschleunigte Soldier-Bewegung mit Terrain-Unterstützung für Blöcke und Stufen**
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
 - Detaillierter Villager-Todeslogger mit Todesursache, Verursacher und Claim-Team
@@ -92,6 +93,20 @@ Das Soldier-System befindet sich unter `scripts/soldier/` und unterstützt Infan
 ### Persistenz nach Neustarts
 
 Die Soldaten selbst bleiben als Minecraft-Entities erhalten. Die interne JavaScript-Map `SOLDIERS` ist dagegen nur zur Laufzeit vorhanden. `scripts/soldier/registry.js` baut diese Registry nach jedem Serverstart aus den tatsächlich vorhandenen Soldier-Entities und deren Dynamic Properties (`soldier:ownerId`, `soldier:type`, `soldier:level`) wieder auf. Nicht mehr vorhandene Soldaten werden aus der Registry entfernt. Dadurch zeigt der Soldatenstab nach einem Neustart nur die **tatsächlich aktuell vorhandenen eigenen Soldaten** an.
+
+### Bewegung über Gelände
+
+Die Soldier-KI verwendet weiterhin reaktionsschnelle Impulse für Formation und Kampf. `scripts/soldier/terrain_movement.js` ergänzt diese Bewegung um eine Terrain-Schicht:
+
+- höhere Grundgeschwindigkeit und zusätzlicher Vorwärtsimpuls während der Bewegung
+- Geschwindigkeitsbonus abhängig vom Soldier-Level
+- zusätzlicher Geschwindigkeitsbonus für Kavallerie
+- Erkennung eines soliden Blocks direkt vor dem Soldier
+- kurzer Sprungimpuls, wenn oberhalb des Hindernisses ausreichend Platz vorhanden ist
+- dadurch Überwinden von **ein Block hohen Hindernissen und Stufen/Treppen**, während die normale Gravitation das Landen übernimmt
+- Sprung-Cooldown verhindert dauerhaftes Hochspringen auf derselben Stelle
+
+Die Entity `siedler:soldier` besitzt außerdem eine erhöhte `minecraft:movement`-Geschwindigkeit von `0.4`. Die Terrain-Hilfe ersetzt die vorhandene KI nicht, sondern ergänzt sie, damit Formation, Kampf und Befehle erhalten bleiben.
 
 ### Soldier-Commands
 
@@ -183,6 +198,7 @@ scripts/core/main.js
 └── Soldier
     ├── commands.js [inkl. /siedler:soldier_tp]
     ├── registry.js [persistente Entity-Erkennung nach Neustart]
+    ├── terrain_movement.js [Speed + Block/Stufen-Überwindung]
     ├── groups.js
     ├── command_manager.js
     └── KI / Nahkampf / Fernkampf / Kavallerie
