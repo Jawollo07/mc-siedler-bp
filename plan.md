@@ -8,22 +8,6 @@
 
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
 - [x] Zentralisiertes erweitertes Logging mit INFO/WARN/ERROR/DEBUG und Console-Bridge
-- [x] Modulbezogene Logger für Soldier, Soldier-Spawn, Soldatenhändler, Anti-AFK und Diplomatie
-- [x] Modulbezogene Logger für Claims, Market, Taxes und Monster
-- [x] Zusätzliche Scoped Logger für Claims-Protection, Market-Trader, Teams-Chat, Essentials-Start und Soldier-Level
-- [x] Debug-Ausgaben für gezielte Diagnose häufiger Abläufe vorbereitet
-- [x] WARN-Rate-Limiting für wiederholte identische Meldungen
-- [x] Konfigurierbares WARN-Intervall über `globalThis.SIEDLER_WARN_RATE_LIMIT_MS`
-- [x] Unterdrückte WARN-Wiederholungen werden beim nächsten erlaubten Auftreten zusammengefasst
-- [x] Essentials in Storage-, Player-, Teleport-, Messaging- und Admin-Module aufgeteilt
-- [x] Detaillierte Essentials-Logs für Homes, Todespunkte, TPA, private Nachrichten, Admin-Aktionen und Persistenz
-- [x] Essentials-Index auf reinen Orchestrator reduziert
-- [x] Detaillierter Villager-Todeslogger unter Essentials
-- [x] Villager-Todeslogs enthalten NameTag, Entity-Typ, Entity-ID, Position, Dimension und Todesursache
-- [x] Villager-Todeslogs erfassen verursachende Entity und Projektil, sofern vom Death-Event verfügbar
-- [x] Villager-Todeslogs ermitteln das Team über den Claim an der Todesposition
-- [x] Villager-Todeslogs kennzeichnen Villager außerhalb eines Claims als `Kein Claim`
-- [x] Villager-Todeslogger verwendet den zentralen `[Essentials:VillagerDeath]` Logger
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Diplomatie-UI und `/diplomacy`
 - [x] Claim-Block-Recovery und Item-Rückgabe
@@ -34,10 +18,12 @@
 - [x] Handelsfenster für spezialisierte Händler repariert
 - [x] Händler-Trade-Tables über Component Groups
 - [x] Händler-Spawn-Initialisierung und Recovery
-- [x] **Verzauberungshändler-Villager mit eigener Trade-Table**
-- [x] **Verzauberungshändler über `/siedler:trader enchantments` und `/siedler:trader_here enchantments` verfügbar**
-- [x] **Verzauberte Bücher über `enchant_book_for_trading` nach Bedrock-Handelslogik**
-- [x] **Variant-ID `7` und Tag `trader_enchantments` für stabile Händler-Recovery**
+- [x] Verzauberungshändler-Villager mit eigener Trade-Table
+- [x] Verzauberungshändler über `/siedler:trader enchantments` und `/siedler:trader_here enchantments` verfügbar
+- [x] Verzauberte Bücher über `enchant_book_for_trading` nach Bedrock-Handelslogik
+- [x] Verzauberungshändler mit erweitertem Pool aus 16 Angeboten/Preis- und Verzauberungsstufen
+- [x] Mehrere Angebote werden pro Händler aus dem Pool ausgewählt
+- [x] Variant-ID `7` und Tag `trader_enchantments` für stabile Händler-Recovery
 - [x] Soldatenhändler mit eigener Rekrutierungs-UI
 - [x] Soldatenhändler-Interaktion über `beforeEvents.playerInteractWithEntity`
 - [x] Vanilla-Interaktion des Soldatenhändlers wird für die eigene UI abgefangen
@@ -58,25 +44,10 @@
 - [x] Taktische Kavallerie-Zustände: Approach, Charge, Hit, Pass
 - [x] Charge-Schaden und Knockback
 - [x] Pass-Verhalten und Stuck-Erkennung
-- [x] Vanilla-Pferd auf Hindernisse und Terrain-Wechsel getestet/zu testen
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
-- [x] Marktplatz blockiert Abbau und Platzierung
-- [x] Zentraler Marktplatz-Teleportpunkt
-- [x] `/market_tp_set` und `/market`
+- [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
-- [x] Aktivitätserkennung, Warnung, AFK-Status und Kick
-- [x] Anti-AFK-Administration und konfigurierbare Kick-Zeit
-- [x] Anti-AFK-Kick ohne fehleranfälligen mehrteiligen Kick-Grund
-- [x] Soldier-Mehrfachauswahl und Gruppenmitgliederverwaltung
-- [x] `ModalFormData.toggle()` auf `ModalFormDataToggleOptions` mit `defaultValue` angepasst
-- [x] Native-Type-Conversion-Fehler in `soldier/ui.js` bei Toggle-Formularen behoben
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
-- [x] Native `world.beforeEvents.chatSend` als bevorzugter Chat-Adapter
-- [x] Native `world.afterEvents.chatSend` als Logging-Fallback
-- [x] `/siedler:teamchat` als sicherer Team-Chat-Fallback bei fehlender Before-Chat-API
-- [x] `/siedler:tc` als Kurzform für den Team-Chat-Fallback
-- [x] Custom-Command-Argumente des Team-Chat-Fallbacks korrekt als Argument-Array verarbeitet
-- [x] Kein unsicheres `@team`-Intercepting über After-Events, um öffentliche Nachrichten nicht versehentlich doppelt oder zu spät zu verarbeiten
 
 ## 🎯 Nächster Schwerpunkt
 
