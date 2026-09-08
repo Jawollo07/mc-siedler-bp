@@ -4,6 +4,7 @@ import { godMode } from "./state.js";
 import { registerTeleportCommands, registerTeleportEvents } from "./teleport.js";
 import { registerMessagingCommands } from "./messaging.js";
 import { registerAdminCommands } from "./admin.js";
+import { registerVillagerDeathLogger } from "./villager_death_logger.js";
 
 const logger = createLogger("Essentials");
 
@@ -11,15 +12,17 @@ const logger = createLogger("Essentials");
  * Essentials – zentraler Einstiegspunkt.
  *
  * Die eigentliche Funktionalität liegt bewusst in getrennten Modulen:
- * - state.js      Laufzeitdaten
- * - storage.js    Dynamic Properties / Persistenz
- * - players.js    Spielerauflösung und Command-Helfer
- * - teleport.js   Spawn, Home, Back und TPA
- * - messaging.js  MSG / Reply
- * - admin.js      Admin-Werkzeuge
+ * - state.js                   Laufzeitdaten
+ * - storage.js                 Dynamic Properties / Persistenz
+ * - players.js                 Spielerauflösung und Command-Helfer
+ * - teleport.js                Spawn, Home, Back und TPA
+ * - messaging.js               MSG / Reply
+ * - admin.js                   Admin-Werkzeuge
+ * - villager_death_logger.js   detaillierte Villager-Todeslogs
  */
 
 registerTeleportEvents();
+registerVillagerDeathLogger();
 
 world.afterEvents.playerSpawn?.subscribe?.((event) => {
     if (!event?.initialSpawn) return;
