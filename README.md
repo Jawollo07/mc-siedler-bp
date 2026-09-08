@@ -42,7 +42,7 @@ Der Händler besitzt die Variant-ID `7` und den Tag `trader_enchantments`. Dadur
 
 Die optionale `world.afterEvents.entitySpawn`-Initialisierung wird nur verwendet, wenn das Event tatsächlich verfügbar ist. Fehlt das Event, übernimmt die periodische Händler-Recovery die Initialisierung.
 
-Die Custom Commands werden korrekt über **`system.beforeEvents.startup`** registriert. `startup` gehört zur `system`-API und darf nicht über `world.beforeEvents` registriert werden. Dadurch startet `trader_commands.js` auch mit der aktuellen Bedrock Script API ohne `cannot read property 'subscribe' of undefined` an dieser Stelle.
+Die Custom Commands werden korrekt über **`system.beforeEvents.startup`** registriert. `startup` gehört zur `system`-API und darf nicht über `world.beforeEvents` registriert werden. Dadurch starten Händler- und Anti-AFK-Commands mit der aktuellen Bedrock Script API ohne den entsprechenden `subscribe`-Fehler.
 
 ### Händler-Commands
 
@@ -64,6 +64,25 @@ weapons
 supplies
 soldiers
 enchantments
+```
+
+## 🛡️ Anti-AFK
+
+Das Anti-AFK-System liegt unter `scripts/antiafk/` und erkennt Inaktivität über Bewegung sowie relevante Spieleraktionen. Es unterstützt Warnungen, AFK-Markierung, automatische Kicks und manuelle AFK-Steuerung.
+
+Die Custom Commands werden über **`system.beforeEvents.startup`** registriert. Optional fehlende After-/Before-Events werden mit optional chaining abgesichert, damit eine versionsabhängige API nicht mehr den zentralen Loader zum Absturz bringt.
+
+Verfügbare Commands:
+
+```text
+/siedler:afk
+/siedler:afk_status
+/siedler:afk_on
+/siedler:afk_off
+/siedler:afk_kick_on
+/siedler:afk_kick_off
+/siedler:afk_kick_time <minuten>
+/siedler:afk_reset
 ```
 
 ## 📝 Logging
@@ -110,7 +129,7 @@ scripts/core/main.js
 │   └── trader_commands.js [API-Guards + system.beforeEvents.startup]
 ├── Monster
 ├── Essentials
-├── Anti-AFK
+├── Anti-AFK [system.beforeEvents.startup + Event-Guards]
 └── Soldier
 
 trading/
