@@ -145,12 +145,32 @@ Erfasst werden unter anderem Zombies, Zombie-Villager, Husk, Drowned, Skelette, 
 /siedler:soldier_tool
 /siedler:soldier_info
 /siedler:soldier_xp <Amount>
-/siedler:soldier_tp
+/siedler:soldier_tp [Target]
 ```
 
-`/siedler:soldier_tp` teleportiert **alle eigenen, aktuell registrierten Soldaten** zum ausführenden Spieler. Die Soldaten werden dabei in einer kleinen Formation um den Spieler verteilt, damit sie nicht auf derselben Position übereinander spawnen. Bei Kavallerie wird das zugehörige Pferd ebenfalls mit teleportiert.
+`/siedler:soldier_tp` unterstützt jetzt mehrere Zielarten. Ohne `Target` werden weiterhin **alle eigenen, aktuell registrierten Soldaten** zum ausführenden Spieler teleportiert. Die Einheiten werden in einer Formation verteilt; bei Kavallerie wird das zugehörige Pferd ebenfalls mit teleportiert.
 
-Der Teleport berücksichtigt die `ownerId`-Zuordnung und kann daher keine fremden Soldaten teleportieren. Die Einheiten können dabei auch aus einer anderen Dimension zum Spieler geholt werden.
+Unterstützte `Target`-Werte:
+
+```text
+/siedler:soldier_tp all
+/siedler:soldier_tp selected
+/siedler:soldier_tp staff
+/siedler:soldier_tp nearest
+/siedler:soldier_tp group:<Gruppenname>
+/siedler:soldier_tp <Gruppenname>
+/siedler:soldier_tp soldier:<Entity-ID>
+/siedler:soldier_tp <NameTag>
+```
+
+- `all` – alle eigenen Soldaten
+- `selected` / `selection` / `staff` – die aktuell mit dem **Soldatenstab** ausgewählten Soldaten
+- `nearest` / `single` – der nächste eigene Soldat
+- `group:<Name>` oder direkt `<Gruppenname>` – alle Mitglieder der eigenen Gruppe
+- `soldier:<Entity-ID>` – ein einzelner eigener Soldier über seine Entity-ID
+- `<NameTag>` – ein einzelner eigener Soldier über seinen aktuellen NameTag
+
+Die Auswahl wird immer anhand der `ownerId` geprüft. Fremde Soldaten können dadurch nicht über den Teleport-Command übernommen werden. Gruppen- und Staff-Auswahlen werden nach der Auswahl ebenfalls in Formation teleportiert. Bei einem Cross-Dimension-Teleport wird das Soldier-Mount gemeinsam mit dem Soldier in die Dimension des Spielers versetzt.
 
 ### Bewegungs- und Kampf-Commands
 
@@ -227,6 +247,7 @@ scripts/core/main.js
 ├── Anti-AFK [system.beforeEvents.startup + Event-Guards]
 └── Soldier
     ├── commands.js [inkl. /siedler:soldier_tp]
+    ├── teleport.js [all / selected / group / individual / staff selection]
     ├── registry.js [persistente Entity-Erkennung nach Neustart]
     ├── monster_targeting.js [feindliche Monster-Zielsuche]
     ├── cavalry_controller.js [mount-basierte Kavallerie-Steuerung]
