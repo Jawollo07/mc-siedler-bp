@@ -14,6 +14,7 @@
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - **Beschleunigte Soldier-Bewegung mit Terrain-Unterstützung für Blöcke und Stufen**
 - **Erweiterte lokale A*-Wegfindung mit Höhenwechseln, Umwegen und Stuck-Recovery**
+- **Automatische Zielsuche für normale passive/neutral Tiere**
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
 - Detaillierter Villager-Todeslogger mit Todesursache, Verursacher und Claim-Team
@@ -129,6 +130,12 @@ Die Wegfindung berücksichtigt:
 
 Die A*-Wegfindung ersetzt die bestehende Kampf-KI nicht. Sie liefert die nächste sinnvolle Bewegungsposition an die vorhandene Beschleunigungs-, Formations- und Terrain-Bewegung. Dadurch bleiben Befehle wie `move`, `follow`, `attack`, `defend` und `patrol` kompatibel, sofern die jeweilige KI einen Bewegungsbefehl bzw. ein Ziel setzt.
 
+### Tier-Zielsuche
+
+`scripts/soldier/animal_targeting.js` ergänzt die autonome Zielsuche um eine **explizite Whitelist normaler passiver und neutraler Tiere**. Wenn ein eigener Soldier kein aktuelles Ziel und keinen manuellen Befehl hat, kann er in Reichweite Tiere wie Kühe, Schweine, Schafe, Hühner, Pferde, Ziegen, Wölfe, Katzen, Bienen, Frösche und weitere definierte Vanilla-Tiere als Ziel auswählen.
+
+Bewusst nicht über diese Tier-Zielsuche erfasst werden Spieler, Villager, Händler oder beliebige andere NPCs. Soldier-Mounts mit dem Tag `soldier_mount` werden ebenfalls ignoriert, damit Kavallerie nicht das eigene Reittier als Ziel auswählt. Das bestehende Team-/Feindverhalten für Spieler und andere Soldiers bleibt davon getrennt.
+
 ### Soldier-Commands
 
 ```text
@@ -219,6 +226,7 @@ scripts/core/main.js
 └── Soldier
     ├── commands.js [inkl. /siedler:soldier_tp]
     ├── registry.js [persistente Entity-Erkennung nach Neustart]
+    ├── animal_targeting.js [passive/neutral Tier-Zielsuche]
     ├── pathfinding.js [erweiterte lokale A*-Wegfindung + Stuck-Recovery]
     ├── terrain_movement.js [Speed + Block/Stufen-Überwindung + A*-Sprunghinweise]
     ├── groups.js
