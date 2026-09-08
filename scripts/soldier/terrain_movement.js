@@ -14,11 +14,8 @@ const lastJump = new Map();
 
 /**
  * Terrain assistance for the custom impulse-based Soldier AI.
- *
- * The normal Soldier AI deliberately uses impulses for responsive formation
- * movement. That bypasses vanilla path navigation, so this helper adds the
- * missing terrain behaviour: faster travel and short jumps over one-block
- * obstacles / stairs. Gravity and collision then handle the landing naturally.
+ * Pathfinding hints are preferred when available; local block detection is
+ * retained as a fallback for Soldiers that are not currently path-navigating.
  */
 export function startSoldierTerrainMovement() {
     if (started) return;
@@ -37,7 +34,6 @@ function updateTerrainMovement() {
             continue;
         }
 
-        // Only assist active movement. Combat/idle states must remain untouched.
         if (soldier.phase !== SOLDIER_CONFIG.STATES.MOVE) continue;
 
         const direction = soldier.desiredDirection;
@@ -46,11 +42,8 @@ function updateTerrainMovement() {
         const movementEntity = soldier.type === "cavalry"
             ? (soldier.mount?.isValid ? soldier.mount : entity)
             : entity;
-
         if (!movementEntity?.isValid) continue;
 
-        // Give the existing AI a small additional forward impulse. This raises
-        // practical travel speed without replacing its acceleration/braking model.
         try {
             const level = Math.max(1, Math.min(7, Number(soldier.level) || 1));
             const levelBoost = 0.85 + level * 0.06;
@@ -63,7 +56,13 @@ function updateTerrainMovement() {
         } catch {}
 
         if (now - (lastJump.get(id) ?? 0) < JUMP_COOLDOWN_MS) continue;
-        if (!needsTerrainStep(movementEntity, direction)) continue;
+
+        const pathState = soldier.pathfinding;
+        const pathWantsJump = pathState?.jumpRequired === true &&
+            Math.abs(Number(pathState.verticalDelta) || 0) > 0;
+        const terrainWantsJump = needsTerrainStep(movementEntity, direction);
+
+        if (!pathWantsJump && !terrainWantsJump) continue;
 
         try {
             movementEntity.applyImpulse({
@@ -88,12 +87,9 @@ function needsTerrainStep(entity, direction) {
 
     if (!feetBlock || !headBlock || !aboveBlock) return false;
 
-    // If the block directly ahead at foot level is solid but the space above is
-    // free, a short jump lets the soldier climb a one-block obstacle or stair.
     const blockedAtFeet = !isPassable(feetBlock);
     const freeAtHead = isPassable(headBlock);
     const freeAbove = isPassable(aboveBlock);
-
     return blockedAtFeet && freeAtHead && freeAbove;
 }
 
@@ -108,10 +104,10 @@ function safeBlock(dimension, x, y, z) {
 function isPassable(block) {
     if (!block) return false;
     try {
-        if (block.isAir) return true;
-        if (block.isLiquid) return true;
+        if (block.isAir || block.isLiquid) return true;
         const id = String(block.typeId ?? "");
-        return id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:water" || id === "minecraft:flowing_water";
+        return id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air" ||
+            id === "minecraft:water" || id === "minecraft:flowing_water";
     } catch {
         return false;
     }
