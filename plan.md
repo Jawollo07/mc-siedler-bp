@@ -34,6 +34,10 @@
 - [x] Handelsfenster für spezialisierte Händler repariert
 - [x] Händler-Trade-Tables über Component Groups
 - [x] Händler-Spawn-Initialisierung und Recovery
+- [x] **Verzauberungshändler-Villager mit eigener Trade-Table**
+- [x] **Verzauberungshändler über `/siedler:trader enchantments` und `/siedler:trader_here enchantments` verfügbar**
+- [x] **Verzauberte Bücher über `enchant_book_for_trading` nach Bedrock-Handelslogik**
+- [x] **Variant-ID `7` und Tag `trader_enchantments` für stabile Händler-Recovery**
 - [x] Soldatenhändler mit eigener Rekrutierungs-UI
 - [x] Soldatenhändler-Interaktion über `beforeEvents.playerInteractWithEntity`
 - [x] Vanilla-Interaktion des Soldatenhändlers wird für die eigene UI abgefangen
