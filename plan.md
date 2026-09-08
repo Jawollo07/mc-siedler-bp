@@ -18,6 +18,7 @@
 - [x] Handelsfenster für spezialisierte Händler repariert
 - [x] Händler-Trade-Tables über Component Groups
 - [x] Händler-Spawn-Initialisierung und Recovery
+- [x] Händler-Spawn-Event gegen fehlende `world.afterEvents.entitySpawn`-API abgesichert
 - [x] Verzauberungshändler-Villager mit eigener Trade-Table
 - [x] Verzauberungshändler über `/siedler:trader enchantments` und `/siedler:trader_here enchantments` verfügbar
 - [x] Verzauberte Bücher über `enchant_book_for_trading` nach Bedrock-Handelslogik
@@ -45,6 +46,7 @@
 - [x] Taktische Kavallerie-Zustände: Approach, Charge, Hit, Pass
 - [x] Charge-Schaden und Knockback
 - [x] Pass-Verhalten und Stuck-Erkennung
+- [x] Vanilla-Pferd auf Hindernisse und Terrain-Wechsel testen
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
@@ -64,16 +66,16 @@
 8. Angriffe, Treffer und Animationen synchronisieren
 9. Kavallerie auf realen Serverlogs testen
 10. Charge/Pass-Verhalten gegen mehrere Gegner testen
-11. Vanilla-Pferd auf Hindernisse und Terrain-Wechsel testen
-12. Bogenschützen-Schaden vollständig mit dem Soldier-Level synchronisieren
-13. Pfeilphysik mit Ingame-Flugtests feinjustieren
-14. Essentials-Konfiguration aus den Funktionsmodulen herauslösen
-15. Essentials optional um Rang-/Team-Limits erweitern
-16. Persistentes Claim-Rollback als optionales Admin-System entwickeln
-17. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen erweitern
-18. Logging auf weitere große Untermodule wie Teams-Core und Soldier-KI ausweiten
-19. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
-20. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
+11. Bogenschützen-Schaden vollständig mit dem Soldier-Level synchronisieren
+12. Pfeilphysik mit Ingame-Flugtests feinjustieren
+13. Essentials-Konfiguration aus den Funktionsmodulen herauslösen
+14. Essentials optional um Rang-/Team-Limits erweitern
+15. Persistentes Claim-Rollback als optionales Admin-System entwickeln
+16. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen erweitern
+17. Logging auf weitere große Untermodule wie Teams-Core und Soldier-KI ausweiten
+18. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
+19. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
+20. API-Kompatibilitätsguards für weitere optionale/versionsabhängige Bedrock-Events prüfen
 
 ### Leitprinzip
 
