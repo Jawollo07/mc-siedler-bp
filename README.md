@@ -10,7 +10,7 @@
 - Teams, Diplomatie, Claims und Wirtschaft
 - Claim-Protection mit Block-Recovery und Item-Rückgabe
 - Zentraler Marktplatz und spezialisierte Händler
-- **Verzauberungshändler-Villager mit umfangreicher Auswahl an verzauberten Büchern**
+- **Verzauberungshändler-Villager mit vollständigem Pool aller definierten Angebote**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
@@ -32,7 +32,7 @@ Der Typ `enchantments` ist über die bestehenden Trader-Commands verfügbar:
 /siedler:trader_here enchantments
 ```
 
-Der Händler bietet jetzt eine deutlich größere Auswahl an verzauberten Büchern. Die Trade-Table enthält verschiedene Preisstufen von günstigen Verzauberungen bis zu teuren High-End-Angeboten. Pro Händler werden mehrere Angebote aus dem Pool ausgewählt.
+Der Händler stellt **alle 17 aktuell definierten Angebote des Trade-Pools gleichzeitig** zur Verfügung. Es werden also nicht mehr nur einige Angebote zufällig aus dem Pool ausgewählt. Damit sind sämtliche Preis- und Verzauberungsstufen des Pools im Handelsfenster verfügbar.
 
 Die Verzauberungen werden über die Bedrock-Trade-Table-Funktion `enchant_book_for_trading` erzeugt. Dadurch werden die konkreten Verzauberungen und Stufen von der Handelslogik bestimmt, statt für jedes Buch eine feste Verzauberung einzuprogrammieren.
 
@@ -133,5 +133,5 @@ scripts/core/main.js
     └── trader.js [Logger]
 
 trading/
-└── siedler_trader_enchantments.json [umfangreiche Verzauberungsbücher-Auswahl]
+└── siedler_trader_enchantments.json [17/17 Pool-Angebote gleichzeitig verfügbar]
 ```
