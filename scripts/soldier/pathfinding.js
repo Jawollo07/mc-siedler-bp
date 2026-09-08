@@ -2,87 +2,102 @@ import { system } from "@minecraft/server";
 import { SOLDIERS, SOLDIER_CONFIG } from "./config.js";
 
 const TICK_INTERVAL = 2;
-const REPATH_TICKS = 12;
-const WAYPOINT_REACHED = 0.9;
-const DIRECT_LOOK_AHEAD = 1.4;
-const SEARCH_RADIUS = 18;
-const MAX_NODES = 900;
-const MAX_PATH_LENGTH = 48;
+const REPATH_TICKS = 10;
+const STUCK_REPATH_TICKS = 8;
+const WAYPOINT_REACHED = 0.72;
+const SEARCH_RADIUS = 20;
+const MAX_NODES = 1200;
+const MAX_PATH_LENGTH = 64;
 const DIAGONAL_COST = 1.4142;
+const MAX_STEP_UP = 1;
+const MAX_STEP_DOWN = 2;
+const GOAL_REACHED_DISTANCE = 1.1;
 
 let started = false;
 
 /**
- * Lightweight voxel A* navigation for Siedler soldiers.
+ * Local voxel A* navigator for the custom impulse based Soldier AI.
  *
- * The vanilla navigation component is not used as the soldiers are moved by
- * the custom impulse AI. Instead this module calculates a small local path
- * over walkable block cells and feeds the next waypoint back into the AI's
- * desiredDirection vector.
+ * This deliberately does not use vanilla navigation. The existing AI owns
+ * acceleration/formation/combat movement; this module only supplies a safe
+ * direction and optional jump/drop hints for the next path node.
  */
 export function startSoldierPathfinding() {
     if (started) return;
     started = true;
     system.runInterval(updatePathfinding, TICK_INTERVAL);
-    console.info("[Soldier Pathfinding] Local A* navigation enabled");
+    console.info("[Soldier Pathfinding] Extended local A* navigation enabled");
 }
 
 function updatePathfinding() {
     let index = 0;
-    for (const [id, soldier] of SOLDIERS) {
-        if ((index++ % 2) !== ((Math.floor(system.currentTick / TICK_INTERVAL)) % 2)) continue;
-        if (!isMoving(soldier)) continue;
+    const slice = Math.floor(system.currentTick / TICK_INTERVAL) % 2;
 
-        const entity = soldier.entity;
-        if (!entity?.isValid) continue;
+    for (const [id, soldier] of SOLDIERS) {
+        if ((index++ % 2) !== slice) continue;
+
+        const entity = soldier?.entity;
+        if (!entity?.isValid || !isMovementRelevant(soldier)) continue;
 
         const destination = getDestination(soldier);
         if (!destination) continue;
 
-        const targetKey = `${Math.floor(destination.x)},${Math.floor(destination.y)},${Math.floor(destination.z)}`;
-        const currentKey = cellKey(entity.location);
         const state = soldier.pathfinding ?? (soldier.pathfinding = {});
+        const targetKey = positionKey(destination);
 
         if (state.destinationKey !== targetKey) {
-            state.destinationKey = targetKey;
-            state.path = null;
-            state.index = 0;
-            state.lastPathTick = -Infinity;
+            resetPathState(state, targetKey);
         }
+
+        const start = getStartCell(entity);
+        if (!start) continue;
 
         if (state.path?.length && state.index < state.path.length) {
-            const waypoint = state.path[state.index];
-            if (horizontalDistance(entity.location, waypoint) <= WAYPOINT_REACHED) {
-                state.index++;
-                if (state.index >= state.path.length) {
-                    state.path = null;
-                }
-            }
+            advanceWaypoint(entity, state);
         }
 
-        const target = state.path?.[state.index];
-        const directBlocked = !hasDirectRoute(entity, destination);
-        const needsRepath = !state.path || state.index >= state.path.length ||
-            (directBlocked && system.currentTick - (state.lastPathTick ?? -Infinity) >= REPATH_TICKS);
+        const currentWaypoint = state.path?.[state.index];
+        const direct = hasDirectRoute(entity, destination);
+        const targetDistance = horizontalDistance(entity.location, destination);
+        const pathInvalid = currentWaypoint && !isWalkable(entity.dimension, currentWaypoint.x, currentWaypoint.y, currentWaypoint.z);
+        const timedRepath = system.currentTick - (state.lastPathTick ?? -Infinity) >= REPATH_TICKS;
+        const stuck = isStuck(entity, state);
+        const noUsablePath = !currentWaypoint && targetDistance > GOAL_REACHED_DISTANCE;
 
-        if (needsRepath && system.currentTick - (state.lastPathTick ?? -Infinity) >= REPATH_TICKS) {
+        if (pathInvalid || noUsablePath || ((!direct || stuck) && timedRepath)) {
             state.lastPathTick = system.currentTick;
-            const start = getStartCell(entity);
-            const goal = chooseGoalCell(entity, destination);
-            const path = findPath(entity.dimension, start, goal);
+            const goal = chooseGoalCell(entity, destination, start);
+            const path = goal ? findPath(entity.dimension, start, goal) : [];
             state.path = path;
             state.index = 0;
+            state.failed = path.length === 0;
         }
 
         const next = state.path?.[state.index] ?? destination;
         setDirection(soldier, entity, next);
+        applyPathHints(soldier, entity, next);
+        updateStuckState(entity, state);
     }
 }
 
-function isMoving(soldier) {
-    if (!soldier || soldier.phase !== SOLDIER_CONFIG.STATES.MOVE) return false;
-    const direction = soldier.desiredDirection;
-    return !!direction && Math.hypot(direction.x, direction.z) > 0.01;
+function isMovementRelevant(soldier) {
+    if (!soldier) return false;
+    const states = SOLDIER_CONFIG.STATES;
+    if (soldier.phase === states.IDLE) return false;
+    if (soldier.phase === states.ATTACK && !soldier.targetId) return false;
+    return !!soldier.command || !!soldier.targetId || !!soldier.entity?.getDynamicProperty?.("soldier:ownerId");
+}
+
+function resetPathState(state, targetKey) {
+    state.destinationKey = targetKey;
+    state.path = null;
+    state.index = 0;
+    state.lastPathTick = -Infinity;
+    state.failed = false;
+    state.jumpRequired = false;
+    state.dropRequired = false;
+    state.lastPosition = null;
+    state.lastProgressTick = system.currentTick;
 }
 
 function getDestination(soldier) {
@@ -90,25 +105,31 @@ function getDestination(soldier) {
     const command = soldier.command;
 
     if (command?.position && isPosition(command.position)) return command.position;
+
     if (Array.isArray(command?.positions) && command.positions.length) {
-        const index = Math.min(command.patrolIndex ?? 0, command.positions.length - 1);
-        return command.positions[index];
+        const patrolIndex = Math.max(0, Math.min(command.patrolIndex ?? 0, command.positions.length - 1));
+        return command.positions[patrolIndex];
     }
 
     if (soldier.targetId) {
         try {
             const target = entity.dimension.getEntities({
                 location: entity.location,
-                maxDistance: SOLDIER_CONFIG.SEARCH_RADIUS + 8
+                maxDistance: SOLDIER_CONFIG.SEARCH_RADIUS + 12
             }).find(candidate => candidate.id === soldier.targetId);
             if (target?.isValid) return target.location;
         } catch {}
     }
 
+    // Follow/owner fallback. getPlayers() is not assumed to exist on Dimension.
     try {
         const ownerId = entity.getDynamicProperty("soldier:ownerId");
-        if (ownerId) {
-            const owner = entity.dimension.getPlayers?.().find?.(player => player.id === ownerId);
+        if (typeof ownerId === "string" && ownerId.length) {
+            const owner = entity.dimension.getEntities({
+                location: entity.location,
+                maxDistance: 128,
+                families: ["player"]
+            }).find(candidate => candidate.id === ownerId);
             if (owner?.isValid) return owner.location;
         }
     } catch {}
@@ -116,33 +137,35 @@ function getDestination(soldier) {
     return null;
 }
 
-function chooseGoalCell(entity, destination) {
-    const start = getStartCell(entity);
+function chooseGoalCell(entity, destination, start) {
     const dx = destination.x - entity.location.x;
     const dz = destination.z - entity.location.z;
     const distance = Math.hypot(dx, dz);
 
+    let desired;
     if (distance <= SEARCH_RADIUS - 2) {
-        return nearestWalkable(entity.dimension, {
+        desired = {
             x: Math.floor(destination.x),
             y: Math.floor(destination.y),
             z: Math.floor(destination.z)
-        }, start);
+        };
+    } else {
+        const scale = (SEARCH_RADIUS - 2) / Math.max(distance, 0.01);
+        desired = {
+            x: Math.floor(entity.location.x + dx * scale),
+            y: Math.floor(entity.location.y),
+            z: Math.floor(entity.location.z + dz * scale)
+        };
     }
 
-    const scale = (SEARCH_RADIUS - 2) / Math.max(distance, 0.01);
-    return nearestWalkable(entity.dimension, {
-        x: Math.floor(entity.location.x + dx * scale),
-        y: Math.floor(entity.location.y),
-        z: Math.floor(entity.location.z + dz * scale)
-    }, start);
+    return nearestWalkable(entity.dimension, desired, start);
 }
 
 function findPath(dimension, start, goal) {
     if (!isWalkable(dimension, start.x, start.y, start.z)) return [];
     if (!isWalkable(dimension, goal.x, goal.y, goal.z)) return [];
 
-    const open = [{ x: start.x, y: start.y, z: start.z, g: 0, f: heuristic(start, goal) }];
+    const open = [{ ...start, g: 0, f: heuristic(start, goal) }];
     const cameFrom = new Map();
     const gScore = new Map([[cellKey(start), 0]]);
     const closed = new Set();
@@ -159,17 +182,19 @@ function findPath(dimension, start, goal) {
         if (closed.has(currentKey)) continue;
         closed.add(currentKey);
 
-        if (current.x === goal.x && current.y === goal.y && current.z === goal.z) {
-            return reconstructPath(cameFrom, current);
-        }
+        if (sameCell(current, goal)) return reconstructPath(cameFrom, current);
 
-        for (const neighbor of neighbors(current)) {
+        for (const neighbor of neighbors(dimension, current)) {
             const key = cellKey(neighbor);
-            if (closed.has(key) || !isWalkable(dimension, neighbor.x, neighbor.y, neighbor.z)) continue;
+            if (closed.has(key)) continue;
+            if (!canTraverse(dimension, current, neighbor)) continue;
 
-            const diagonal = neighbor.x !== current.x && neighbor.z !== current.z;
-            const stepCost = diagonal ? DIAGONAL_COST : 1;
-            const tentative = current.g + stepCost + Math.abs(neighbor.y - current.y) * 0.15;
+            const diagonal = current.x !== neighbor.x && current.z !== neighbor.z;
+            const vertical = Math.abs(neighbor.y - current.y);
+            const stepCost = (diagonal ? DIAGONAL_COST : 1) + vertical * 0.25;
+            const terrainCost = getTerrainCost(dimension, neighbor);
+            const tentative = current.g + stepCost + terrainCost;
+
             if (tentative >= (gScore.get(key) ?? Infinity)) continue;
 
             cameFrom.set(key, current);
@@ -181,35 +206,58 @@ function findPath(dimension, start, goal) {
     return [];
 }
 
-function reconstructPath(cameFrom, current) {
+function neighbors(dimension, node) {
     const result = [];
-    let node = current;
-    while (node) {
-        result.push({ x: node.x + 0.5, y: node.y, z: node.z + 0.5 });
-        node = cameFrom.get(cellKey(node));
-        if (result.length > MAX_PATH_LENGTH) break;
-    }
-    result.reverse();
-    if (result.length && result.length > 1) result.shift();
-    return result;
-}
 
-function neighbors(node) {
-    const result = [];
     for (let dx = -1; dx <= 1; dx++) {
         for (let dz = -1; dz <= 1; dz++) {
             if (dx === 0 && dz === 0) continue;
-            for (const dy of [0, 1, -1]) {
-                // Diagonal movement may not cut through a solid corner.
-                if (dx !== 0 && dz !== 0 && dy === 0) {
-                    result.push({ x: node.x + dx, y: node.y, z: node.z + dz, diagonal: true });
-                } else if (dx === 0 || dz === 0) {
-                    result.push({ x: node.x + dx, y: node.y + dy, z: node.z + dz });
-                }
+
+            const diagonal = dx !== 0 && dz !== 0;
+            // Horizontal neighbours are allowed on the same floor. Vertical
+            // neighbours are generated only when the landing cell is valid.
+            for (const dy of [0, 1, -1, -2]) {
+                if (dy === -2 && (dx !== 0 || dz !== 0)) continue;
+                if (dy === 1 && diagonal) continue;
+                if (dy < 0 && diagonal) continue;
+                result.push({ x: node.x + dx, y: node.y + dy, z: node.z + dz });
             }
         }
     }
+
     return result;
+}
+
+function canTraverse(dimension, from, to) {
+    const dy = to.y - from.y;
+    if (dy > MAX_STEP_UP || dy < -MAX_STEP_DOWN) return false;
+
+    const diagonal = from.x !== to.x && from.z !== to.z;
+    if (diagonal) {
+        // Prevent A* from cutting through the corner of two adjacent blocks.
+        const sideA = { x: to.x, y: from.y, z: from.z };
+        const sideB = { x: from.x, y: from.y, z: to.z };
+        if (!isWalkable(dimension, sideA.x, sideA.y, sideA.z)) return false;
+        if (!isWalkable(dimension, sideB.x, sideB.y, sideB.z)) return false;
+    }
+
+    if (!isWalkable(dimension, to.x, to.y, to.z)) return false;
+
+    // For an upward step, the block at the current head position must not
+    // obstruct the climb. For a drop, require a safe landing and avoid paths
+    // that fall through a completely open vertical shaft.
+    if (dy > 0 && !isPassable(safeBlock(dimension, to.x, from.y + 1, to.z))) return false;
+    if (dy < 0 && !hasSafeDrop(dimension, to)) return false;
+
+    return true;
+}
+
+function hasSafeDrop(dimension, cell) {
+    for (let y = cell.y; y >= cell.y - MAX_STEP_DOWN; y--) {
+        if (isWalkable(dimension, cell.x, y, cell.z)) return y === cell.y;
+        if (isSupport(safeBlock(dimension, cell.x, y - 1, cell.z))) return true;
+    }
+    return false;
 }
 
 function isWalkable(dimension, x, y, z) {
@@ -223,31 +271,43 @@ function isWalkable(dimension, x, y, z) {
 
 function nearestWalkable(dimension, desired, fallback) {
     if (isWalkable(dimension, desired.x, desired.y, desired.z)) return desired;
-    for (let radius = 1; radius <= 3; radius++) {
+
+    for (let radius = 1; radius <= 4; radius++) {
         for (let dx = -radius; dx <= radius; dx++) {
             for (let dz = -radius; dz <= radius; dz++) {
-                for (const dy of [0, 1, -1]) {
-                    const candidate = { x: desired.x + dx, y: desired.y + dy, z: desired.z + dz };
+                for (const dy of [0, 1, -1, -2, 2]) {
+                    const candidate = {
+                        x: desired.x + dx,
+                        y: desired.y + dy,
+                        z: desired.z + dz
+                    };
                     if (isWalkable(dimension, candidate.x, candidate.y, candidate.z)) return candidate;
                 }
             }
         }
     }
+
     return fallback;
 }
 
 function getStartCell(entity) {
-    const base = { x: Math.floor(entity.location.x), y: Math.floor(entity.location.y), z: Math.floor(entity.location.z) };
-    if (isWalkable(entity.dimension, base.x, base.y, base.z)) return base;
-    return nearestWalkable(entity.dimension, base, base);
+    const base = {
+        x: Math.floor(entity.location.x),
+        y: Math.floor(entity.location.y),
+        z: Math.floor(entity.location.z)
+    };
+    return isWalkable(entity.dimension, base.x, base.y, base.z)
+        ? base
+        : nearestWalkable(entity.dimension, base, null);
 }
 
 function hasDirectRoute(entity, destination) {
     const dx = destination.x - entity.location.x;
     const dz = destination.z - entity.location.z;
     const distance = Math.hypot(dx, dz);
-    if (distance < DIRECT_LOOK_AHEAD) return true;
-    const steps = Math.min(8, Math.ceil(distance / 1.5));
+    if (distance < 1.25) return true;
+
+    const steps = Math.min(12, Math.ceil(distance / 1.25));
     for (let i = 1; i <= steps; i++) {
         const t = i / steps;
         const x = Math.floor(entity.location.x + dx * t);
@@ -258,28 +318,109 @@ function hasDirectRoute(entity, destination) {
     return true;
 }
 
+function advanceWaypoint(entity, state) {
+    while (state.path?.[state.index] && horizontalDistance(entity.location, state.path[state.index]) <= WAYPOINT_REACHED) {
+        state.index++;
+    }
+
+    if (state.path && state.index >= state.path.length) {
+        state.path = null;
+        state.index = 0;
+    }
+}
+
 function setDirection(soldier, entity, waypoint) {
     const dx = waypoint.x - entity.location.x;
     const dz = waypoint.z - entity.location.z;
     const distance = Math.hypot(dx, dz);
     if (distance <= 0.05) return;
+
     soldier.desiredDirection.x = dx / distance;
     soldier.desiredDirection.z = dz / distance;
 }
 
+function applyPathHints(soldier, entity, waypoint) {
+    const state = soldier.pathfinding ?? (soldier.pathfinding = {});
+    const dy = Number(waypoint.y) - Math.floor(entity.location.y);
+    state.jumpRequired = dy > 0;
+    state.dropRequired = dy < 0;
+    state.verticalDelta = dy;
+
+    // terrain_movement.js consumes these hints when present. They are plain
+    // runtime fields so older Soldier data remains fully compatible.
+    if (dy > 0) state.jumpAt = system.currentTick;
+}
+
+function isStuck(entity, state) {
+    if (!state.lastPosition) return false;
+    if (system.currentTick - (state.lastProgressTick ?? system.currentTick) < STUCK_REPATH_TICKS) return false;
+    return horizontalDistance(entity.location, state.lastPosition) < 0.35;
+}
+
+function updateStuckState(entity, state) {
+    if (!state.lastPosition) {
+        state.lastPosition = { ...entity.location };
+        state.lastProgressTick = system.currentTick;
+        return;
+    }
+
+    if (horizontalDistance(entity.location, state.lastPosition) >= 0.35) {
+        state.lastPosition = { ...entity.location };
+        state.lastProgressTick = system.currentTick;
+    }
+}
+
+function getTerrainCost(dimension, cell) {
+    const floor = safeBlock(dimension, cell.x, cell.y - 1, cell.z);
+    if (!floor) return 10;
+
+    const id = String(floor.typeId ?? "");
+    if (id.includes("soul_sand") || id.includes("soul_soil")) return 1.5;
+    if (id.includes("mud")) return 0.7;
+    if (id.includes("ice")) return 0.15;
+    if (id.includes("slab") || id.includes("stairs")) return -0.1;
+    return 0;
+}
+
 function isPassable(block) {
+    if (!block) return false;
     try {
         if (block.isAir || block.isLiquid) return true;
         const id = String(block.typeId ?? "");
-        return id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:water" || id === "minecraft:flowing_water" || id.includes("_door") || id.includes("_trapdoor");
+        if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") return true;
+        if (id === "minecraft:water" || id === "minecraft:flowing_water") return true;
+        if (id.includes("_door") || id.includes("_trapdoor")) return isOpenBlock(block);
+        if (id.includes("_button") || id.includes("_lever") || id.includes("_pressure_plate")) return true;
+        return id.includes("tall_grass") || id.includes("short_grass") || id.includes("flower") || id.includes("vine") || id.includes("snow_layer");
     } catch {
         return false;
     }
 }
 
-function isSupport(block) {
+function isOpenBlock(block) {
     try {
-        if (block.isLiquid || block.isAir) return false;
+        const permutation = block.permutation;
+        const candidates = ["open_bit", "open", "door_hinge_bit"];
+        for (const state of candidates) {
+            try {
+                const value = permutation?.getState?.(state);
+                if (typeof value === "boolean") return value;
+            } catch {}
+        }
+    } catch {}
+
+    // Unknown door state: treat it as blocked rather than risking a route
+    // through a closed block. Open doors are usually represented by the
+    // permutation state above on current Bedrock builds.
+    return false;
+}
+
+function isSupport(block) {
+    if (!block) return false;
+    try {
+        if (block.isAir || block.isLiquid) return false;
+        const id = String(block.typeId ?? "");
+        if (id.includes("water") || id.includes("lava")) return false;
         return block.isSolid !== false;
     } catch {
         return true;
@@ -287,15 +428,42 @@ function isSupport(block) {
 }
 
 function safeBlock(dimension, x, y, z) {
-    try { return dimension.getBlock({ x, y, z }); } catch { return null; }
+    try {
+        return dimension.getBlock({ x, y, z });
+    } catch {
+        return null;
+    }
+}
+
+function reconstructPath(cameFrom, current) {
+    const result = [];
+    let node = current;
+
+    while (node) {
+        result.push({ x: node.x + 0.5, y: node.y, z: node.z + 0.5 });
+        node = cameFrom.get(cellKey(node));
+        if (result.length > MAX_PATH_LENGTH) break;
+    }
+
+    result.reverse();
+    if (result.length > 1) result.shift();
+    return result;
 }
 
 function heuristic(a, b) {
-    return Math.hypot(a.x - b.x, a.z - b.z) + Math.abs(a.y - b.y) * 0.8;
+    return Math.hypot(a.x - b.x, a.z - b.z) + Math.abs(a.y - b.y) * 0.9;
+}
+
+function sameCell(a, b) {
+    return a.x === b.x && a.y === b.y && a.z === b.z;
 }
 
 function cellKey(cell) {
     return `${cell.x},${cell.y},${cell.z}`;
+}
+
+function positionKey(position) {
+    return `${Math.floor(Number(position.x))},${Math.floor(Number(position.y))},${Math.floor(Number(position.z))}`;
 }
 
 function isPosition(position) {
