@@ -36,6 +36,9 @@
 - [x] Soldier-Spawn, Owner-Zuordnung, Level 1–7 und XP
 - [x] Infanterie, Bogenschütze und Kavallerie
 - [x] Soldier-Ausrüstung und Befehle
+- [x] **`/siedler:soldier_tp` teleportiert alle eigenen Soldaten zum Spieler**
+- [x] **Soldier-Teleport verteilt Einheiten in einer Formation statt auf einer einzigen Position**
+- [x] **Kavallerie-Mount wird beim Soldier-Teleport mitgeführt**
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
 - [x] Nahkampf-KI mit Windup/Cooldown
 - [x] Bogenschützen-KI mit echter `minecraft:arrow`-Physik
