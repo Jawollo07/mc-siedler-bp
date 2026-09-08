@@ -2,7 +2,7 @@
 
 > Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 07.09.2026
+**Stand:** 08.09.2026
 
 ## 📊 Aktueller Stand
 
@@ -18,6 +18,10 @@
 - [x] Essentials in Storage-, Player-, Teleport-, Messaging- und Admin-Module aufgeteilt
 - [x] Detaillierte Essentials-Logs für Homes, Todespunkte, TPA, private Nachrichten, Admin-Aktionen und Persistenz
 - [x] Essentials-Index auf reinen Orchestrator reduziert
+- [x] Detaillierter Villager-Todeslogger unter Essentials
+- [x] Villager-Todeslogs enthalten NameTag, Entity-Typ, Entity-ID, Position, Dimension und Todesursache
+- [x] Villager-Todeslogs erfassen verursachende Entity und Projektil, sofern vom Death-Event verfügbar
+- [x] Villager-Todeslogger verwendet den zentralen `[Essentials:VillagerDeath]` Logger
 - [x] Teams, Diplomatie, Claims und Wirtschaft
 - [x] Diplomatie-UI und `/diplomacy`
 - [x] Claim-Block-Recovery und Item-Rückgabe
