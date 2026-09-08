@@ -41,6 +41,12 @@
 - [x] **Kavallerie-Mount wird beim Soldier-Teleport mitgeführt**
 - [x] **Persistente Soldier-Registry rekonstruiert vorhandene Soldaten nach Serverneustart**
 - [x] **Stale Soldier-Einträge werden aus der Laufzeit-Registry entfernt**
+- [x] **Soldier-TP unterstützt einzelne Soldaten über `nearest`, Entity-ID oder NameTag**
+- [x] **Soldier-TP unterstützt Gruppen über Gruppenname oder `group:<Name>`**
+- [x] **Soldier-TP unterstützt die aktuelle Soldatenstab-Auswahl über `selected` / `staff`**
+- [x] **Soldier-TP unterstützt weiterhin `all` bzw. den Aufruf ohne Target**
+- [x] **Soldier-TP prüft bei allen Selektoren die `ownerId` und verhindert Fremd-Soldatenzugriff**
+- [x] **Soldier-TP kann ausgewählte Gruppen/Soldaten auch dimensionsübergreifend zum Spieler holen**
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
 - [x] **Explizite autonome Zielsuche für nahe feindliche Monster**
 - [x] **Passive/neutral Tiere aus der autonomen Soldier-Zielsuche ausgeschlossen**
