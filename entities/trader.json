@@ -9,7 +9,8 @@
       "trades_tools":{"minecraft:trade_table":{"display_name":"§bWerkzeughändler","table":"trading/siedler_trader_tools.json","new_screen":true,"persist_trades":true},"minecraft:variant":{"value":3}},
       "trades_weapons":{"minecraft:trade_table":{"display_name":"§cWaffenhändler","table":"trading/siedler_trader_weapons.json","new_screen":true,"persist_trades":true},"minecraft:variant":{"value":4}},
       "trades_supplies":{"minecraft:trade_table":{"display_name":"§dVersorgungshändler","table":"trading/siedler_trader_supplies.json","new_screen":true,"persist_trades":true},"minecraft:variant":{"value":5}},
-      "trades_soldiers":{"minecraft:variant":{"value":6}}
+      "trades_soldiers":{"minecraft:variant":{"value":6}},
+      "trades_enchantments":{"minecraft:trade_table":{"display_name":"§5Verzauberungshändler","table":"trading/siedler_trader_enchantments.json","new_screen":true,"persist_trades":true},"minecraft:variant":{"value":7}}
     },
     "components":{
       "minecraft:type_family":{"family":["trader","mob"]},
@@ -28,13 +29,14 @@
     },
     "events":{
       "minecraft:entity_spawned":{"add":{"component_groups":["trades_food"]}},
-      "siedler:set_food":{"remove":{"component_groups":["trades_building","trades_resources","trades_tools","trades_weapons","trades_supplies","trades_soldiers"]},"add":{"component_groups":["trades_food"]}},
-      "siedler:set_building":{"remove":{"component_groups":["trades_food","trades_resources","trades_tools","trades_weapons","trades_supplies","trades_soldiers"]},"add":{"component_groups":["trades_building"]}},
-      "siedler:set_resources":{"remove":{"component_groups":["trades_food","trades_building","trades_tools","trades_weapons","trades_supplies","trades_soldiers"]},"add":{"component_groups":["trades_resources"]}},
-      "siedler:set_tools":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_weapons","trades_supplies","trades_soldiers"]},"add":{"component_groups":["trades_tools"]}},
-      "siedler:set_weapons":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_supplies","trades_soldiers"]},"add":{"component_groups":["trades_weapons"]}},
-      "siedler:set_supplies":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_weapons","trades_soldiers"]},"add":{"component_groups":["trades_supplies"]}},
-      "siedler:set_soldiers":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_weapons","trades_supplies"]},"add":{"component_groups":["trades_soldiers"]}},
+      "siedler:set_food":{"remove":{"component_groups":["trades_building","trades_resources","trades_tools","trades_weapons","trades_supplies","trades_soldiers","trades_enchantments"]},"add":{"component_groups":["trades_food"]}},
+      "siedler:set_building":{"remove":{"component_groups":["trades_food","trades_resources","trades_tools","trades_weapons","trades_supplies","trades_soldiers","trades_enchantments"]},"add":{"component_groups":["trades_building"]}},
+      "siedler:set_resources":{"remove":{"component_groups":["trades_food","trades_building","trades_tools","trades_weapons","trades_supplies","trades_soldiers","trades_enchantments"]},"add":{"component_groups":["trades_resources"]}},
+      "siedler:set_tools":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_weapons","trades_supplies","trades_soldiers","trades_enchantments"]},"add":{"component_groups":["trades_tools"]}},
+      "siedler:set_weapons":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_supplies","trades_soldiers","trades_enchantments"]},"add":{"component_groups":["trades_weapons"]}},
+      "siedler:set_supplies":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_weapons","trades_soldiers","trades_enchantments"]},"add":{"component_groups":["trades_supplies"]}},
+      "siedler:set_soldiers":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_weapons","trades_supplies","trades_enchantments"]},"add":{"component_groups":["trades_soldiers"]}},
+      "siedler:set_enchantments":{"remove":{"component_groups":["trades_food","trades_building","trades_resources","trades_tools","trades_weapons","trades_supplies","trades_soldiers"]},"add":{"component_groups":["trades_enchantments"]}},
       "siedler:trader_interact":{}
     }
   }
