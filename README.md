@@ -13,7 +13,7 @@
 - **Verzauberungshändler-Villager mit vollständigem Pool aller definierten Angebote**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - **Beschleunigte Soldier-Bewegung mit Terrain-Unterstützung für Blöcke und Stufen**
-- **Lokale A*-Wegfindung für Hindernisse, Umwege und Höhenwechsel**
+- **Erweiterte lokale A*-Wegfindung mit Höhenwechseln, Umwegen und Stuck-Recovery**
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
 - Detaillierter Villager-Todeslogger mit Todesursache, Verursacher und Claim-Team
@@ -104,24 +104,30 @@ Die Soldier-KI verwendet weiterhin reaktionsschnelle Impulse für Formation und 
 - zusätzlicher Geschwindigkeitsbonus für Kavallerie
 - Erkennung eines soliden Blocks direkt vor dem Soldier
 - kurzer Sprungimpuls, wenn oberhalb des Hindernisses ausreichend Platz vorhanden ist
+- A*-Wegpunkte können einen gezielten Sprung über einen Höhenwechsel anfordern
 - dadurch Überwinden von **ein Block hohen Hindernissen und Stufen/Treppen**, während die normale Gravitation das Landen übernimmt
 
-### Echte Wegfindung
+### Erweiterte echte Wegfindung
 
-`scripts/soldier/pathfinding.js` ergänzt die Impulsbewegung um eine **lokale A*-Wegfindung**. Der Pathfinder baut aus der Blockwelt ein begehbares Voxel-Raster und sucht darin einen kostengünstigen Weg zum Ziel. Dadurch können Soldiers bei einem versperrten direkten Weg automatisch ausweichen, statt dauerhaft gegen einen Block zu laufen.
+`scripts/soldier/pathfinding.js` ergänzt die Impulsbewegung um eine **erweiterte lokale A*-Wegfindung**. Der Pathfinder baut aus der Blockwelt ein begehbares Voxel-Raster und sucht darin einen kostengünstigen Weg zum Ziel. Der Suchraum bleibt lokal begrenzt, damit auch größere Soldier-Gruppen keine globalen Suchläufe auslösen.
 
 Die Wegfindung berücksichtigt:
 
 - freie Blöcke für Füße und Kopf
 - festen Untergrund
-- **Höhenwechsel um eine Blockhöhe**
-- Treppen und begehbare Geländeformen, soweit die Blockgeometrie als begehbare Zelle erkannt wird
-- diagonale Bewegung
+- **Aufwärts-Schritte bis eine Blockhöhe**
+- **Abwärts-Schritte bis zwei Blockhöhen**, sofern eine sichere Landefläche vorhanden ist
+- Treppen, Slabs und andere begehbare Formen soweit sie über die verfügbare Blockinformation als begehbar erkannt werden
+- offene Türen/Trapdoors über deren Blockzustand; unbekannte/geschlossene Zustände werden sicherheitshalber blockiert
+- diagonale Bewegung **ohne diagonales Durchschneiden von Blockecken**
+- Terrain-Kosten für ungünstige bzw. bevorzugte Bodenarten
 - lokale Umwege um Wände und Hindernisse
-- regelmäßiges Repathing, wenn sich das Ziel oder die Umgebung verändert
-- Begrenzung des Suchraums, damit viele Soldiers gleichzeitig nicht den Server mit globalen Suchläufen belasten
+- regelmäßiges Repathing bei Ziel-/Umgebungsänderungen
+- **Stuck-Erkennung und beschleunigtes Repathing**, wenn ein Soldier trotz gültigem Weg nicht vorankommt
+- direkte Route als Fast-Path, bevor unnötig A* gesucht wird
+- Begrenzung auf maximal 1200 untersuchte Knoten und 64 Wegpunkte pro lokalen Suchlauf
 
-Die A*-Wegfindung ersetzt die bestehende Kampf-KI nicht. Sie liefert lediglich die nächste sinnvolle Bewegungsposition an die vorhandene Beschleunigungs-, Formations- und Terrain-Bewegung. Dadurch bleiben Befehle wie `move`, `follow`, `attack`, `defend` und `patrol` kompatibel.
+Die A*-Wegfindung ersetzt die bestehende Kampf-KI nicht. Sie liefert die nächste sinnvolle Bewegungsposition an die vorhandene Beschleunigungs-, Formations- und Terrain-Bewegung. Dadurch bleiben Befehle wie `move`, `follow`, `attack`, `defend` und `patrol` kompatibel, sofern die jeweilige KI einen Bewegungsbefehl bzw. ein Ziel setzt.
 
 ### Soldier-Commands
 
@@ -213,8 +219,8 @@ scripts/core/main.js
 └── Soldier
     ├── commands.js [inkl. /siedler:soldier_tp]
     ├── registry.js [persistente Entity-Erkennung nach Neustart]
-    ├── pathfinding.js [lokale A*-Wegfindung]
-    ├── terrain_movement.js [Speed + Block/Stufen-Überwindung]
+    ├── pathfinding.js [erweiterte lokale A*-Wegfindung + Stuck-Recovery]
+    ├── terrain_movement.js [Speed + Block/Stufen-Überwindung + A*-Sprunghinweise]
     ├── groups.js
     ├── command_manager.js
     └── KI / Nahkampf / Fernkampf / Kavallerie
