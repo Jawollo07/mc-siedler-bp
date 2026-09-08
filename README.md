@@ -13,38 +13,10 @@
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
-- Detaillierter Villager-Todeslogger mit Todesursache und Verursacher
+- Detaillierter Villager-Todeslogger mit Todesursache, Verursacher und Claim-Team
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
-
-## 💬 Chat-System
-
-Das Chat-System verwendet die native Bedrock Script API. Eine externe `ChatSend-API` oder ein separates Chat-Plugin wird nicht benötigt.
-
-### Native Chat-Unterstützung
-
-Wenn `world.beforeEvents.chatSend` verfügbar ist, übernimmt Siedler Logic:
-
-- `@team Nachricht` als privaten Team-Chat
-- öffentliche Chat-Nachrichten mit Team-Kontext
-- zentrale Chat-Logs über `[Essentials:Chat]`
-- eigene Formatierung des öffentlichen Chats
-
-Die native Chat-Schnittstelle kann je nach Server-/API-Build fehlen oder als Pre-Release-Funktion eingeschränkt sein. Deshalb besitzt Siedler Logic einen sicheren Fallback.
-
-### Fallback ohne Before-Chat-API
-
-Wenn die native Before-Chat-API nicht vorhanden ist, bleibt der normale Vanilla-Chat unangetastet. Der Team-Chat kann dann über folgende Befehle verwendet werden:
-
-```text
-/siedler:teamchat "Nachricht an mein Team"
-/siedler:tc "Nachricht an mein Team"
-```
-
-Falls `world.afterEvents.chatSend` verfügbar ist, wird der öffentliche Chat weiterhin automatisch über `[Essentials:Chat]` geloggt. Der After-Event wird bewusst nicht verwendet, um `@team` nachträglich zu verstecken, da die Nachricht zu diesem Zeitpunkt bereits gesendet wurde.
-
-Damit gibt es keinen harten Ausfall des Team-Chats, wenn die native Before-Chat-API auf einem bestimmten Bedrock-Server nicht verfügbar ist.
 
 ## 📝 Logging
 
@@ -57,51 +29,29 @@ Unterstützte Level:
 - `WARN` – behebbare Probleme und API-/Konfigurationswarnungen
 - `ERROR` – Fehler und Exceptions
 
-Wichtige Logger-Bereiche sind aktuell:
-
-- `[Claims]` / `[Claims:Protection]`
-- `[Market]` / `[Market:Commands]` / `[Market:Trader]`
-- `[Taxes]`
-- `[Monster]`
-- `[Teams]` / `[Teams:Chat]` / `[Diplomacy]`
-- `[Essentials]` / `[Essentials:Storage]` / `[Essentials:Players]` / `[Essentials:Teleport]` / `[Essentials:Messaging]` / `[Essentials:Admin]` / `[Essentials:Start]` / `[Essentials:Chat]` / `[Essentials:VillagerDeath]`
-- `[Soldier]` / `[Soldier:Spawn]` / `[Soldier:Trader]` / `[Soldier:Level]`
-- `[Anti-AFK]`
-
 ### 🧑‍🌾 Villager-Todeslogger
 
-Das Essentials-Modul `scripts/essentials/villager_death_logger.js` überwacht `world.afterEvents.entityDie` und erfasst ausschließlich Vanilla-Villager (`minecraft:villager` und `minecraft:villager_v2`). Für jeden Tod werden möglichst viele direkt aus dem Death-Event verfügbare Informationen protokolliert:
+Das Essentials-Modul `scripts/essentials/villager_death_logger.js` überwacht `world.afterEvents.entityDie` und erfasst Vanilla-Villager (`minecraft:villager` und `minecraft:villager_v2`). Für jeden Tod werden möglichst viele direkt aus dem Death-Event verfügbare Informationen protokolliert:
 
 - Villager-Name/NameTag
 - Entity-Typ
 - Entity-ID
 - exakte Position (auf Ganzzahl-Koordinaten gerundet)
 - Dimension
+- **aktueller Claim und das dem Claim zugeordnete Team**
 - Todesursache aus `damageSource.cause`
 - verursachende Entity inklusive Typ, NameTag und ID, sofern vorhanden
 - verursachendes Projektil inklusive Typ, NameTag und ID, sofern vorhanden
 
+Das Team wird dabei **direkt über den Claim an der Todesposition** (`getClaimAt(villager.location)`) ermittelt. Dadurch wird nicht irgendein Besitzer des Villagers verwendet, sondern das Team, dessen Claim den aktuellen Standort des Villagers abdeckt. Befindet sich der Villager außerhalb eines Claims, wird `Kein Claim` protokolliert.
+
 Beispiel:
 
 ```text
-[Siedler Logic 2.x.x] [WARN] [Essentials:VillagerDeath] Villager-Tod erkannt | Name: <kein NameTag> | Typ: minecraft:villager | ID: ... | Position: 120, 64, -35 | Dimension: overworld | Todesursache: entity_attack | Verursacher: Zombie [minecraft:zombie] (ID: ...) | Projektile: keiner
+[Siedler Logic 2.x.x] [WARN] [Essentials:VillagerDeath] Villager-Tod erkannt | Name: <kein NameTag> | Typ: minecraft:villager | ID: ... | Position: 120, 64, -35 | Dimension: overworld | Aktueller Claim / Team: Rot | Todesursache: entity_attack | Verursacher: Zombie [minecraft:zombie] (ID: ...) | Projektile: keiner
 ```
 
 Der Logger verwendet bewusst `WARN`, damit Villager-Tode auch beim normalen `INFO`-Log-Level in der Serverkonsole sichtbar sind. Wiederholte identische Warnungen werden durch das zentrale WARN-Rate-Limiting des Loggers gebremst.
-
-### WARN-Rate-Limiting
-
-Wiederholte identische `WARN`-Meldungen werden automatisch gebremst. Standardmäßig wird dieselbe Warnung höchstens einmal innerhalb von **10 Sekunden** ausgegeben. Unterdrückte Wiederholungen werden beim nächsten erlaubten Auftreten zusammengefasst.
-
-Das gilt für `logger.warn()` und für bestehende `console.warn()`-Aufrufe über die Console-Bridge. Das Intervall kann vor dem Laden des Packs angepasst werden:
-
-```js
-globalThis.SIEDLER_WARN_RATE_LIMIT_MS = 5000;
-```
-
-Mit `0` wird das Rate-Limiting deaktiviert. Laufzeitseitig steht `setWarnRateLimit(milliseconds)` zur Verfügung.
-
-Neue Untermodule sollen möglichst einen eigenen Scoped Logger verwenden und Tick-/Event-Diagnose auf `DEBUG` halten, damit die Serverkonsole nicht unnötig belastet wird.
 
 ## 🧰 Essentials
 
@@ -115,94 +65,8 @@ Das Essentials-System ist modular aufgebaut. `scripts/essentials/index.js` dient
 - `admin.js` – Heal, Feed, God, Fly, Kill, Clear sowie Zeit-/Wetterbefehle
 - `start.js` – Startsystem
 - `player_stats.js` – Spieler-Dashboard und Statistiken
-- `villager_death_logger.js` – detaillierte Protokollierung von Villager-Toden
+- `villager_death_logger.js` – detaillierte Protokollierung von Villager-Toden inklusive Claim-Team
 - `../teams/chat.js` – native Public-/Team-Chat-Anbindung, Fallback und Chat-Logging
-
-Die Essentials-Module besitzen jeweils eigene Scoped Logs. Dadurch lassen sich beispielsweise Home-, TPA-, Speicher-, Admin- und Villager-Todesereignisse getrennt analysieren, ohne die komplette Serverkonsole durchsuchen zu müssen.
-
-## 🪖 Soldatenverwaltung
-
-Der Soldatenstab öffnet eine zentrale Verwaltungsoberfläche für eigene Soldaten. Einzelne Soldaten können ausgewählt und direkt gesteuert werden. Zusätzlich gibt es eine Mehrfachauswahl, Gruppenverwaltung und Formationen.
-
-Die Mehrfachauswahl und die Mitgliederverwaltung verwenden `ModalFormData.toggle()` mit den aktuellen `ModalFormDataToggleOptions` und `defaultValue`.
-
-## 🪖 Soldatenhändler
-
-Der Soldatenhändler ist ein `siedler:trader` und verwendet eine eigene `ActionFormData`-Rekrutierungsoberfläche. Die Interaktion wird über `world.beforeEvents.playerInteractWithEntity` abgefangen.
-
-## 🐎 Kavallerie
-
-Kavallerie verwendet ein normales erwachsenes `minecraft:horse` und wird über `/ride` auf das Mount gesetzt. Die KI verwendet taktische Zustände wie Approach, Charge, Hit und Pass.
-
-## 🏪 Marktplatz
-
-Es gibt einen zentralen Marktplatz mit persistentem Teleportpunkt:
-
-```text
-/market_tp_set
-/market
-```
-
-Der Marktplatz blockiert Blockabbau und Platzierung und entfernt feindliche Monster aus dem Schutzbereich.
-
-## 🤝 Diplomatie
-
-Persistente Beziehungen zwischen Teams: Verbündet, Neutral und Feindlich. Das Menü ist über `/diplomacy` für Spieler verfügbar.
-
-## 💤 Anti-AFK
-
-Das Anti-AFK-System erkennt Bewegung, Chat, Interaktionen, Blockänderungen und Kampfaktivität. Es warnt, markiert AFK-Spieler und kann sie automatisch kicken.
-
-## 💰 Steuern
-
-Die tägliche Steuer wird nur eingezogen, wenn mindestens ein Mitglied des jeweiligen Teams online ist. Die Steuer-Einlagerung verwendet einen eigenen `[Taxes]` Logger.
-
-## 🛡️ Claims
-
-Claims schützen die Team-Gebiete vor unerlaubtem Bauen, Abbauen und Interaktionen. Block-Recovery und Item-Rückgabe sind aktiviert. Claim-Verwaltung und Schutzereignisse verwenden eigene `[Claims]`-Logger.
-
-## 👹 Monster
-
-Das Monster-System verwaltet Spawn-Filtering, Claims, Pillager, Outposts und die permanente Weakness für Spieler. Konfigurations- und Spawnfehler werden über den `[Monster]` Logger erfasst.
-
-## 📦 Installation
-
-| Komponente | Stand |
-|---|---|
-| Minecraft Bedrock | `1.26.0+` |
-| `@minecraft/server` | `2.9.0` |
-| `@minecraft/server-ui` | `2.1.0` |
-| Entry Point | `scripts/core/main.js` |
-
-Nach Änderungen an Scripts oder Entity-Definitionen muss der Server/die Welt vollständig neu geladen werden.
-
-## 🎮 Wichtige Commands
-
-```text
-/diplomacy
-/afk
-/siedler:stats
-/siedler:spawn
-/siedler:sethome
-/siedler:home
-/siedler:delhome
-/siedler:tpa <spieler>
-/siedler:tpahere <spieler>
-/siedler:tpaccept
-/siedler:tpdeny
-/siedler:msg <spieler> <nachricht>
-/siedler:reply <nachricht>
-/siedler:back
-/siedler:teamchat "<nachricht>"
-/siedler:tc "<nachricht>"
-/siedler:trader <type>
-/siedler:trader_here <type>
-/siedler:trader_types
-/siedler:trader_remove
-/market
-/market_tp_set
-/siedler:spawn_soldier <type> [level]
-```
 
 ## 🧩 Architektur
 
@@ -233,7 +97,7 @@ scripts/core/main.js
 │   ├── admin.js [Logger]
 │   ├── start.js [Logger]
 │   ├── player_stats.js
-│   └── villager_death_logger.js [Detailed Death Logger]
+│   └── villager_death_logger.js [Detailed Death Logger + Claim-Team]
 ├── Anti-AFK [Logger]
 └── Soldier
     ├── ai.js
@@ -248,5 +112,3 @@ scripts/core/main.js
     ├── level.js [Logger]
     └── trader.js [Logger]
 ```
-
-Die detaillierte Planung befindet sich in `plan.md`.
