@@ -51,6 +51,8 @@
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
+- [x] Anti-AFK-Custom-Commands auf `system.beforeEvents.startup` korrigiert
+- [x] Anti-AFK-Event-Subscriptions gegen fehlende versionsabhängige Events abgesichert
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
 
 ## 🎯 Nächster Schwerpunkt
