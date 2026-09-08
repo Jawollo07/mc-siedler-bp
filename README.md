@@ -38,11 +38,33 @@ Die Verzauberungen werden über die Bedrock-Trade-Table-Funktion `enchant_book_f
 
 Der Händler besitzt die Variant-ID `7` und den Tag `trader_enchantments`. Dadurch kann die bestehende Händler-Recovery ihn erkennen und nicht versehentlich wieder zum Lebensmittelhändler machen.
 
-### Händler-Spawn-Kompatibilität
+### Händler-Spawn- und Command-Kompatibilität
 
-Die Initialisierung nutzt `world.afterEvents.entitySpawn` nur dann, wenn das Event in der aktuell laufenden Bedrock Script API tatsächlich vorhanden ist. Fehlt `entitySpawn`, wird kein `.subscribe()` auf `undefined` ausgeführt. Stattdessen übernimmt die vorhandene periodische Händler-Recovery die Initialisierung neu gespawnter bzw. noch nicht typisierter Händler.
+Die optionale `world.afterEvents.entitySpawn`-Initialisierung wird nur verwendet, wenn das Event tatsächlich verfügbar ist. Fehlt das Event, übernimmt die periodische Händler-Recovery die Initialisierung.
 
-Damit führt eine nicht verfügbare `entitySpawn`-API nicht mehr zum Fehler `TypeError: cannot read property 'subscribe' of undefined` und stoppt nicht mehr die weitere Initialisierung des Händler-Moduls.
+Die Custom Commands werden korrekt über **`system.beforeEvents.startup`** registriert. `startup` gehört zur `system`-API und darf nicht über `world.beforeEvents` registriert werden. Dadurch startet `trader_commands.js` auch mit der aktuellen Bedrock Script API ohne `cannot read property 'subscribe' of undefined` an dieser Stelle.
+
+### Händler-Commands
+
+```text
+/siedler:trader <type>
+/siedler:trader_here <type>
+/siedler:trader_types
+/siedler:trader_remove
+```
+
+Verfügbare Typen:
+
+```text
+food
+building
+resources
+tools
+weapons
+supplies
+soldiers
+enchantments
+```
 
 ## 📝 Logging
 
@@ -69,30 +91,9 @@ Das Essentials-Modul `scripts/essentials/villager_death_logger.js` überwacht `w
 - verursachende Entity inklusive Typ, NameTag und ID, sofern vorhanden
 - verursachendes Projektil inklusive Typ, NameTag und ID, sofern vorhanden
 
-Das Team wird dabei **direkt über den Claim an der Todesposition** (`getClaimAt(villager.location)`) ermittelt. Dadurch wird nicht irgendein Besitzer des Villagers verwendet, sondern das Team, dessen Claim den aktuellen Standort des Villagers abdeckt. Befindet sich der Villager außerhalb eines Claims, wird `Kein Claim` protokolliert.
-
-Beispiel:
-
-```text
-[Siedler Logic 2.x.x] [WARN] [Essentials:VillagerDeath] Villager-Tod erkannt | Name: <kein NameTag> | Typ: minecraft:villager | ID: ... | Position: 120, 64, -35 | Dimension: overworld | Aktueller Claim / Team: Rot | Todesursache: entity_attack | Verursacher: Zombie [minecraft:zombie] (ID: ...) | Projektile: keiner
-```
-
-Der Logger verwendet bewusst `WARN`, damit Villager-Tode auch beim normalen `INFO`-Log-Level in der Serverkonsole sichtbar sind. Wiederholte identische Warnungen werden durch das zentrale WARN-Rate-Limiting des Loggers gebremst.
-
 ## 🧰 Essentials
 
-Das Essentials-System ist modular aufgebaut. `scripts/essentials/index.js` dient nur noch als Einstiegspunkt und verdrahtet die einzelnen Bereiche:
-
-- `state.js` – Homes, Todespunkte, TPA-Anfragen, Reply-Ziele sowie God-/Fly-Zustände
-- `storage.js` – Laden und Speichern der Dynamic Properties inklusive Validierung
-- `players.js` – sichere Spielerauflösung per ID, exaktem Namen oder eindeutigem Prefix
-- `teleport.js` – `/siedler:spawn`, Homes, `/siedler:back` und TPA/TPAHere
-- `messaging.js` – `/siedler:msg` und `/siedler:reply`
-- `admin.js` – Heal, Feed, God, Fly, Kill, Clear sowie Zeit-/Wetterbefehle
-- `start.js` – Startsystem
-- `player_stats.js` – Spieler-Dashboard und Statistiken
-- `villager_death_logger.js` – detaillierte Protokollierung von Villager-Toden inklusive Claim-Team
-- `../teams/chat.js` – native Public-/Team-Chat-Anbindung, Fallback und Chat-Logging
+Das Essentials-System ist modular aufgebaut. `scripts/essentials/index.js` dient als Einstiegspunkt und verdrahtet die einzelnen Bereiche.
 
 ## 🧩 Architektur
 
@@ -101,42 +102,16 @@ scripts/core/main.js
 ├── logger.js
 ├── dynamic_properties.js
 ├── Teams
-│   ├── index.js [Logger]
-│   ├── chat.js [Native Chat Adapter + Fallback + Logger]
-│   └── relations.js [Logger]
-├── Taxes [Logger]
+├── Taxes
 ├── Claims
-│   ├── index.js [Logger]
-│   └── protection.js [Logger]
 ├── Market
-│   ├── market_place.js [Logger]
-│   ├── commands.js [Logger]
-│   └── trader_commands.js [Logger + Enchantment Trader + API-Guard]
-├── Monster [Logger]
+│   ├── market_place.js
+│   ├── commands.js
+│   └── trader_commands.js [API-Guards + system.beforeEvents.startup]
+├── Monster
 ├── Essentials
-│   ├── index.js [Orchestrator]
-│   ├── state.js
-│   ├── storage.js [Logger]
-│   ├── players.js [Logger]
-│   ├── teleport.js [Logger]
-│   ├── messaging.js [Logger]
-│   ├── admin.js [Logger]
-│   ├── start.js [Logger]
-│   ├── player_stats.js
-│   └── villager_death_logger.js [Detailed Death Logger + Claim-Team]
-├── Anti-AFK [Logger]
+├── Anti-AFK
 └── Soldier
-    ├── ai.js
-    ├── ranged_ai.js
-    ├── cavalry_ai.js
-    ├── spawn.js [Logger]
-    ├── config.js
-    ├── commands.js
-    ├── command_manager.js
-    ├── groups.js
-    ├── ui.js
-    ├── level.js [Logger]
-    └── trader.js [Logger]
 
 trading/
 └── siedler_trader_enchantments.json [17/17 Pool-Angebote gleichzeitig verfügbar]
