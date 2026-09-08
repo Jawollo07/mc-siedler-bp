@@ -18,7 +18,25 @@ function isSoldierTrader(trader) { if (!trader?.isValid || trader.typeId !== TRA
 function hasTraderRole(trader) { return Object.values(TRADER_TYPES).some(config => { try { return config.tag && trader.hasTag(config.tag); } catch { return false; } }) || isSoldierTrader(trader); }
 function applyTraderType(trader, type) { const config = TRADER_TYPES[type]; if (!config || !trader?.isValid) return false; try { trader.triggerEvent(config.event); if (config.tag && !trader.hasTag(config.tag)) trader.addTag(config.tag); try { trader.nameTag = config.name; } catch {} return true; } catch (error) { logger.warn(`Typ ${type} konnte nicht angewendet werden: ${error}`); return false; } }
 function spawnTrader(player, type, location) { const config = TRADER_TYPES[type]; if (!config) { reply(player, `§cUnbekannter Typ: ${type}`); reply(player, `§7Verfügbar: ${Object.keys(TRADER_TYPES).join(", ")}`); return; } try { const trader = player.dimension.spawnEntity(TRADER_TYPE, location); system.run(() => { if (!applyTraderType(trader, type)) { reply(player, "§cHändler konnte nicht initialisiert werden."); return; } logger.debug(`Händler gespawnt: type=${type}, player=${player.id}`); reply(player, `§a${config.name} §agespawnt.`); }); } catch (error) { logger.warn(`Spawn fehlgeschlagen: ${error}`); reply(player, "§cHändler konnte nicht gespawnt werden."); } }
-world.afterEvents.entitySpawn.subscribe((event) => { const trader = event.entity; if (trader.typeId !== TRADER_TYPE) return; system.run(() => { try { if (!hasTraderRole(trader)) applyTraderType(trader, "food"); } catch (error) { logger.warn(`Spawn-Initialisierung fehlgeschlagen: ${error}`); } }); });
+
+// entitySpawn is not available on every Bedrock Script API/runtime combination.
+// Keep trader recovery below as the guaranteed fallback instead of crashing the whole module.
+if (world.afterEvents?.entitySpawn?.subscribe) {
+    world.afterEvents.entitySpawn.subscribe(({ entity }) => {
+        const trader = entity;
+        if (trader.typeId !== TRADER_TYPE) return;
+        system.run(() => {
+            try {
+                if (!hasTraderRole(trader)) applyTraderType(trader, "food");
+            } catch (error) {
+                logger.warn(`Spawn-Initialisierung fehlgeschlagen: ${error}`);
+            }
+        });
+    });
+} else {
+    logger.warn("world.afterEvents.entitySpawn ist in dieser Script-API-Version nicht verfügbar; Händler-Recovery übernimmt die Initialisierung.");
+}
+
 system.runInterval(() => { for (const dimensionId of ["overworld", "nether", "the_end"]) try { const dimension = world.getDimension(dimensionId); for (const trader of dimension.getEntities({ type: TRADER_TYPE })) if (!hasTraderRole(trader)) applyTraderType(trader, "food"); } catch (error) { logger.debug(`Trader-Recovery ${dimensionId} fehlgeschlagen: ${error}`); } }, 200);
 world.beforeEvents.startup.subscribe((event) => { const registry = event.customCommandRegistry;
     registry.registerCommand({ name: "siedler:trader", description: "Spawnt einen vordefinierten Händler.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ name: "type", type: CustomCommandParamType.String }] }, (origin, type) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; system.run(() => spawnTrader(player, String(type).toLowerCase(), player.location)); return { status: CustomCommandStatus.Success }; });
