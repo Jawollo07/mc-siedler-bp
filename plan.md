@@ -42,6 +42,7 @@
 - [x] **Persistente Soldier-Registry rekonstruiert vorhandene Soldaten nach Serverneustart**
 - [x] **Stale Soldier-Einträge werden aus der Laufzeit-Registry entfernt**
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
+- [x] **Explizite autonome Zielsuche für normale passive/neutral Tiere**
 - [x] Nahkampf-KI mit Windup/Cooldown
 - [x] **Beschleunigte Soldier-Bewegung mit zusätzlichem Level-/Kavallerie-Boost**
 - [x] **Terrain-Erkennung für solide Blöcke vor dem Soldier**
