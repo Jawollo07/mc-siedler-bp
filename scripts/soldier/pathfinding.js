@@ -18,9 +18,9 @@ let started = false;
 /**
  * Local voxel A* navigator for the custom impulse based Soldier AI.
  *
- * This deliberately does not use vanilla navigation. The existing AI owns
- * acceleration/formation/combat movement; this module only supplies a safe
- * direction and optional jump/drop hints for the next path node.
+ * Vanilla navigation is intentionally not used because the Soldier AI owns
+ * acceleration, formations and combat movement. A* only supplies a safe local
+ * waypoint plus jump/drop hints for the terrain layer.
  */
 export function startSoldierPathfinding() {
     if (started) return;
@@ -44,27 +44,23 @@ function updatePathfinding() {
 
         const state = soldier.pathfinding ?? (soldier.pathfinding = {});
         const targetKey = positionKey(destination);
-
-        if (state.destinationKey !== targetKey) {
-            resetPathState(state, targetKey);
-        }
+        if (state.destinationKey !== targetKey) resetPathState(state, targetKey);
 
         const start = getStartCell(entity);
         if (!start) continue;
 
-        if (state.path?.length && state.index < state.path.length) {
-            advanceWaypoint(entity, state);
-        }
+        if (state.path?.length && state.index < state.path.length) advanceWaypoint(entity, state);
 
         const currentWaypoint = state.path?.[state.index];
         const direct = hasDirectRoute(entity, destination);
         const targetDistance = horizontalDistance(entity.location, destination);
-        const pathInvalid = currentWaypoint && !isWalkable(entity.dimension, currentWaypoint.x, currentWaypoint.y, currentWaypoint.z);
+        const pathInvalid = !!currentWaypoint && !isWalkable(entity.dimension, currentWaypoint.x, currentWaypoint.y, currentWaypoint.z);
         const timedRepath = system.currentTick - (state.lastPathTick ?? -Infinity) >= REPATH_TICKS;
         const stuck = isStuck(entity, state);
         const noUsablePath = !currentWaypoint && targetDistance > GOAL_REACHED_DISTANCE;
+        const shouldSearch = timedRepath && (pathInvalid || noUsablePath || !direct || stuck);
 
-        if (pathInvalid || noUsablePath || ((!direct || stuck) && timedRepath)) {
+        if (shouldSearch) {
             state.lastPathTick = system.currentTick;
             const goal = chooseGoalCell(entity, destination, start);
             const path = goal ? findPath(entity.dimension, start, goal) : [];
@@ -85,7 +81,16 @@ function isMovementRelevant(soldier) {
     const states = SOLDIER_CONFIG.STATES;
     if (soldier.phase === states.IDLE) return false;
     if (soldier.phase === states.ATTACK && !soldier.targetId) return false;
-    return !!soldier.command || !!soldier.targetId || !!soldier.entity?.getDynamicProperty?.("soldier:ownerId");
+    return !!soldier.command || !!soldier.targetId || hasOwner(soldier.entity);
+}
+
+function hasOwner(entity) {
+    try {
+        const ownerId = entity?.getDynamicProperty?.("soldier:ownerId");
+        return typeof ownerId === "string" && ownerId.length > 0;
+    } catch {
+        return false;
+    }
 }
 
 function resetPathState(state, targetKey) {
@@ -96,6 +101,7 @@ function resetPathState(state, targetKey) {
     state.failed = false;
     state.jumpRequired = false;
     state.dropRequired = false;
+    state.verticalDelta = 0;
     state.lastPosition = null;
     state.lastProgressTick = system.currentTick;
 }
@@ -121,7 +127,6 @@ function getDestination(soldier) {
         } catch {}
     }
 
-    // Follow/owner fallback. getPlayers() is not assumed to exist on Dimension.
     try {
         const ownerId = entity.getDynamicProperty("soldier:ownerId");
         if (typeof ownerId === "string" && ownerId.length) {
@@ -142,21 +147,20 @@ function chooseGoalCell(entity, destination, start) {
     const dz = destination.z - entity.location.z;
     const distance = Math.hypot(dx, dz);
 
-    let desired;
-    if (distance <= SEARCH_RADIUS - 2) {
-        desired = {
+    const desired = distance <= SEARCH_RADIUS - 2
+        ? {
             x: Math.floor(destination.x),
             y: Math.floor(destination.y),
             z: Math.floor(destination.z)
-        };
-    } else {
-        const scale = (SEARCH_RADIUS - 2) / Math.max(distance, 0.01);
-        desired = {
-            x: Math.floor(entity.location.x + dx * scale),
-            y: Math.floor(entity.location.y),
-            z: Math.floor(entity.location.z + dz * scale)
-        };
-    }
+        }
+        : (() => {
+            const scale = (SEARCH_RADIUS - 2) / Math.max(distance, 0.01);
+            return {
+                x: Math.floor(entity.location.x + dx * scale),
+                y: Math.floor(entity.location.y),
+                z: Math.floor(entity.location.z + dz * scale)
+            };
+        })();
 
     return nearestWalkable(entity.dimension, desired, start);
 }
@@ -184,10 +188,9 @@ function findPath(dimension, start, goal) {
 
         if (sameCell(current, goal)) return reconstructPath(cameFrom, current);
 
-        for (const neighbor of neighbors(dimension, current)) {
+        for (const neighbor of neighbors(current)) {
             const key = cellKey(neighbor);
-            if (closed.has(key)) continue;
-            if (!canTraverse(dimension, current, neighbor)) continue;
+            if (closed.has(key) || !canTraverse(dimension, current, neighbor)) continue;
 
             const diagonal = current.x !== neighbor.x && current.z !== neighbor.z;
             const vertical = Math.abs(neighbor.y - current.y);
@@ -206,25 +209,19 @@ function findPath(dimension, start, goal) {
     return [];
 }
 
-function neighbors(dimension, node) {
+function neighbors(node) {
     const result = [];
-
     for (let dx = -1; dx <= 1; dx++) {
         for (let dz = -1; dz <= 1; dz++) {
             if (dx === 0 && dz === 0) continue;
-
             const diagonal = dx !== 0 && dz !== 0;
-            // Horizontal neighbours are allowed on the same floor. Vertical
-            // neighbours are generated only when the landing cell is valid.
             for (const dy of [0, 1, -1, -2]) {
                 if (dy === -2 && (dx !== 0 || dz !== 0)) continue;
-                if (dy === 1 && diagonal) continue;
-                if (dy < 0 && diagonal) continue;
+                if (diagonal && dy !== 0) continue;
                 result.push({ x: node.x + dx, y: node.y + dy, z: node.z + dz });
             }
         }
     }
-
     return result;
 }
 
@@ -234,7 +231,6 @@ function canTraverse(dimension, from, to) {
 
     const diagonal = from.x !== to.x && from.z !== to.z;
     if (diagonal) {
-        // Prevent A* from cutting through the corner of two adjacent blocks.
         const sideA = { x: to.x, y: from.y, z: from.z };
         const sideB = { x: from.x, y: from.y, z: to.z };
         if (!isWalkable(dimension, sideA.x, sideA.y, sideA.z)) return false;
@@ -243,21 +239,18 @@ function canTraverse(dimension, from, to) {
 
     if (!isWalkable(dimension, to.x, to.y, to.z)) return false;
 
-    // For an upward step, the block at the current head position must not
-    // obstruct the climb. For a drop, require a safe landing and avoid paths
-    // that fall through a completely open vertical shaft.
-    if (dy > 0 && !isPassable(safeBlock(dimension, to.x, from.y + 1, to.z))) return false;
-    if (dy < 0 && !hasSafeDrop(dimension, to)) return false;
+    if (dy > 0) {
+        // The space above the destination must be clear so the unit can climb.
+        if (!isPassable(safeBlock(dimension, to.x, from.y + 1, to.z))) return false;
+    }
 
+    if (dy < 0 && !hasSafeDrop(dimension, to)) return false;
     return true;
 }
 
 function hasSafeDrop(dimension, cell) {
-    for (let y = cell.y; y >= cell.y - MAX_STEP_DOWN; y--) {
-        if (isWalkable(dimension, cell.x, y, cell.z)) return y === cell.y;
-        if (isSupport(safeBlock(dimension, cell.x, y - 1, cell.z))) return true;
-    }
-    return false;
+    const floor = safeBlock(dimension, cell.x, cell.y - 1, cell.z);
+    return isSupport(floor) && isWalkable(dimension, cell.x, cell.y, cell.z);
 }
 
 function isWalkable(dimension, x, y, z) {
@@ -265,8 +258,7 @@ function isWalkable(dimension, x, y, z) {
     const head = safeBlock(dimension, x, y + 1, z);
     const floor = safeBlock(dimension, x, y - 1, z);
     if (!feet || !head || !floor) return false;
-    if (!isPassable(feet) || !isPassable(head)) return false;
-    return isSupport(floor);
+    return isPassable(feet) && isPassable(head) && isSupport(floor);
 }
 
 function nearestWalkable(dimension, desired, fallback) {
@@ -276,11 +268,7 @@ function nearestWalkable(dimension, desired, fallback) {
         for (let dx = -radius; dx <= radius; dx++) {
             for (let dz = -radius; dz <= radius; dz++) {
                 for (const dy of [0, 1, -1, -2, 2]) {
-                    const candidate = {
-                        x: desired.x + dx,
-                        y: desired.y + dy,
-                        z: desired.z + dz
-                    };
+                    const candidate = { x: desired.x + dx, y: desired.y + dy, z: desired.z + dz };
                     if (isWalkable(dimension, candidate.x, candidate.y, candidate.z)) return candidate;
                 }
             }
@@ -345,10 +333,6 @@ function applyPathHints(soldier, entity, waypoint) {
     state.jumpRequired = dy > 0;
     state.dropRequired = dy < 0;
     state.verticalDelta = dy;
-
-    // terrain_movement.js consumes these hints when present. They are plain
-    // runtime fields so older Soldier data remains fully compatible.
-    if (dy > 0) state.jumpAt = system.currentTick;
 }
 
 function isStuck(entity, state) {
@@ -400,18 +384,13 @@ function isPassable(block) {
 function isOpenBlock(block) {
     try {
         const permutation = block.permutation;
-        const candidates = ["open_bit", "open", "door_hinge_bit"];
-        for (const state of candidates) {
+        for (const state of ["open_bit", "open"]) {
             try {
                 const value = permutation?.getState?.(state);
                 if (typeof value === "boolean") return value;
             } catch {}
         }
     } catch {}
-
-    // Unknown door state: treat it as blocked rather than risking a route
-    // through a closed block. Open doors are usually represented by the
-    // permutation state above on current Bedrock builds.
     return false;
 }
 
