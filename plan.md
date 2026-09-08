@@ -21,8 +21,9 @@
 - [x] Verzauberungshändler-Villager mit eigener Trade-Table
 - [x] Verzauberungshändler über `/siedler:trader enchantments` und `/siedler:trader_here enchantments` verfügbar
 - [x] Verzauberte Bücher über `enchant_book_for_trading` nach Bedrock-Handelslogik
-- [x] Verzauberungshändler mit erweitertem Pool aus 16 Angeboten/Preis- und Verzauberungsstufen
-- [x] Mehrere Angebote werden pro Händler aus dem Pool ausgewählt
+- [x] Verzauberungshändler mit erweitertem Pool aus 17 Angeboten/Preis- und Verzauberungsstufen
+- [x] Alle 17 Angebote des Verzauberungshändler-Pools gleichzeitig verfügbar
+- [x] Keine zufällige Auswahl mehr aus dem definierten Enchantment-Pool
 - [x] Variant-ID `7` und Tag `trader_enchantments` für stabile Händler-Recovery
 - [x] Soldatenhändler mit eigener Rekrutierungs-UI
 - [x] Soldatenhändler-Interaktion über `beforeEvents.playerInteractWithEntity`
