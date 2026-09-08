@@ -13,6 +13,7 @@
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
+- Detaillierter Villager-Todeslogger mit Todesursache und Verursacher
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
@@ -63,9 +64,30 @@ Wichtige Logger-Bereiche sind aktuell:
 - `[Taxes]`
 - `[Monster]`
 - `[Teams]` / `[Teams:Chat]` / `[Diplomacy]`
-- `[Essentials]` / `[Essentials:Storage]` / `[Essentials:Players]` / `[Essentials:Teleport]` / `[Essentials:Messaging]` / `[Essentials:Admin]` / `[Essentials:Start]` / `[Essentials:Chat]`
+- `[Essentials]` / `[Essentials:Storage]` / `[Essentials:Players]` / `[Essentials:Teleport]` / `[Essentials:Messaging]` / `[Essentials:Admin]` / `[Essentials:Start]` / `[Essentials:Chat]` / `[Essentials:VillagerDeath]`
 - `[Soldier]` / `[Soldier:Spawn]` / `[Soldier:Trader]` / `[Soldier:Level]`
 - `[Anti-AFK]`
+
+### 🧑‍🌾 Villager-Todeslogger
+
+Das Essentials-Modul `scripts/essentials/villager_death_logger.js` überwacht `world.afterEvents.entityDie` und erfasst ausschließlich Vanilla-Villager (`minecraft:villager` und `minecraft:villager_v2`). Für jeden Tod werden möglichst viele direkt aus dem Death-Event verfügbare Informationen protokolliert:
+
+- Villager-Name/NameTag
+- Entity-Typ
+- Entity-ID
+- exakte Position (auf Ganzzahl-Koordinaten gerundet)
+- Dimension
+- Todesursache aus `damageSource.cause`
+- verursachende Entity inklusive Typ, NameTag und ID, sofern vorhanden
+- verursachendes Projektil inklusive Typ, NameTag und ID, sofern vorhanden
+
+Beispiel:
+
+```text
+[Siedler Logic 2.x.x] [WARN] [Essentials:VillagerDeath] Villager-Tod erkannt | Name: <kein NameTag> | Typ: minecraft:villager | ID: ... | Position: 120, 64, -35 | Dimension: overworld | Todesursache: entity_attack | Verursacher: Zombie [minecraft:zombie] (ID: ...) | Projektile: keiner
+```
+
+Der Logger verwendet bewusst `WARN`, damit Villager-Tode auch beim normalen `INFO`-Log-Level in der Serverkonsole sichtbar sind. Wiederholte identische Warnungen werden durch das zentrale WARN-Rate-Limiting des Loggers gebremst.
 
 ### WARN-Rate-Limiting
 
@@ -93,9 +115,10 @@ Das Essentials-System ist modular aufgebaut. `scripts/essentials/index.js` dient
 - `admin.js` – Heal, Feed, God, Fly, Kill, Clear sowie Zeit-/Wetterbefehle
 - `start.js` – Startsystem
 - `player_stats.js` – Spieler-Dashboard und Statistiken
+- `villager_death_logger.js` – detaillierte Protokollierung von Villager-Toden
 - `../teams/chat.js` – native Public-/Team-Chat-Anbindung, Fallback und Chat-Logging
 
-Die Essentials-Module besitzen jeweils eigene Scoped Logs. Dadurch lassen sich beispielsweise Home-, TPA-, Speicher- und Admin-Probleme getrennt analysieren, ohne die komplette Serverkonsole durchsuchen zu müssen.
+Die Essentials-Module besitzen jeweils eigene Scoped Logs. Dadurch lassen sich beispielsweise Home-, TPA-, Speicher-, Admin- und Villager-Todesereignisse getrennt analysieren, ohne die komplette Serverkonsole durchsuchen zu müssen.
 
 ## 🪖 Soldatenverwaltung
 
@@ -209,7 +232,8 @@ scripts/core/main.js
 │   ├── messaging.js [Logger]
 │   ├── admin.js [Logger]
 │   ├── start.js [Logger]
-│   └── player_stats.js
+│   ├── player_stats.js
+│   └── villager_death_logger.js [Detailed Death Logger]
 ├── Anti-AFK [Logger]
 └── Soldier
     ├── ai.js
