@@ -11,6 +11,7 @@ import { startRangedAI } from "./ranged_ai.js";
 import { startSoldierTerrainMovement } from "./terrain_movement.js";
 import { startSoldierPathfinding } from "./pathfinding.js";
 import { startMonsterTargeting } from "./monster_targeting.js";
+import { startCavalryController } from "./cavalry_controller.js";
 
 const logger = createLogger("Soldier");
 
@@ -20,5 +21,6 @@ startRangedAI();
 startSoldierTerrainMovement();
 startSoldierPathfinding();
 startMonsterTargeting();
+startCavalryController();
 
 logger.success("Soldier-System geladen (AI, Nahkampf, Fernkampf, Kavallerie, Terrain-Bewegung, A*-Wegfindung und Monster-Zielsuche).");
