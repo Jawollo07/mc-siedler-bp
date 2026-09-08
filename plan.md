@@ -42,7 +42,9 @@
 - [x] **Persistente Soldier-Registry rekonstruiert vorhandene Soldaten nach Serverneustart**
 - [x] **Stale Soldier-Einträge werden aus der Laufzeit-Registry entfernt**
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
-- [x] **Explizite autonome Zielsuche für normale passive/neutral Tiere**
+- [x] **Explizite autonome Zielsuche für nahe feindliche Monster**
+- [x] **Passive/neutral Tiere aus der autonomen Soldier-Zielsuche ausgeschlossen**
+- [x] **Explizite Monster-Whitelist für Zombies, Skelette, Creeper, Spinnen, Nether-, End-, Illager- und weitere feindliche Mobs**
 - [x] Nahkampf-KI mit Windup/Cooldown
 - [x] **Beschleunigte Soldier-Bewegung mit zusätzlichem Level-/Kavallerie-Boost**
 - [x] **Terrain-Erkennung für solide Blöcke vor dem Soldier**
