@@ -10,7 +10,7 @@
 - Teams, Diplomatie, Claims und Wirtschaft
 - Claim-Protection mit Block-Recovery und Item-Rückgabe
 - Zentraler Marktplatz und spezialisierte Händler
-- **Verzauberungshändler-Villager mit verzauberten Büchern**
+- **Verzauberungshändler-Villager mit umfangreicher Auswahl an verzauberten Büchern**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
@@ -21,7 +21,7 @@
 
 ## 🛒 Händler
 
-Das Händler-System verwendet die Entity `siedler:trader` und bietet mehrere spezialisierte Händlerrollen. Der neue **Verzauberungshändler** verwendet die bestehende Villager-Darstellung des Siedler-Händlers und öffnet beim Interagieren das normale Bedrock-Handelsfenster.
+Das Händler-System verwendet die Entity `siedler:trader` und bietet mehrere spezialisierte Händlerrollen. Der **Verzauberungshändler** verwendet die bestehende Villager-Darstellung des Siedler-Händlers und öffnet beim Interagieren das normale Bedrock-Handelsfenster.
 
 ### Verzauberungshändler
 
@@ -32,7 +32,9 @@ Der Typ `enchantments` ist über die bestehenden Trader-Commands verfügbar:
 /siedler:trader_here enchantments
 ```
 
-Der Händler verwendet `trading/siedler_trader_enchantments.json` und bietet verzauberte Bücher gegen Emeralds und ein normales Buch an. Die Verzauberung wird über die offizielle Bedrock-Trade-Table-Funktion `enchant_book_for_trading` erzeugt, sodass die Angebote wie bei einem normalen Verzauberung-/Bibliothekarhändler zufällig passende Verzauberungen erhalten.
+Der Händler bietet jetzt eine deutlich größere Auswahl an verzauberten Büchern. Die Trade-Table enthält verschiedene Preisstufen von günstigen Verzauberungen bis zu teuren High-End-Angeboten. Pro Händler werden mehrere Angebote aus dem Pool ausgewählt.
+
+Die Verzauberungen werden über die Bedrock-Trade-Table-Funktion `enchant_book_for_trading` erzeugt. Dadurch werden die konkreten Verzauberungen und Stufen von der Handelslogik bestimmt, statt für jedes Buch eine feste Verzauberung einzuprogrammieren.
 
 Der Händler besitzt die Variant-ID `7` und den Tag `trader_enchantments`. Dadurch kann die bestehende Händler-Recovery ihn erkennen und nicht versehentlich wieder zum Lebensmittelhändler machen.
 
@@ -131,5 +133,5 @@ scripts/core/main.js
     └── trader.js [Logger]
 
 trading/
-└── siedler_trader_enchantments.json [Verzauberungsbücher]
+└── siedler_trader_enchantments.json [umfangreiche Verzauberungsbücher-Auswahl]
 ```
