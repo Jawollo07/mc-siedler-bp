@@ -43,6 +43,10 @@
 - [x] **Stale Soldier-Einträge werden aus der Laufzeit-Registry entfernt**
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
 - [x] Nahkampf-KI mit Windup/Cooldown
+- [x] **Beschleunigte Soldier-Bewegung mit zusätzlichem Level-/Kavallerie-Boost**
+- [x] **Terrain-Erkennung für solide Blöcke vor dem Soldier**
+- [x] **Sprunglogik zum Überwinden von ein Block hohen Hindernissen und Stufen/Treppen**
+- [x] **Terrain-Bewegung als separates Modul ohne Austausch der bestehenden Kampf-/Formations-KI**
 - [x] Bogenschützen-KI mit echter `minecraft:arrow`-Physik
 - [x] Ballistisches Zielen, Gravitation, Drag, Predictive Aim und Swept-Ray
 - [x] Spieler-Dashboard und Serverstatistiken
@@ -87,4 +91,4 @@
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern, eine gute Kampfposition einnehmen und angreifen. Kavallerie soll nicht in Gegnern stecken bleiben, sondern chargen, den Gegner passieren und anschließend neu ansetzen.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern, Gelände überwinden, eine gute Kampfposition einnehmen und angreifen. Kavallerie soll nicht in Gegnern stecken bleiben, sondern chargen, den Gegner passieren und anschließend neu ansetzen.**
