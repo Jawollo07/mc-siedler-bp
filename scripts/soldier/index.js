@@ -10,6 +10,7 @@ import { startCombatRangeFix } from "./combat_range.js";
 import { startRangedAI } from "./ranged_ai.js";
 import { startSoldierTerrainMovement } from "./terrain_movement.js";
 import { startSoldierPathfinding } from "./pathfinding.js";
+import { startAnimalTargeting } from "./animal_targeting.js";
 
 const logger = createLogger("Soldier");
 
@@ -18,5 +19,6 @@ startCombatRangeFix();
 startRangedAI();
 startSoldierTerrainMovement();
 startSoldierPathfinding();
+startAnimalTargeting();
 
-logger.success("Soldier-System geladen (AI, Nahkampf, Fernkampf, Kavallerie, Terrain-Bewegung und A*-Wegfindung).");
+logger.success("Soldier-System geladen (AI, Nahkampf, Fernkampf, Kavallerie, Terrain-Bewegung, A*-Wegfindung und Tier-Zielsuche).");
