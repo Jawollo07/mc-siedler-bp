@@ -38,6 +38,12 @@ Die Verzauberungen werden über die Bedrock-Trade-Table-Funktion `enchant_book_f
 
 Der Händler besitzt die Variant-ID `7` und den Tag `trader_enchantments`. Dadurch kann die bestehende Händler-Recovery ihn erkennen und nicht versehentlich wieder zum Lebensmittelhändler machen.
 
+### Händler-Spawn-Kompatibilität
+
+Die Initialisierung nutzt `world.afterEvents.entitySpawn` nur dann, wenn das Event in der aktuell laufenden Bedrock Script API tatsächlich vorhanden ist. Fehlt `entitySpawn`, wird kein `.subscribe()` auf `undefined` ausgeführt. Stattdessen übernimmt die vorhandene periodische Händler-Recovery die Initialisierung neu gespawnter bzw. noch nicht typisierter Händler.
+
+Damit führt eine nicht verfügbare `entitySpawn`-API nicht mehr zum Fehler `TypeError: cannot read property 'subscribe' of undefined` und stoppt nicht mehr die weitere Initialisierung des Händler-Moduls.
+
 ## 📝 Logging
 
 Das zentrale Logging-System liegt unter `scripts/core/logger.js`. Neben der globalen Console-Bridge können Module eigene Logger mit `createLogger("Modulname")` verwenden.
@@ -105,7 +111,7 @@ scripts/core/main.js
 ├── Market
 │   ├── market_place.js [Logger]
 │   ├── commands.js [Logger]
-│   └── trader_commands.js [Logger + Enchantment Trader]
+│   └── trader_commands.js [Logger + Enchantment Trader + API-Guard]
 ├── Monster [Logger]
 ├── Essentials
 │   ├── index.js [Orchestrator]
