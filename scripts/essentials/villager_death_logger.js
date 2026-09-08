@@ -1,5 +1,6 @@
 import { world } from "@minecraft/server";
 import { createLogger } from "../core/logger.js";
+import { getClaimAt } from "../claims/utils.js";
 
 const logger = createLogger("Essentials:VillagerDeath");
 
@@ -75,6 +76,17 @@ function getDamager(damageSource) {
     }
 }
 
+function getClaimTeam(entity) {
+    try {
+        const claim = getClaimAt(entity.location);
+        if (!claim) return "§7Kein Claim";
+        return safeString(claim.team, "§cUnbekanntes Team");
+    } catch (error) {
+        logger.debug(`Claim-Team konnte für Villager nicht ermittelt werden: ${error}`);
+        return "§cNicht ermittelbar";
+    }
+}
+
 function logVillagerDeath(event) {
     const villager = event?.deadEntity;
     if (!isVillager(villager)) return;
@@ -83,6 +95,7 @@ function logVillagerDeath(event) {
     const damager = getDamager(damageSource);
     const projectile = getProjectile(damageSource);
     const cause = formatCause(damageSource);
+    const claimTeam = getClaimTeam(villager);
 
     const details = [
         `Villager-Tod erkannt`,
@@ -91,6 +104,7 @@ function logVillagerDeath(event) {
         `ID: ${safeString(villager.id)}`,
         `Position: ${formatPosition(villager)}`,
         `Dimension: ${formatDimension(villager)}`,
+        `Aktueller Claim / Team: ${claimTeam}`,
         `Todesursache: ${cause}`,
         `Verursacher: ${formatEntity(damager)}`,
         `Projektile: ${formatEntity(projectile)}`
@@ -114,7 +128,7 @@ export function registerVillagerDeathLogger() {
             }
         });
 
-        logger.info("Villager-Todeslogger aktiviert. Todesursache, Verursacher, Projektil, Position und Dimension werden erfasst.");
+        logger.info("Villager-Todeslogger aktiviert. Todesursache, Verursacher, Projektil, Position, Dimension und Claim-Team werden erfasst.");
         return true;
     } catch (error) {
         logger.exception("Villager-Todeslogger konnte nicht registriert werden", error);
