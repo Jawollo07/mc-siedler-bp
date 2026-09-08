@@ -128,7 +128,7 @@ Die Wegfindung berücksichtigt:
 - direkte Route als Fast-Path, bevor unnötig A* gesucht wird
 - Begrenzung auf maximal 1200 untersuchte Knoten und 64 Wegpunkte pro lokalen Suchlauf
 
-Die A*-Wegfindung ersetzt die bestehende Kampf-KI nicht. Sie liefert die nächste sinnvolle Bewegungsposition an die vorhandene Beschleunigungs-, Formations- und Terrain-Bewegung. Dadurch bleiben Befehle wie `move`, `follow`, `attack`, `defend` und `patrol` kompatibel, sofern die jeweilige KI einen Bewegungsbefehl bzw. ein Ziel setzt.
+Für **Kavallerie** wird der normale Rider-basierte A*-Steuervektor nicht verwendet. `scripts/soldier/cavalry_controller.js` übernimmt die Bewegung direkt am Pferd. Dadurch kann der Pathfinder die Pferderichtung nicht mehr mit einer auf den Reiter bezogenen Bewegung überschreiben. Der Controller übernimmt sanftes Lenken, Geschwindigkeitsbegrenzung und direkte Zielannäherung.
 
 ### Monster-Zielsuche
 
@@ -229,6 +229,7 @@ scripts/core/main.js
     ├── commands.js [inkl. /siedler:soldier_tp]
     ├── registry.js [persistente Entity-Erkennung nach Neustart]
     ├── monster_targeting.js [feindliche Monster-Zielsuche]
+    ├── cavalry_controller.js [mount-basierte Kavallerie-Steuerung]
     ├── pathfinding.js [erweiterte lokale A*-Wegfindung + Stuck-Recovery]
     ├── terrain_movement.js [Speed + Block/Stufen-Überwindung + A*-Sprunghinweise]
     ├── groups.js
