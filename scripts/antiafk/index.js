@@ -138,7 +138,9 @@ world.afterEvents.entityHitEntity?.subscribe?.((event) => {
     if (attacker?.typeId === "minecraft:player") markActivity(attacker, "combat");
 });
 system.runInterval(tick, ANTI_AFK_CONFIG.checkIntervalTicks);
-world.beforeEvents.startup.subscribe((event) => {
+
+// Custom-command startup belongs to the system API, not world.beforeEvents.
+system.beforeEvents.startup.subscribe((event) => {
     const registry = event.customCommandRegistry;
     registerPlayerCommand(registry, "siedler:afk", "Aktiviert oder beendet deinen AFK-Status.", (origin) => {
         const player = playerFrom(origin);
