@@ -89,6 +89,10 @@ Verfügbare Commands:
 
 Das Soldier-System befindet sich unter `scripts/soldier/` und unterstützt Infanterie, Bogenschützen und Kavallerie mit Owner-Zuordnung, Leveln, XP, Ausrüstung, KI, Befehlen und Gruppenformationen.
 
+### Persistenz nach Neustarts
+
+Die Soldaten selbst bleiben als Minecraft-Entities erhalten. Die interne JavaScript-Map `SOLDIERS` ist dagegen nur zur Laufzeit vorhanden. `scripts/soldier/registry.js` baut diese Registry nach jedem Serverstart aus den tatsächlich vorhandenen Soldier-Entities und deren Dynamic Properties (`soldier:ownerId`, `soldier:type`, `soldier:level`) wieder auf. Nicht mehr vorhandene Soldaten werden aus der Registry entfernt. Dadurch zeigt der Soldatenstab nach einem Neustart nur die **tatsächlich aktuell vorhandenen eigenen Soldaten** an.
+
 ### Soldier-Commands
 
 ```text
@@ -178,6 +182,7 @@ scripts/core/main.js
 ├── Anti-AFK [system.beforeEvents.startup + Event-Guards]
 └── Soldier
     ├── commands.js [inkl. /siedler:soldier_tp]
+    ├── registry.js [persistente Entity-Erkennung nach Neustart]
     ├── groups.js
     ├── command_manager.js
     └── KI / Nahkampf / Fernkampf / Kavallerie
