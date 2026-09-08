@@ -1,6 +1,6 @@
 {
   "tiers": [{"total_exp_required":0,"groups":[
-    {"num_to_select":4,"trades":[
+    {"num_to_select":8,"trades":[
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:wheat","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:carrot","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:potato","quantity":16}],"max_uses":64,"trader_exp":1,"reward_exp":true},
@@ -10,14 +10,14 @@
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:melon_slice","quantity":16}],"max_uses":40,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":1}],"gives":[{"item":"minecraft:kelp","quantity":16}],"max_uses":40,"trader_exp":1,"reward_exp":true}
     ]},
-    {"num_to_select":3,"trades":[
+    {"num_to_select":5,"trades":[
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:beef","quantity":8}],"max_uses":48,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:porkchop","quantity":8}],"max_uses":48,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:chicken","quantity":8}],"max_uses":48,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:cod","quantity":8}],"max_uses":40,"trader_exp":1,"reward_exp":true},
       {"wants":[{"item":"minecraft:emerald","quantity":2}],"gives":[{"item":"minecraft:salmon","quantity":8}],"max_uses":40,"trader_exp":1,"reward_exp":true}
     ]},
-    {"num_to_select":3,"trades":[
+    {"num_to_select":6,"trades":[
       {"wants":[{"item":"minecraft:wheat","quantity":24}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":64,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:carrot","quantity":24}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":64,"trader_exp":2,"reward_exp":true},
       {"wants":[{"item":"minecraft:potato","quantity":24}],"gives":[{"item":"minecraft:emerald","quantity":1}],"max_uses":64,"trader_exp":2,"reward_exp":true},
