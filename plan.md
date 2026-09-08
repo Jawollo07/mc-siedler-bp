@@ -19,6 +19,7 @@
 - [x] Händler-Trade-Tables über Component Groups
 - [x] Händler-Spawn-Initialisierung und Recovery
 - [x] Händler-Spawn-Event gegen fehlende `world.afterEvents.entitySpawn`-API abgesichert
+- [x] Händler-Custom-Commands über korrektes `system.beforeEvents.startup` registriert
 - [x] Verzauberungshändler-Villager mit eigener Trade-Table
 - [x] Verzauberungshändler über `/siedler:trader enchantments` und `/siedler:trader_here enchantments` verfügbar
 - [x] Verzauberte Bücher über `enchant_book_for_trading` nach Bedrock-Handelslogik
