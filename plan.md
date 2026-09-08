@@ -47,6 +47,11 @@
 - [x] **Terrain-Erkennung für solide Blöcke vor dem Soldier**
 - [x] **Sprunglogik zum Überwinden von ein Block hohen Hindernissen und Stufen/Treppen**
 - [x] **Terrain-Bewegung als separates Modul ohne Austausch der bestehenden Kampf-/Formations-KI**
+- [x] **Lokale A*-Wegfindung für Soldiers und Kavallerie**
+- [x] **Wegfindung berücksichtigt begehbare Fuß-/Kopfhöhe und festen Untergrund**
+- [x] **Automatische Umwege um versperrte direkte Wege**
+- [x] **Lokale Repath-Suche bei veränderten Zielen oder Hindernissen**
+- [x] **Wegfindung unterstützt Höhenwechsel um eine Blockhöhe sowie diagonale Bewegung**
 - [x] Bogenschützen-KI mit echter `minecraft:arrow`-Physik
 - [x] Ballistisches Zielen, Gravitation, Drag, Predictive Aim und Swept-Ray
 - [x] Spieler-Dashboard und Serverstatistiken
@@ -68,27 +73,26 @@
 
 ### Soldier-KI v2
 
-1. echte Wegfindung für Soldiers und Kavallerie
-2. Hindernisse und Gelände erkennen
-3. Höhen-/Treppenlogik verbessern
-4. Charge-Lane auf Hindernisse prüfen
-5. echte Nahkampf-Hitbox berücksichtigen
-6. Kampfpositionen dynamisch verteilen
-7. Gruppenformationen stabilisieren
-8. Angriffe, Treffer und Animationen synchronisieren
-9. Kavallerie auf realen Serverlogs testen
-10. Charge/Pass-Verhalten gegen mehrere Gegner testen
-11. Bogenschützen-Schaden vollständig mit dem Soldier-Level synchronisieren
-12. Pfeilphysik mit Ingame-Flugtests feinjustieren
-13. Essentials-Konfiguration aus den Funktionsmodulen herauslösen
-14. Essentials optional um Rang-/Team-Limits erweitern
-15. Persistentes Claim-Rollback als optionales Admin-System entwickeln
-16. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen erweitern
-17. Logging auf weitere große Untermodule wie Teams-Core und Soldier-KI ausweiten
-18. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
-19. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
-20. API-Kompatibilitätsguards für weitere optionale/versionsabhängige Bedrock-Events prüfen
+1. Wegfindung in realen Serverlogs testen und Performance bei großen Gruppen messen
+2. komplexe Treppen, Slabs und weitere Sonderblock-Geometrien testen
+3. Charge-Lane auf Hindernisse prüfen
+4. echte Nahkampf-Hitbox berücksichtigen
+5. Kampfpositionen dynamisch verteilen
+6. Gruppenformationen stabilisieren
+7. Angriffe, Treffer und Animationen synchronisieren
+8. Kavallerie auf realen Serverlogs testen
+9. Charge/Pass-Verhalten gegen mehrere Gegner testen
+10. Bogenschützen-Schaden vollständig mit dem Soldier-Level synchronisieren
+11. Pfeilphysik mit Ingame-Flugtests feinjustieren
+12. Essentials-Konfiguration aus den Funktionsmodulen herauslösen
+13. Essentials optional um Rang-/Team-Limits erweitern
+14. Persistentes Claim-Rollback als optionales Admin-System entwickeln
+15. Anti-AFK optional um persistente Serverkonfiguration und Ausnahmen erweitern
+16. Logging auf weitere große Untermodule wie Teams-Core und Soldier-KI ausweiten
+17. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
+18. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
+19. API-Kompatibilitätsguards für weitere optionale/versionsabhängige Bedrock-Events prüfen
 
 ### Leitprinzip
 
-> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, sinnvoll annähern, Gelände überwinden, eine gute Kampfposition einnehmen und angreifen. Kavallerie soll nicht in Gegnern stecken bleiben, sondern chargen, den Gegner passieren und anschließend neu ansetzen.**
+> **Soldaten sollen sich wie echte Einheiten verhalten: Ziel erkennen, einen begehbaren Weg berechnen, Gelände überwinden, sinnvoll annähern, eine gute Kampfposition einnehmen und angreifen. Kavallerie soll nicht in Gegnern stecken bleiben, sondern Hindernisse berücksichtigen, chargen, den Gegner passieren und anschließend neu ansetzen.**
