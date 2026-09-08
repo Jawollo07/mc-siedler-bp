@@ -1,7 +1,11 @@
 import { system, world, CustomCommandParamType, CustomCommandStatus, CommandPermissionLevel } from "@minecraft/server";
 import { createLogger } from "../core/logger.js";
+
 const logger = createLogger("Market:Trader");
-const TRADER_TYPE = "siedler:trader", SOLDIER_TRADER_VARIANT = 6, OP_PERMISSION = CommandPermissionLevel.GameDirectors;
+const TRADER_TYPE = "siedler:trader";
+const SOLDIER_TRADER_VARIANT = 6;
+const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
+
 const TRADER_TYPES = {
     food: { event: "siedler:set_food", name: "§aLebensmittelhändler", tag: "trader_food" },
     building: { event: "siedler:set_building", name: "§6Baustoffhändler", tag: "trader_building" },
@@ -12,19 +16,91 @@ const TRADER_TYPES = {
     soldiers: { event: "siedler:set_soldiers", name: "§cSoldatenhändler", tag: "soldier_trader" },
     enchantments: { event: "siedler:set_enchantments", name: "§5Verzauberungshändler", tag: "trader_enchantments" }
 };
-function playerOnly(origin) { try { const player = origin.sourceEntity; return player?.typeId === "minecraft:player" ? player : null; } catch { return null; } }
-function reply(player, message) { try { player.sendMessage(`§8[§bHändler§8]§r ${message}`); } catch {} }
-function isSoldierTrader(trader) { if (!trader?.isValid || trader.typeId !== TRADER_TYPE) return false; try { if (trader.hasTag(TRADER_TYPES.soldiers.tag)) return true; } catch {} try { return trader.getComponent("minecraft:variant")?.value === SOLDIER_TRADER_VARIANT; } catch { return false; } }
-function hasTraderRole(trader) { return Object.values(TRADER_TYPES).some(config => { try { return config.tag && trader.hasTag(config.tag); } catch { return false; } }) || isSoldierTrader(trader); }
-function applyTraderType(trader, type) { const config = TRADER_TYPES[type]; if (!config || !trader?.isValid) return false; try { trader.triggerEvent(config.event); if (config.tag && !trader.hasTag(config.tag)) trader.addTag(config.tag); try { trader.nameTag = config.name; } catch {} return true; } catch (error) { logger.warn(`Typ ${type} konnte nicht angewendet werden: ${error}`); return false; } }
-function spawnTrader(player, type, location) { const config = TRADER_TYPES[type]; if (!config) { reply(player, `§cUnbekannter Typ: ${type}`); reply(player, `§7Verfügbar: ${Object.keys(TRADER_TYPES).join(", ")}`); return; } try { const trader = player.dimension.spawnEntity(TRADER_TYPE, location); system.run(() => { if (!applyTraderType(trader, type)) { reply(player, "§cHändler konnte nicht initialisiert werden."); return; } logger.debug(`Händler gespawnt: type=${type}, player=${player.id}`); reply(player, `§a${config.name} §agespawnt.`); }); } catch (error) { logger.warn(`Spawn fehlgeschlagen: ${error}`); reply(player, "§cHändler konnte nicht gespawnt werden."); } }
 
-// entitySpawn is not available on every Bedrock Script API/runtime combination.
-// Keep trader recovery below as the guaranteed fallback instead of crashing the whole module.
+function playerOnly(origin) {
+    try {
+        const player = origin.sourceEntity;
+        return player?.typeId === "minecraft:player" ? player : null;
+    } catch {
+        return null;
+    }
+}
+
+function reply(player, message) {
+    try {
+        player.sendMessage(`§8[§bHändler§8]§r ${message}`);
+    } catch {}
+}
+
+function isSoldierTrader(trader) {
+    if (!trader?.isValid || trader.typeId !== TRADER_TYPE) return false;
+    try {
+        if (trader.hasTag(TRADER_TYPES.soldiers.tag)) return true;
+    } catch {}
+    try {
+        return trader.getComponent("minecraft:variant")?.value === SOLDIER_TRADER_VARIANT;
+    } catch {
+        return false;
+    }
+}
+
+function hasTraderRole(trader) {
+    return Object.values(TRADER_TYPES).some(config => {
+        try {
+            return config.tag && trader.hasTag(config.tag);
+        } catch {
+            return false;
+        }
+    }) || isSoldierTrader(trader);
+}
+
+function applyTraderType(trader, type) {
+    const config = TRADER_TYPES[type];
+    if (!config || !trader?.isValid) return false;
+
+    try {
+        trader.triggerEvent(config.event);
+        if (config.tag && !trader.hasTag(config.tag)) trader.addTag(config.tag);
+        try {
+            trader.nameTag = config.name;
+        } catch {}
+        return true;
+    } catch (error) {
+        logger.warn(`Typ ${type} konnte nicht angewendet werden: ${error}`);
+        return false;
+    }
+}
+
+function spawnTrader(player, type, location) {
+    const config = TRADER_TYPES[type];
+    if (!config) {
+        reply(player, `§cUnbekannter Typ: ${type}`);
+        reply(player, `§7Verfügbar: ${Object.keys(TRADER_TYPES).join(", ")}`);
+        return;
+    }
+
+    try {
+        const trader = player.dimension.spawnEntity(TRADER_TYPE, location);
+        system.run(() => {
+            if (!applyTraderType(trader, type)) {
+                reply(player, "§cHändler konnte nicht initialisiert werden.");
+                return;
+            }
+            logger.debug(`Händler gespawnt: type=${type}, player=${player.id}`);
+            reply(player, `§a${config.name} §agespawnt.`);
+        });
+    } catch (error) {
+        logger.warn(`Spawn fehlgeschlagen: ${error}`);
+        reply(player, "§cHändler konnte nicht gespawnt werden.");
+    }
+}
+
+// entitySpawn is optional because availability differs between Bedrock Script API versions.
 if (world.afterEvents?.entitySpawn?.subscribe) {
     world.afterEvents.entitySpawn.subscribe(({ entity }) => {
         const trader = entity;
         if (trader.typeId !== TRADER_TYPE) return;
+
         system.run(() => {
             try {
                 if (!hasTraderRole(trader)) applyTraderType(trader, "food");
@@ -37,11 +113,99 @@ if (world.afterEvents?.entitySpawn?.subscribe) {
     logger.warn("world.afterEvents.entitySpawn ist in dieser Script-API-Version nicht verfügbar; Händler-Recovery übernimmt die Initialisierung.");
 }
 
-system.runInterval(() => { for (const dimensionId of ["overworld", "nether", "the_end"]) try { const dimension = world.getDimension(dimensionId); for (const trader of dimension.getEntities({ type: TRADER_TYPE })) if (!hasTraderRole(trader)) applyTraderType(trader, "food"); } catch (error) { logger.debug(`Trader-Recovery ${dimensionId} fehlgeschlagen: ${error}`); } }, 200);
-world.beforeEvents.startup.subscribe((event) => { const registry = event.customCommandRegistry;
-    registry.registerCommand({ name: "siedler:trader", description: "Spawnt einen vordefinierten Händler.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ name: "type", type: CustomCommandParamType.String }] }, (origin, type) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; system.run(() => spawnTrader(player, String(type).toLowerCase(), player.location)); return { status: CustomCommandStatus.Success }; });
-    registry.registerCommand({ name: "siedler:trader_here", description: "Spawnt einen Händler vor dir.", permissionLevel: OP_PERMISSION, cheatsRequired: false, mandatoryParameters: [{ name: "type", type: CustomCommandParamType.String }] }, (origin, type) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; system.run(() => { const rotation = player.getRotation(), yaw = (rotation.y + 90) * Math.PI / 180; spawnTrader(player, String(type).toLowerCase(), { x: player.location.x + Math.cos(yaw) * 2, y: player.location.y, z: player.location.z + Math.sin(yaw) * 2 }); }); return { status: CustomCommandStatus.Success }; });
-    registry.registerCommand({ name: "siedler:trader_types", description: "Zeigt alle Händlertypen.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; reply(player, `§bHändlertypen: §f${Object.keys(TRADER_TYPES).join("§7, §f")}`); return { status: CustomCommandStatus.Success }; });
-    registry.registerCommand({ name: "siedler:trader_remove", description: "Entfernt alle Siedler-Händler in deiner Dimension.", permissionLevel: OP_PERMISSION, cheatsRequired: false }, (origin) => { const player = playerOnly(origin); if (!player) return { status: CustomCommandStatus.Failure }; system.run(() => { let removed = 0; try { for (const trader of player.dimension.getEntities({ type: TRADER_TYPE })) try { trader.remove(); removed++; } catch {} } catch (error) { logger.warn(`Remove fehlgeschlagen: ${error}`); } reply(player, `§a${removed} Händler entfernt.`); }); return { status: CustomCommandStatus.Success }; });
+// Guaranteed fallback/recovery for runtimes without entitySpawn.
+system.runInterval(() => {
+    for (const dimensionId of ["overworld", "nether", "the_end"]) {
+        try {
+            const dimension = world.getDimension(dimensionId);
+            for (const trader of dimension.getEntities({ type: TRADER_TYPE })) {
+                if (!hasTraderRole(trader)) applyTraderType(trader, "food");
+            }
+        } catch (error) {
+            logger.debug(`Trader-Recovery ${dimensionId} fehlgeschlagen: ${error}`);
+        }
+    }
+}, 200);
+
+// Custom commands are registered during the system startup event.
+// IMPORTANT: startup belongs to system.beforeEvents, not world.beforeEvents.
+system.beforeEvents.startup.subscribe((event) => {
+    const registry = event.customCommandRegistry;
+
+    registry.registerCommand({
+        name: "siedler:trader",
+        description: "Spawnt einen vordefinierten Händler.",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false,
+        mandatoryParameters: [{ name: "type", type: CustomCommandParamType.String }]
+    }, (origin, type) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+        system.run(() => spawnTrader(player, String(type).toLowerCase(), player.location));
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({
+        name: "siedler:trader_here",
+        description: "Spawnt einen Händler vor dir.",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false,
+        mandatoryParameters: [{ name: "type", type: CustomCommandParamType.String }]
+    }, (origin, type) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+
+        system.run(() => {
+            const rotation = player.getRotation();
+            const yaw = (rotation.y + 90) * Math.PI / 180;
+            spawnTrader(player, String(type).toLowerCase(), {
+                x: player.location.x + Math.cos(yaw) * 2,
+                y: player.location.y,
+                z: player.location.z + Math.sin(yaw) * 2
+            });
+        });
+
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({
+        name: "siedler:trader_types",
+        description: "Zeigt alle Händlertypen.",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false
+    }, (origin) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+        reply(player, `§bHändlertypen: §f${Object.keys(TRADER_TYPES).join("§7, §f")}`);
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({
+        name: "siedler:trader_remove",
+        description: "Entfernt alle Siedler-Händler in deiner Dimension.",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false
+    }, (origin) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+
+        system.run(() => {
+            let removed = 0;
+            try {
+                for (const trader of player.dimension.getEntities({ type: TRADER_TYPE })) {
+                    try {
+                        trader.remove();
+                        removed++;
+                    } catch {}
+                }
+            } catch (error) {
+                logger.warn(`Remove fehlgeschlagen: ${error}`);
+            }
+            reply(player, `§a${removed} Händler entfernt.`);
+        });
+
+        return { status: CustomCommandStatus.Success };
+    });
 });
+
 logger.success("Händler-Commands und Recovery geladen");
