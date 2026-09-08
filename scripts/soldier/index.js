@@ -8,11 +8,13 @@ import "./registry.js";
 import { startSoldierAI } from "./ai.js";
 import { startCombatRangeFix } from "./combat_range.js";
 import { startRangedAI } from "./ranged_ai.js";
+import { startSoldierTerrainMovement } from "./terrain_movement.js";
 
 const logger = createLogger("Soldier");
 
 startSoldierAI();
 startCombatRangeFix();
 startRangedAI();
+startSoldierTerrainMovement();
 
-logger.success("Soldier-System geladen (AI, Nahkampf, Fernkampf und Kavallerie).");
+logger.success("Soldier-System geladen (AI, Nahkampf, Fernkampf, Kavallerie und Terrain-Bewegung).");
