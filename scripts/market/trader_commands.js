@@ -1,10 +1,13 @@
 import { system, world, CustomCommandParamType, CustomCommandStatus, CommandPermissionLevel } from "@minecraft/server";
 import { createLogger } from "../core/logger.js";
+import { MARKET_PLACES } from "./market_place.js";
 
 const logger = createLogger("Market:Trader");
 const TRADER_TYPE = "siedler:trader";
 const SOLDIER_TRADER_VARIANT = 6;
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
+const AUTO_TRADER_INTERVAL = 200; // 10 seconds
+const AUTO_TRADER_INITIAL_DELAY = 40; // 2 seconds after startup
 
 const TRADER_TYPES = {
     food: { event: "siedler:set_food", name: "§aLebensmittelhändler", tag: "trader_food" },
@@ -16,6 +19,8 @@ const TRADER_TYPES = {
     soldiers: { event: "siedler:set_soldiers", name: "§cSoldatenhändler", tag: "soldier_trader" },
     enchantments: { event: "siedler:set_enchantments", name: "§5Verzauberungshändler", tag: "trader_enchantments" }
 };
+
+const TRADER_TYPE_KEYS = Object.keys(TRADER_TYPES);
 
 function playerOnly(origin) {
     try {
@@ -71,27 +76,133 @@ function applyTraderType(trader, type) {
     }
 }
 
+function spawnTraderAt(dimension, type, location, automatic = false) {
+    const config = TRADER_TYPES[type];
+    if (!config) return null;
+
+    try {
+        const trader = dimension.spawnEntity(TRADER_TYPE, location);
+        system.run(() => {
+            if (!trader?.isValid) return;
+            if (!applyTraderType(trader, type)) {
+                logger.warn(`Händler konnte nicht initialisiert werden: type=${type}`);
+                return;
+            }
+            logger.info(`${automatic ? "Automatischer Händler-Spawn" : "Händler gespawnt"}: type=${type}`);
+        });
+        return trader;
+    } catch (error) {
+        logger.warn(`Spawn fehlgeschlagen: type=${type}, error=${error}`);
+        return null;
+    }
+}
+
 function spawnTrader(player, type, location) {
     const config = TRADER_TYPES[type];
     if (!config) {
         reply(player, `§cUnbekannter Typ: ${type}`);
-        reply(player, `§7Verfügbar: ${Object.keys(TRADER_TYPES).join(", ")}`);
+        reply(player, `§7Verfügbar: ${TRADER_TYPE_KEYS.join(", ")}`);
         return;
     }
 
-    try {
-        const trader = player.dimension.spawnEntity(TRADER_TYPE, location);
-        system.run(() => {
-            if (!applyTraderType(trader, type)) {
-                reply(player, "§cHändler konnte nicht initialisiert werden.");
-                return;
-            }
-            logger.debug(`Händler gespawnt: type=${type}, player=${player.id}`);
-            reply(player, `§a${config.name} §agespawnt.`);
-        });
-    } catch (error) {
-        logger.warn(`Spawn fehlgeschlagen: ${error}`);
+    const trader = spawnTraderAt(player.dimension, type, location, false);
+    if (!trader) {
         reply(player, "§cHändler konnte nicht gespawnt werden.");
+        return;
+    }
+
+    system.run(() => {
+        try {
+            if (trader.isValid) reply(player, `§a${config.name} §agespawnt.`);
+        } catch {}
+    });
+}
+
+function getTraderEntities(dimension) {
+    try {
+        return dimension.getEntities({ type: TRADER_TYPE });
+    } catch (error) {
+        logger.debug(`Händler konnten nicht gesucht werden: ${error}`);
+        return [];
+    }
+}
+
+function traderHasRole(trader, type) {
+    const config = TRADER_TYPES[type];
+    if (!config || !trader?.isValid) return false;
+    try {
+        if (trader.hasTag(config.tag)) return true;
+    } catch {}
+    if (type === "soldiers") return isSoldierTrader(trader);
+    return false;
+}
+
+function getAutomaticTraderLocation(market, index, total) {
+    const configured = market.traderSpawn;
+    const centerX = configured?.x ?? ((market.min.x + market.max.x) / 2);
+    const centerY = configured?.y ?? ((market.min.y ?? 0) + 1);
+    const centerZ = configured?.z ?? ((market.min.z + market.max.z) / 2);
+
+    // Spread traders around the configured market spawn point instead of
+    // putting every entity into the exact same block.
+    const radius = Math.max(2.5, Math.min(5, total * 0.55));
+    const angle = (Math.PI * 2 * index) / Math.max(1, total);
+    return {
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY,
+        z: centerZ + Math.sin(angle) * radius
+    };
+}
+
+function maintainMarketTraders() {
+    for (const market of MARKET_PLACES) {
+        if (!market.enabled) continue;
+
+        try {
+            const dimension = world.getDimension(market.dimension);
+            const traders = getTraderEntities(dimension);
+            const targetPerType = Math.max(1, Number(market.traderCountPerType ?? 1));
+
+            // Initialize old/untyped trader entities first so they can be
+            // counted correctly on the next pass instead of creating duplicates.
+            for (const trader of traders) {
+                if (!hasTraderRole(trader)) applyTraderType(trader, "food");
+            }
+
+            const roleCounts = Object.fromEntries(TRADER_TYPE_KEYS.map(type => [type, 0]));
+            for (const trader of traders) {
+                if (!trader?.isValid || trader.dimension?.id !== market.dimension) continue;
+                if (!traderHasRole(trader, "food") && !traderHasRole(trader, "building") && !traderHasRole(trader, "resources") && !traderHasRole(trader, "tools") && !traderHasRole(trader, "weapons") && !traderHasRole(trader, "supplies") && !traderHasRole(trader, "soldiers") && !traderHasRole(trader, "enchantments")) continue;
+
+                // Only count traders that are currently inside this market.
+                const minX = Math.min(market.min.x, market.max.x);
+                const maxX = Math.max(market.min.x, market.max.x);
+                const minZ = Math.min(market.min.z, market.max.z);
+                const maxZ = Math.max(market.min.z, market.max.z);
+                if (trader.location.x < minX || trader.location.x > maxX || trader.location.z < minZ || trader.location.z > maxZ) continue;
+
+                for (const type of TRADER_TYPE_KEYS) {
+                    if (traderHasRole(trader, type)) {
+                        roleCounts[type]++;
+                        break;
+                    }
+                }
+            }
+
+            let spawnIndex = 0;
+            const totalTypes = TRADER_TYPE_KEYS.length;
+            for (const type of TRADER_TYPE_KEYS) {
+                while (roleCounts[type] < targetPerType) {
+                    const location = getAutomaticTraderLocation(market, spawnIndex % totalTypes, totalTypes);
+                    const trader = spawnTraderAt(dimension, type, location, true);
+                    if (!trader) break;
+                    roleCounts[type]++;
+                    spawnIndex++;
+                }
+            }
+        } catch (error) {
+            logger.warn(`Automatische Händler-Wartung für ${market.id} fehlgeschlagen: ${error}`);
+        }
     }
 }
 
@@ -113,12 +224,12 @@ if (world.afterEvents?.entitySpawn?.subscribe) {
     logger.warn("world.afterEvents.entitySpawn ist in dieser Script-API-Version nicht verfügbar; Händler-Recovery übernimmt die Initialisierung.");
 }
 
-// Guaranteed fallback/recovery for runtimes without entitySpawn.
+// Recovery for runtimes without entitySpawn and cleanup for manually removed/dead traders.
 system.runInterval(() => {
     for (const dimensionId of ["overworld", "nether", "the_end"]) {
         try {
             const dimension = world.getDimension(dimensionId);
-            for (const trader of dimension.getEntities({ type: TRADER_TYPE })) {
+            for (const trader of getTraderEntities(dimension)) {
                 if (!hasTraderRole(trader)) applyTraderType(trader, "food");
             }
         } catch (error) {
@@ -126,6 +237,11 @@ system.runInterval(() => {
         }
     }
 }, 200);
+
+// Keep the configured market staffed automatically. Missing or killed traders
+// are recreated; existing traders are never duplicated just because the timer runs.
+system.runTimeout(maintainMarketTraders, AUTO_TRADER_INITIAL_DELAY);
+system.runInterval(maintainMarketTraders, AUTO_TRADER_INTERVAL);
 
 // Custom commands are registered during the system startup event.
 // IMPORTANT: startup belongs to system.beforeEvents, not world.beforeEvents.
@@ -176,7 +292,7 @@ system.beforeEvents.startup.subscribe((event) => {
     }, (origin) => {
         const player = playerOnly(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-        reply(player, `§bHändlertypen: §f${Object.keys(TRADER_TYPES).join("§7, §f")}`);
+        reply(player, `§bHändlertypen: §f${TRADER_TYPE_KEYS.join("§7, §f")}`);
         return { status: CustomCommandStatus.Success };
     });
 
@@ -208,4 +324,4 @@ system.beforeEvents.startup.subscribe((event) => {
     });
 });
 
-logger.success("Händler-Commands und Recovery geladen");
+logger.success("Händler-Commands, Recovery und automatischer Marktbestand geladen");
