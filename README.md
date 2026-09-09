@@ -14,6 +14,7 @@
 - **Händler bleiben dauerhaft innerhalb des konfigurierten Marktplatzes**
 - **Verzauberungshändler-Villager mit vollständigem Pool aller definierten Angebote**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
+- **Konfigurierbare Soldier-Angriffsmodi 0–5 mit persistenter Speicherung pro Soldier**
 - **Beschleunigte Soldier-Bewegung mit Level-/Kavallerie-Bonus, Geschwindigkeitslimit und Terrain-Unterstützung**
 - **Verbesserte Kavallerie mit direkter Mount-Steuerung, Charge/Pass-Taktik und Hindernissprüngen**
 - **Erweiterte lokale A*-Wegfindung mit Höhenwechseln, Umwegen und Stuck-Recovery**
@@ -30,6 +31,42 @@
 
 Das Soldier-System befindet sich unter `scripts/soldier/` und unterstützt Infanterie, Bogenschützen und Kavallerie mit Owner-Zuordnung, Leveln, XP, Ausrüstung, KI, Befehlen und Gruppenformationen.
 
+### 🎯 Soldier-Angriffsmodi
+
+Jeder Soldier besitzt einen separat gespeicherten Angriffsmodus. Der Modus beeinflusst nur die **autonome Zielsuche**; manuell erteilte Befehle wie Folgen, Bleiben, Verteidigen oder ein direkter Angriff haben weiterhin Vorrang.
+
+| Modus | Verhalten |
+|---:|---|
+| `0` | **Nichts angreifen** – keine autonome Zielsuche |
+| `1` | **Monster in der Nähe** – nur Entities der Bedrock-Monster-Familie |
+| `2` | **Feindliche Soldaten** – nur Soldaten eines Teams mit `hostile`-Beziehung |
+| `3` | **Tiere** – nur Entities der Bedrock-Tierfamilie |
+| `4` | **Feindliche Dorfbewohner** – nur Villager innerhalb eines Claims eines feindlichen Teams |
+| `5` | **Alles** – lebende Ziele; Spieler und Soldaten müssen weiterhin feindlich sein |
+
+Der Standardmodus für neue bzw. bisher nicht gespeicherte Soldiers ist `1` (Monster).
+
+Der Modus wird über den Custom Command gesetzt:
+
+```text
+/siedler:soldier_mode <0-5>
+```
+
+Sind Soldiers über den Soldatenstab ausgewählt, wird der Modus auf die Auswahl angewendet. Ist keine Auswahl vorhanden, wird der Modus auf den nächstgelegenen eigenen Soldier angewendet.
+
+Beispiele:
+
+```text
+/siedler:soldier_mode 0
+/siedler:soldier_mode 1
+/siedler:soldier_mode 2
+/siedler:soldier_mode 3
+/siedler:soldier_mode 4
+/siedler:soldier_mode 5
+```
+
+Der Modus wird als `soldier:mode` auf der Soldier-Entity gespeichert und bleibt dadurch über Serverneustarts erhalten.
+
 ### Kavallerie
 
 Die Kavallerie wird über `cavalry_ai.js` und den dedizierten `cavalry_controller.js` direkt am Pferd gesteuert. Der normale Rider-A*-Steuervektor greift nicht in die Mount-Bewegung ein.
@@ -44,8 +81,8 @@ Die Kavallerie:
 - verwendet eine höhere Höchstgeschwindigkeit als normale Soldiers
 - dreht das Pferd weich in Richtung des aktuellen Ziels
 - springt bei einem erkannten ein Block hohen Hindernis automatisch
-- verfolgt nur echte Feinde: feindliche Spieler/Soldaten sowie die definierte Monster-Whitelist
-- greift keine Tiere, Villager, Händler oder eigenen Mounts an
+- verwendet ebenfalls den konfigurierten Soldier-Angriffsmodus für die autonome Zielauswahl
+- greift im Standardmodus keine Tiere, Villager, Händler oder eigenen Mounts an
 
 Dadurch verhält sich Kavallerie stärker wie eine mobile Stoßtruppe statt wie ein normaler Soldier auf einem Pferd.
 
@@ -55,7 +92,7 @@ Die normale Soldier-Bewegung verwendet einen stärkeren, aber begrenzten Vorwär
 
 ### Persistenz nach Neustarts
 
-Die Soldier-Registry wird nach Serverstarts aus den vorhandenen Soldier-Entities und Dynamic Properties rekonstruiert.
+Die Soldier-Registry wird nach Serverstarts aus den vorhandenen Soldier-Entities und Dynamic Properties rekonstruiert. Dazu gehört auch der gespeicherte `soldier:mode`.
 
 ### Wegfindung und Terrain
 
@@ -63,7 +100,7 @@ Die Soldier-Registry wird nach Serverstarts aus den vorhandenen Soldier-Entities
 
 ### Monster-Zielsuche
 
-`scripts/soldier/monster_targeting.js` verwendet eine explizite Whitelist feindlicher Monster. Passive bzw. neutrale Tiere werden ausdrücklich nicht als autonome Ziele ausgewählt. Spieler, Villager, Händler und eigene Soldier-Mounts bleiben ebenfalls ausgeschlossen.
+`scripts/soldier/monster_targeting.js` verwendet eine explizite Whitelist feindlicher Monster. Die neue Soldier-Modussteuerung begrenzt die autonome Zielauswahl zusätzlich auf den jeweils gewählten Modus. Spieler, Villager, Händler und eigene Soldier-Mounts bleiben entsprechend der Modusregeln ausgeschlossen.
 
 ### Soldier-Teleport
 
@@ -81,6 +118,7 @@ Unterstützte Ziele sind `all`, `selected`, `selection`, `staff`, `nearest`, `si
 /siedler:soldier_info
 /siedler:soldier_xp <Amount>
 /siedler:soldier_tp [Target]
+/siedler:soldier_mode <0-5>
 /siedler:move <Target>
 /siedler:follow
 /siedler:stay
