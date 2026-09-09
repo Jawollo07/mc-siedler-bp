@@ -54,9 +54,20 @@ function getEnemyClaimNearPlayer(player) {
         const chunkZ = Number(key.slice(separator + 1));
         if (!Number.isInteger(chunkX) || !Number.isInteger(chunkZ)) continue;
 
-        if (Math.abs(playerChunk.x - chunkX) <= siege.claimSearchRadiusChunks + 1 && Math.abs(playerChunk.z - chunkZ) <= siege.claimSearchRadiusChunks + 1) {
-            candidates.push({ team: claim.team, x: chunkX * 16 + 8, z: chunkZ * 16 + 8 });
-        }
+        if (Math.abs(playerChunk.x - chunkX) > siege.claimSearchRadiusChunks + 1 || Math.abs(playerChunk.z - chunkZ) > siege.claimSearchRadiusChunks + 1) continue;
+
+        // A siege target must have an online defender. Empty claims are never
+        // selected as siege targets in the first place.
+        const occupiedByOnlineMember = world.getAllPlayers().some((onlinePlayer) => {
+            try {
+                return onlinePlayer.dimension.id === player.dimension.id && findClaimContaining(onlinePlayer.location)?.team === claim.team;
+            } catch {
+                return false;
+            }
+        });
+        if (!occupiedByOnlineMember) continue;
+
+        candidates.push({ team: claim.team, x: chunkX * 16 + 8, z: chunkZ * 16 + 8 });
     }
 
     return candidates.length ? candidates[Math.floor(Math.random() * candidates.length)] : null;
@@ -235,6 +246,7 @@ function updateSiegePhase(squad) {
             squad.phase = "retreat";
             squad.phaseStartedAt = now;
         }
+        if (now - squad.noTargetSince >= CONFIG.siege.retreatAfterTicks) squad.forceDespawn = true;
         return;
     }
 
@@ -252,10 +264,8 @@ function updateSiegePhase(squad) {
     if (squad.phase === "assault") return;
 
     if (squad.phase === "retreat") {
-        // A retreat never turns back into an assault automatically. This
-        // prevents a squad from repeatedly switching states as players leave
-        // and re-enter a claim.
-        return;
+        // A retreat never turns back into an assault automatically.
+        if (now - squad.phaseStartedAt >= CONFIG.siege.retreatAfterTicks) squad.forceDespawn = true;
     }
 }
 
@@ -273,8 +283,8 @@ function runSquadAI(squad) {
     const target = findTargetPlayer(squad, currentTarget);
 
     if (squad.siegeClaim && squad.phase === "retreat") {
-        // Retreat back to the original staging/spawn area, never deeper into
-        // the claim. Cleanup will remove the squad after the retreat timeout.
+        // Retreat back to the original staging/spawn area instead of chasing
+        // another player or re-entering the now-empty claim.
         for (const entity of squad.entities) steerEntity(entity, squad.spawnLocation, squad);
         return;
     }
