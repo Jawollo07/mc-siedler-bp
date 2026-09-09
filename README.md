@@ -26,6 +26,49 @@
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
 - **Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik**
+- **Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Steuerstatistik**
+
+## 💰 Steuer-System
+
+Das Steuer-System befindet sich unter `scripts/taxes/` und berechnet die tägliche Steuer eines Teams anhand seiner Dorfbewohner und des permanenten Monster-Token-Bonus.
+
+### Steuerberechnung
+
+- Jeder Dorfbewohner erzeugt **2 Emeralds/Tag**.
+- Jeder besiegte Monster-Token erhöht den permanenten täglichen `taxBonus` um **1 Emerald**.
+- Der permanente Bonus bleibt über die Auszahlung und Serverneustarts erhalten.
+- Die gesamte Tagessteuer ist auf den konfigurierten Maximalwert begrenzt.
+- Steuern werden nur eingezogen, wenn mindestens ein Mitglied des Teams online ist.
+
+### Sichere Steuerkiste
+
+- Die komplette Buchung wird vor dem Einlagern auf verfügbaren Platz geprüft.
+- Ist die Truhe voll oder der Chunk nicht verfügbar, werden **keine Emeralds auf den Boden gedroppt**.
+- Fehlgeschlagene Buchungen werden nicht als bezahlt markiert und später automatisch erneut versucht.
+- Dadurch gehen bei temporär ungeladenen Chunks oder vollen Truhen keine Steuereinnahmen verloren.
+
+### Persistente Steuerstatistik
+
+Pro Team werden gespeichert:
+
+- `totalTaxes` – insgesamt eingezahlte Emeralds
+- `villagerCount` – zuletzt ermittelte Dorfbewohnerzahl
+- `lastPaidDay` – letzter erfolgreicher Zahlungstag
+- `lastTaxAmount` – Höhe der letzten Zahlung
+- `lastTaxBonus` – verwendeter permanenter Bonus
+- `lastPaymentStatus` – aktueller Zahlungsstatus
+- `taxFailures` – Anzahl fehlgeschlagener Zahlungsversuche
+
+Verfügbare Befehle:
+
+```text
+/siedler:taxinfo <team>
+/siedler:taxstats <team>
+/siedler:countvillagers <team>
+/siedler:settax <team> <x> <y> <z>
+```
+
+`/siedler:taxstats` öffnet zusätzlich eine UI mit Tagessteuer, Dorfbewohnern, Token-Bonus, Gesamtzahlungen und Status.
 
 ## ⚔️ Soldier-System
 
@@ -38,7 +81,7 @@ Jeder Soldier besitzt einen separat gespeicherten Angriffsmodus. Der Modus beein
 | Modus | Verhalten |
 |---:|---|
 | `0` | **Nichts angreifen** – keine autonome Zielsuche |
-| `1` | **Monster in der Nähe** – nur Entities der Bedrock-Monster-Familie |
+| `1` | **Monster in der Nähe** – nur Entities der Bedrock-Monsterfamilie |
 | `2` | **Feindliche Soldaten** – nur Soldaten eines Teams mit `hostile`-Beziehung |
 | `3` | **Tiere** – nur Entities der Bedrock-Tierfamilie |
 | `4` | **Feindliche Dorfbewohner** – nur Villager innerhalb eines Claims eines feindlichen Teams |
@@ -54,31 +97,10 @@ Der Modus wird über den Custom Command gesetzt:
 
 Sind Soldiers über den Soldatenstab ausgewählt, wird der Modus auf die Auswahl angewendet. Ist keine Auswahl vorhanden, wird der Modus auf den nächstgelegenen eigenen Soldier angewendet.
 
-Beispiele:
-
-```text
-/siedler:soldier_mode 0
-/siedler:soldier_mode 1
-/siedler:soldier_mode 2
-/siedler:soldier_mode 3
-/siedler:soldier_mode 4
-/siedler:soldier_mode 5
-```
-
-Der Modus wird als `soldier:mode` auf der Soldier-Entity gespeichert und bleibt dadurch über Serverneustarts erhalten.
-
 ### 🧭 Wegfindung und Performance
 
-Die lokale A*-Wegfindung arbeitet bewusst mit einem begrenzten Suchradius und einem kleinen Node-Budget. Blockabfragen werden damit nicht mehr als ungebremste Großsuche ausgeführt. Direkte Wege werden bevorzugt und zwischengespeichert; A*-Neuberechnungen werden zeitlich begrenzt. Dadurch soll verhindert werden, dass die Script-Engine durch `dimension.getBlock()`-Abfragen den Watchdog auslöst.
+Die lokale A*-Wegfindung arbeitet bewusst mit einem begrenzten Suchradius und einem kleinen Node-Budget. Blockabfragen werden damit nicht mehr als ungebremste Großsuche ausgeführt. Direkte Wege werden bevorzugt und zwischengespeichert; A*-Neuberechnungen werden zeitlich begrenzt.
 
 ### Kavallerie
 
-Die Kavallerie wird über `cavalry_ai.js` und den dedizierten `cavalry_controller.js` direkt am Pferd gesteuert. Der normale Rider-A*-Steuervektor greift nicht in die Mount-Bewegung ein.
-
-Die Kavallerie:
-
-- nähert sich Gegnern aktiv und hält die Bewegung auch im Nahbereich aufrecht
-- startet Charges bereits aus größerer Entfernung
-- verursacht beim Charge erhöhten Schaden und zusätzlichen Knockback
-- passiert das Ziel nach einem Treffer, statt darin stehenzubleiben
-- wechselt bei Blockade die Pass-Seite und versucht die Annäherung erneut
+Die Kavallerie wird über `cavalry_ai.js` und `cavalry_controller.js` direkt am Pferd gesteuert. Sie nähert sich Gegnern aktiv, chargt aus größerer Distanz, verursacht erhöhten Charge-Schaden und Knockback, passiert Ziele nach Treffern und nutzt eine Stuck-Recovery mit wechselnder Pass-Seite.
