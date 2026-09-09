@@ -1057,7 +1057,7 @@ system.runInterval(
  * COMMANDS
  * ========================================================= */
 
-world.beforeEvents.worldInitialize.subscribe(
+system.beforeEvents.startup.subscribe(
     event => {
         const registry =
             event.customCommandRegistry;
