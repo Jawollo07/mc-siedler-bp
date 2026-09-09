@@ -31,6 +31,9 @@
 - [x] Nahkampf-, Fernkampf- und Kavallerie-KI
 - [x] Lokale A*-Wegfindung mit Höhenwechseln, Umwegen und Stuck-Recovery
 - [x] Terrain-Bewegung und Überwindung ein Block hoher Hindernisse
+- [x] **Deutlich beschleunigte Soldier-Bewegung mit Level- und Kavallerie-Bonus**
+- [x] **Begrenzung der horizontalen Geschwindigkeit gegen unkontrollierte Beschleunigung**
+- [x] **Stärkerer Vorwärtsimpuls für schnelle Reaktion und Marschbewegung**
 - [x] Bogenschützen mit ballistischer Pfeilphysik
 - [x] Spieler-Dashboard und Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
