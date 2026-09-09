@@ -2,7 +2,7 @@
 
 > Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 08.09.2026
+**Stand:** 09.09.2026
 
 ## 📊 Aktueller Stand
 
@@ -18,84 +18,42 @@
 - [x] Handelsfenster für spezialisierte Händler repariert
 - [x] Händler-Trade-Tables über Component Groups
 - [x] Händler-Spawn-Initialisierung und Recovery
-- [x] Händler-Spawn-Event gegen fehlende `world.afterEvents.entitySpawn`-API abgesichert
-- [x] Händler-Custom-Commands über korrektes `system.beforeEvents.startup` registriert
-- [x] Verzauberungshändler-Villager mit eigener Trade-Table
-- [x] Verzauberungshändler über `/siedler:trader enchantments` und `/siedler:trader_here enchantments` verfügbar
-- [x] Verzauberte Bücher über `enchant_book_for_trading` nach Bedrock-Handelslogik
-- [x] Verzauberungshändler mit erweitertem Pool aus 17 Angeboten/Preis- und Verzauberungsstufen
-- [x] Alle 17 Angebote des Verzauberungshändler-Pools gleichzeitig verfügbar
-- [x] Keine zufällige Auswahl mehr aus dem definierten Enchantment-Pool
-- [x] Variant-ID `7` und Tag `trader_enchantments` für stabile Händler-Recovery
+- [x] Verzauberungshändler-Villager mit vollständigem Trade-Pool
 - [x] Soldatenhändler mit eigener Rekrutierungs-UI
-- [x] Soldatenhändler-Interaktion über `beforeEvents.playerInteractWithEntity`
-- [x] Vanilla-Interaktion des Soldatenhändlers wird für die eigene UI abgefangen
-- [x] Soldatenhändler-Erkennung über `soldier_trader` oder Variant-ID `6`
-- [x] Händler-Recovery erhält Variant-ID `6` und überschreibt Soldatenhändler nicht mehr
-- [x] Emerald-Zahlung und Rückerstattung bei Recruit-Fehlern
 - [x] Soldier-Spawn, Owner-Zuordnung, Level 1–7 und XP
 - [x] Infanterie, Bogenschütze und Kavallerie
-- [x] Soldier-Ausrüstung und Befehle
-- [x] **`/siedler:soldier_tp` teleportiert alle eigenen Soldaten zum Spieler**
-- [x] **Soldier-Teleport verteilt Einheiten in einer Formation statt auf einer einzigen Position**
-- [x] **Kavallerie-Mount wird beim Soldier-Teleport mitgeführt**
-- [x] **Persistente Soldier-Registry rekonstruiert vorhandene Soldaten nach Serverneustart**
-- [x] **Stale Soldier-Einträge werden aus der Laufzeit-Registry entfernt**
-- [x] **Soldier-TP unterstützt einzelne Soldaten über `nearest`, Entity-ID oder NameTag**
-- [x] **Soldier-TP unterstützt Gruppen über Gruppenname oder `group:<Name>`**
-- [x] **Soldier-TP unterstützt die aktuelle Soldatenstab-Auswahl über `selected` / `staff`**
-- [x] **Soldier-TP unterstützt weiterhin `all` bzw. den Aufruf ohne Target**
-- [x] **Soldier-TP prüft bei allen Selektoren die `ownerId` und verhindert Fremd-Soldatenzugriff**
-- [x] **Soldier-TP kann ausgewählte Gruppen/Soldaten auch dimensionsübergreifend zum Spieler holen**
+- [x] Soldier-Ausrüstung, KI, Befehle und Gruppenformationen
+- [x] `/siedler:soldier_tp` mit all / selected / staff / nearest / group / Einzelziel
+- [x] Persistente Soldier-Registry nach Serverneustarts
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
-- [x] **Explizite autonome Zielsuche für nahe feindliche Monster**
-- [x] **Passive/neutral Tiere aus der autonomen Soldier-Zielsuche ausgeschlossen**
-- [x] **Explizite Monster-Whitelist für Zombies, Skelette, Creeper, Spinnen, Nether-, End-, Illager- und weitere feindliche Mobs**
-- [x] Nahkampf-KI mit Windup/Cooldown
-- [x] **Dedizierte mount-basierte Kavallerie-Steuerung gegen Konflikte mit Rider-A*-Bewegung**
-- [x] **Kavallerie-Lenkung, Geschwindigkeitsbegrenzung und Zielannäherung stabilisiert**
-- [x] **Kavallerie-Pfadfinder greift nicht mehr in die Mount-Steuerung ein**
-- [x] **Passive/neutral Tiere werden auch von der Kavallerie-Zielsuche ausgeschlossen**
-- [x] **Beschleunigte Soldier-Bewegung mit zusätzlichem Level-/Kavallerie-Boost**
-- [x] **Terrain-Erkennung für solide Blöcke vor dem Soldier**
-- [x] **Sprunglogik zum Überwinden von ein Block hohen Hindernissen und Stufen/Treppen**
-- [x] **Terrain-Bewegung als separates Modul ohne Austausch der bestehenden Kampf-/Formations-KI**
-- [x] **Lokale A*-Wegfindung für Soldiers und Kavallerie**
-- [x] **Wegfindung berücksichtigt begehbare Fuß-/Kopfhöhe und festen Untergrund**
-- [x] **Automatische Umwege um versperrte direkte Wege**
-- [x] **Lokale Repath-Suche bei veränderten Zielen oder Hindernissen**
-- [x] **Wegfindung unterstützt Höhenwechsel sowie diagonale Bewegung**
-- [x] **Aufwärts-Schritte bis eine Blockhöhe und sichere Abwärts-Schritte bis zwei Blockhöhen**
-- [x] **Diagonales Corner-Cutting durch zwei angrenzende Hindernisse verhindert**
-- [x] **Offene Türen/Trapdoors werden über ihren Blockzustand berücksichtigt; unbekannte Zustände bleiben blockiert**
-- [x] **Terrain-Kosten für ungünstige/bevorzugte Bodenarten**
-- [x] **Stuck-Erkennung mit beschleunigtem Repathing**
-- [x] **A*-Wegpunkte können gezielte Sprunghinweise an die Terrain-Bewegung übergeben**
-- [x] **Suchraum auf 1200 Knoten und 64 Wegpunkte begrenzt**
-- [x] Bogenschützen-KI mit echter `minecraft:arrow`-Physik
-- [x] Ballistisches Zielen, Gravitation, Drag, Predictive Aim und Swept-Ray
+- [x] Explizite autonome Zielsuche für feindliche Monster
+- [x] Passive/neutrale Tiere aus autonomer Zielsuche ausgeschlossen
+- [x] Nahkampf-, Fernkampf- und Kavallerie-KI
+- [x] Lokale A*-Wegfindung mit Höhenwechseln, Umwegen und Stuck-Recovery
+- [x] Terrain-Bewegung und Überwindung ein Block hoher Hindernisse
+- [x] Bogenschützen mit ballistischer Pfeilphysik
 - [x] Spieler-Dashboard und Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
-- [x] Kavallerie mit erwachsenem `minecraft:horse`
-- [x] Kavallerie-Mounting über `/ride`
-- [x] Taktische Kavallerie-Zustände: Approach, Charge, Hit, Pass
-- [x] Charge-Schaden und Knockback
-- [x] Pass-Verhalten und Stuck-Erkennung
-- [x] Vanilla-Pferd auf Hindernisse und Terrain-Wechsel testen
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
-- [x] Anti-AFK-Custom-Commands auf `system.beforeEvents.startup` korrigiert
-- [x] Anti-AFK-Event-Subscriptions gegen fehlende versionsabhängige Events abgesichert
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
-- [x] **Pillager-Squads spawnen niemals direkt innerhalb eines Claims**
-- [x] **Jeder einzelne Pillager-Squad-Spawn wird vor dem Erzeugen gegen Claims geprüft**
-- [x] **Auch Formationsoffsets der Squad-Mitglieder werden gegen Claims geprüft**
-- [x] **Wenn kein sicherer Spawnpunkt außerhalb von Claims gefunden wird, wird der komplette Trupp verworfen**
-- [x] **Belagerungen wechseln nicht in den Angriff, solange im Ziel-Claim kein Spieler des Zielteams steht**
-- [x] **Wird ein Ziel-Claim während eines Angriffs leer, beendet der Trupp den Angriff sofort und zieht sich zurück**
-- [x] **Belagerungs-Schaden ist zusätzlich auf Spieler beschränkt, die aktuell im Ziel-Claim stehen**
-- [x] **README.md und plan.md um die neue Pillager-/Claim-Logik ergänzt**
+
+## 👹 Pillager-Squads / Belagerungen
+
+- [x] Pillager-Squads aus Pillagern, optional Vindicators/Ravager und Captain
+- [x] Pillager-Squad-Spawn wird niemals innerhalb eines Claims ausgeführt
+- [x] Mehrfachsuche nach einem sicheren Spawnpunkt außerhalb aller Claims
+- [x] Jeder einzelne Formationsoffset wird vor dem Entity-Spawn nochmals geprüft
+- [x] Kein unsicherer Fallback: ohne sicheren Spawnpunkt wird der komplette Squad verworfen
+- [x] Belagerungsziele werden nur ausgewählt, wenn ein Mitglied des Zielteams online im Claim steht
+- [x] Leere Claims werden bereits bei der Belagerungszielsuche übersprungen
+- [x] Belagerungs-Squads bleiben im Staging, solange kein Verteidiger im Ziel-Claim steht
+- [x] Wird der Claim während des Angriffs leer, erfolgt sofortiger Wechsel auf Retreat
+- [x] Belagerungs-Squads retargeten bei leerem Claim nicht auf Spieler außerhalb des Ziel-Claims
+- [x] Schaden wird unmittelbar vor dem Treffer nochmals gegen den aktuellen Claim-Standort geprüft
+- [x] Ein Retreat kann nicht automatisch wieder in einen Assault wechseln
+- [x] Retreat-Squads werden nach dem konfigurierten Retreat-Zeitraum entfernt
 
 ## 🎯 Nächster Schwerpunkt
 
