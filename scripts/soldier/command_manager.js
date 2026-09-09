@@ -453,28 +453,30 @@ system.beforeEvents.startup.subscribe(event => {
         mandatoryParameters: [
             { type: CustomCommandParamType.Integer, name: "mode" }
         ]
-    }, (origin, args) => {
+    }, (origin, modeArgument) => {
         const player = origin?.sourceEntity;
         if (player?.typeId !== "minecraft:player") return { status: CustomCommandStatus.Failure };
 
-        const mode = Number(args?.mode);
+        const mode = Number(modeArgument);
         if (!Number.isInteger(mode) || mode < SOLDIER_MODES.NONE || mode > SOLDIER_MODES.EVERYTHING) {
-            player.sendMessage("§cSoldatenmodus muss zwischen 0 und 5 liegen.");
+            system.run(() => player.sendMessage("§cSoldatenmodus muss zwischen 0 und 5 liegen."));
             return { status: CustomCommandStatus.Failure };
         }
 
-        const soldiers = selectSoldiersForMode(player);
-        if (!soldiers.length) {
-            player.sendMessage("§cKeine eigenen Soldaten ausgewählt oder gefunden.");
-            return { status: CustomCommandStatus.Failure };
-        }
+        system.run(() => {
+            const soldiers = selectSoldiersForMode(player);
+            if (!soldiers.length) {
+                player.sendMessage("§cKeine eigenen Soldaten ausgewählt oder gefunden.");
+                return;
+            }
 
-        let changed = 0;
-        for (const soldier of soldiers) {
-            if (setSoldierMode(soldier, mode)) changed++;
-        }
+            let changed = 0;
+            for (const soldier of soldiers) {
+                if (setSoldierMode(soldier, mode)) changed++;
+            }
 
-        player.sendMessage(`§a${changed} Soldat(en): Modus ${mode} – ${getSoldierModeName(mode)}.`);
+            player.sendMessage(`§a${changed} Soldat(en): Modus ${mode} – ${getSoldierModeName(mode)}.`);
+        });
         return { status: CustomCommandStatus.Success };
     });
 });
