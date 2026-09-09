@@ -404,10 +404,6 @@ system.runInterval(() => {
     }
 }, 200);
 
-system.runInterval(confineAllTraders, TRADER_CONFINEMENT_INTERVAL);
-system.runTimeout(maintainMarketTraders, AUTO_TRADER_INITIAL_DELAY);
-system.runInterval(maintainMarketTraders, AUTO_TRADER_INTERVAL);
-
 system.beforeEvents.startup.subscribe(event => {
     const registry = event.customCommandRegistry;
 
