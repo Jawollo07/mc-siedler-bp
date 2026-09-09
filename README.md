@@ -10,6 +10,7 @@
 - Teams, Diplomatie, Claims und Wirtschaft
 - Claim-Protection mit Block-Recovery und Item-Rückgabe
 - Zentraler Marktplatz und spezialisierte Händler
+- **Automatischer Marktbestand: fehlende Händler werden selbstständig nachgespawnt**
 - **Verzauberungshändler-Villager mit vollständigem Pool aller definierten Angebote**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - **Beschleunigte Soldier-Bewegung mit Terrain-Unterstützung für Blöcke und Stufen**
@@ -26,6 +27,29 @@
 ## 🛒 Händler
 
 Das Händler-System verwendet die Entity `siedler:trader` und bietet mehrere spezialisierte Händlerrollen. Der **Verzauberungshändler** verwendet die bestehende Villager-Darstellung des Siedler-Händlers und öffnet beim Interagieren das normale Bedrock-Handelsfenster.
+
+### Automatischer Händlerbestand
+
+Der zentrale Marktplatz hält den Händlerbestand jetzt **automatisch aufrecht**. Für jeden aktuell definierten Händlertyp wird standardmäßig mindestens **ein Händler** am Marktplatz gehalten:
+
+```text
+food
+building
+resources
+tools
+weapons
+supplies
+soldiers
+enchantments
+```
+
+Die Spawnposition liegt im konfigurierten `traderSpawn`-Bereich des Marktplatzes. Die Händler werden leicht verteilt gespawnt, damit nicht alle exakt im selben Block stehen. Die Wartung läuft beim Serverstart nach kurzer Verzögerung und anschließend alle 10 Sekunden.
+
+Wird ein Händler getötet, entfernt oder läuft er aus dem definierten Marktplatzbereich, erkennt die Wartung den fehlenden Bestand und erstellt automatisch einen Ersatz. Bereits vorhandene Händler werden dabei **nicht bei jedem Prüflauf dupliziert**.
+
+Die gewünschte Anzahl pro Typ kann direkt am Markt über `traderCountPerType` angepasst werden. Aktuell ist sie auf `1` gesetzt.
+
+Die automatische Wartung ergänzt die bestehende `entitySpawn`-Initialisierung und die periodische Recovery. Damit bleiben die Händler auch auf Bedrock-Script-API-Versionen funktionsfähig, auf denen einzelne Spawn-Events nicht verfügbar sind.
 
 ### Verzauberungshändler
 
@@ -178,111 +202,3 @@ Die Auswahl wird immer anhand der `ownerId` geprüft. Fremde Soldaten können da
 ```text
 /siedler:move <Target>
 /siedler:follow
-/siedler:stay
-/siedler:attack [Radius]
-/siedler:defend [Radius]
-/siedler:patrol <Target>
-/siedler:stop
-```
-
-### Gruppen-Commands
-
-```text
-/siedler:group_create <Name> [Radius]
-/siedler:group_add <Group>
-/siedler:group_remove <Group>
-/siedler:group_delete <Group>
-/siedler:group_move <Group> <Target>
-/siedler:group_follow <Group>
-/siedler:group_stay <Group>
-/siedler:group_defend <Group> <Target> [Radius]
-/siedler:group_stop <Group>
-/siedler:group_formation <Group> <Formation> [Spacing]
-/siedler:group_list
-```
-
-## 👹 Pillager-Squads und Belagerungen
-
-Das Pillager-System liegt unter `scripts/monster/pillager_squads.js` und unterstützt normale feindliche Trupps sowie Belagerungen gegnerischer Claims.
-
-### Claim-sicherer Spawn
-
-Pillager-Squads werden **niemals direkt innerhalb eines Claims gespawnt**. Vor dem Squad-Spawn wird ein sicherer Punkt außerhalb aller Claims gesucht. Zusätzlich wird für **jedes einzelne Squad-Mitglied** der zufällige Formations-Offset erneut gegen die Claims geprüft. Wenn kein sicherer Punkt gefunden wird, wird der gesamte Trupp nicht gespawnt.
-
-Damit können auch die zufälligen Formationsoffsets nicht versehentlich ein Mitglied über eine Claim-Grenze setzen.
-
-### Belagerung nur bei Spielern im Claim
-
-Ein gegnerischer Claim kann weiterhin als Belagerungsziel ausgewählt werden. Die Belagerungsphase bleibt jedoch so lange im **Staging**, wie sich kein Spieler des Zielteams im entsprechenden Claim befindet.
-
-Sobald der Claim leer ist:
-
-- beginnt kein Angriff
-- wird ein laufender Angriff sofort beendet
-- der Trupp wechselt in **Retreat**
-- ein leerer Claim kann somit nicht von einem Pillager-Squad angegriffen werden
-
-Auch der eigentliche Schaden ist zusätzlich abgesichert: Ein Belagerungstrupp darf nur einen Spieler beschädigen, der im Moment des Angriffs tatsächlich im Ziel-Claim steht.
-
-## 📝 Logging
-
-Das zentrale Logging-System liegt unter `scripts/core/logger.js`. Neben der globalen Console-Bridge können Module eigene Logger mit `createLogger("Modulname")` verwenden.
-
-Unterstützte Level:
-
-- `DEBUG` – häufige Diagnose- und Tick-Informationen
-- `INFO` – wichtige Zustandsänderungen und Startmeldungen
-- `WARN` – behebbare Probleme und API-/Konfigurationswarnungen
-- `ERROR` – Fehler und Exceptions
-
-### 🧑‍🌾 Villager-Todeslogger
-
-Das Essentials-Modul `scripts/essentials/villager_death_logger.js` überwacht `world.afterEvents.entityDie` und erfasst Vanilla-Villager (`minecraft:villager` und `minecraft:villager_v2`). Für jeden Tod werden möglichst viele direkt aus dem Death-Event verfügbare Informationen protokolliert:
-
-- Villager-Name/NameTag
-- Entity-Typ
-- Entity-ID
-- exakte Position (auf Ganzzahl-Koordinaten gerundet)
-- Dimension
-- **aktueller Claim und das dem Claim zugeordnete Team**
-- Todesursache aus `damageSource.cause`
-- verursachende Entity inklusive Typ, NameTag und ID, sofern vorhanden
-- verursachendes Projektil inklusive Typ, NameTag und ID, sofern vorhanden
-
-## 🧰 Essentials
-
-Das Essentials-System ist modular aufgebaut. `scripts/essentials/index.js` dient als Einstiegspunkt und verdrahtet die einzelnen Bereiche.
-
-## 🧩 Architektur
-
-```text
-scripts/core/main.js
-├── logger.js
-├── dynamic_properties.js
-├── Teams
-├── Taxes
-├── Claims
-├── Market
-│   ├── market_place.js
-│   ├── commands.js
-│   └── trader_commands.js [API-Guards + system.beforeEvents.startup]
-├── Monster
-│   ├── pillager_squads.js [claim-sicherer Spawn + spielerabhängige Belagerung]
-│   └── outpost_raids.js
-├── Essentials
-├── Anti-AFK [system.beforeEvents.startup + Event-Guards]
-└── Soldier
-    ├── commands.js [inkl. /siedler:soldier_tp]
-    ├── teleport.js [all / selected / group / individual / staff selection]
-    ├── registry.js [persistente Entity-Erkennung nach Neustart]
-    ├── monster_targeting.js [feindliche Monster-Zielsuche]
-    ├── cavalry_controller.js [mount-basierte Kavallerie-Steuerung]
-    ├── pathfinding.js [erweiterte lokale A*-Wegfindung + Stuck-Recovery]
-    ├── terrain_movement.js [Speed + Block/Stufen-Überwindung + A*-Sprunghinweise]
-    ├── groups.js
-    ├── command_manager.js
-    └── KI / Nahkampf / Fernkampf / Kavallerie
-
-trading/
-└── siedler_trader_enchantments.json [17/17 Pool-Angebote gleichzeitig verfügbar]
-```
