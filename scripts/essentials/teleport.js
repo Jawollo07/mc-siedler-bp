@@ -35,9 +35,21 @@ function registerPlayerCommand(registry, name, description, callback, mandatoryP
     }, callback);
 }
 
+function resolvePlayerArgument(argument) {
+    if (argument?.typeId === "minecraft:player" && argument.isValid) return argument;
+    return findPlayer(argument);
+}
+
+function describePlayerArgument(argument) {
+    if (argument?.typeId === "minecraft:player") return argument.name;
+    return String(argument ?? "").trim();
+}
+
 export function registerTeleportCommands(registry) {
     logger.debug("Registriere Teleport-Commands.");
-    const playerParameter = [{ type: CustomCommandParamType.String, name: "spieler" }];
+    // PlayerSelector liefert direkt ein Player-Objekt. Das ist robuster als String,
+    // insbesondere bei /execute as ... run und bei Spielern mit ähnlichen Namen.
+    const playerParameter = [{ type: CustomCommandParamType.PlayerSelector, name: "spieler" }];
 
     registerPlayerCommand(registry, "siedler:spawn", "Teleportiert dich zum Weltspawn.", (origin) => {
         const player = playerFrom(origin);
@@ -116,10 +128,12 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:tpa", "Sendet eine Teleport-Anfrage.", (origin, args) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-        const target = findPlayer(args?.[0]);
+        const argument = args?.[0];
+        const target = resolvePlayerArgument(argument);
         if (!target) {
-            logger.warn(`TPA abgelehnt: ${player.name} -> "${args?.[0] ?? ""}" nicht gefunden/eindeutig.`);
-            sendCommandError(player, `Spieler "${args?.[0] ?? ""}" ist nicht online oder nicht eindeutig.`);
+            const requested = describePlayerArgument(argument);
+            logger.warn(`TPA abgelehnt: ${player.name} -> "${requested}" nicht gefunden/eindeutig.`);
+            sendCommandError(player, `Spieler "${requested}" ist nicht online oder nicht eindeutig.`);
             return { status: CustomCommandStatus.Failure };
         }
         if (target.id === player.id) {
@@ -140,10 +154,12 @@ export function registerTeleportCommands(registry) {
     registerPlayerCommand(registry, "siedler:tpahere", "Fordert einen Spieler auf, sich zu dir zu teleportieren.", (origin, args) => {
         const player = playerFrom(origin);
         if (!player) return { status: CustomCommandStatus.Failure };
-        const target = findPlayer(args?.[0]);
+        const argument = args?.[0];
+        const target = resolvePlayerArgument(argument);
         if (!target) {
-            logger.warn(`TPAHere abgelehnt: ${player.name} -> "${args?.[0] ?? ""}" nicht gefunden/eindeutig.`);
-            sendCommandError(player, `Spieler "${args?.[0] ?? ""}" ist nicht online oder nicht eindeutig.`);
+            const requested = describePlayerArgument(argument);
+            logger.warn(`TPAHere abgelehnt: ${player.name} -> "${requested}" nicht gefunden/eindeutig.`);
+            sendCommandError(player, `Spieler "${requested}" ist nicht online oder nicht eindeutig.`);
             return { status: CustomCommandStatus.Failure };
         }
         if (target.id === player.id) {
