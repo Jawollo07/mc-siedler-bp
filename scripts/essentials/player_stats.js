@@ -2,6 +2,7 @@ import { world, system, CommandPermissionLevel, CustomCommandStatus } from "@min
 import { ActionFormData } from "@minecraft/server-ui";
 import { getClaimAt, countVillagersInTeamClaims, countTeamClaims, getClaims } from "../claims/utils.js";
 import { getTeams } from "../teams/index.js";
+import { calculateTax } from "../taxes/config.js";
 
 const DIMENSIONS = ["overworld", "nether", "the_end"];
 const SOLDIER_TYPES = ["infantry", "archer", "cavalry"];
@@ -93,7 +94,7 @@ function buildOverview(player) {
     const villagers = team ? countVillagersInTeamClaims(team.name) : 0;
     const members = team?.data?.players?.length ?? 0;
     const taxBonus = Number(team?.data?.taxBonus ?? 0);
-    const taxAmount = Math.min(256, villagers + Math.max(0, taxBonus));
+    const taxAmount = calculateTax(villagers, taxBonus).total;
     const soldiers = getTeamSoldiers(team);
 
     return [

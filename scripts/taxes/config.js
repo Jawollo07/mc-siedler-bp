@@ -5,11 +5,14 @@
  * It is increased exclusively by defeating monster tokens.
  */
 export const TAX_BONUS_CONFIG = Object.freeze({
+    /** Base daily tax per villager, including the requested extra Emerald. */
+    VILLAGER_REWARD: 2,
+
     /** Maximum permanent daily bonus per team. */
-    MAX_BONUS: 64,
+    MAX_BONUS: 10000,
 
     /** Maximum total tax payout for one team and day. */
-    MAX_DAILY_PAYOUT: 256,
+    MAX_DAILY_PAYOUT: 10000,
 
     /** Every defeated monster token increases the daily tax by 1 Emerald. */
     TOKEN_REWARD: 1
@@ -40,6 +43,9 @@ export function calculateTax(villagerCount, taxBonus) {
     return {
         villagers,
         bonus,
-        total: Math.min(TAX_BONUS_CONFIG.MAX_DAILY_PAYOUT, villagers + bonus)
+        total: Math.min(
+            TAX_BONUS_CONFIG.MAX_DAILY_PAYOUT,
+            villagers * TAX_BONUS_CONFIG.VILLAGER_REWARD + bonus
+        )
     };
 }

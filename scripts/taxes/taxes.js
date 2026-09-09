@@ -2,7 +2,7 @@ import { world, ItemStack } from "@minecraft/server";
 import { createLogger } from "../core/logger.js";
 
 const logger = createLogger("Taxes");
-const MAX_TAX_AMOUNT = 256;
+const MAX_TAX_AMOUNT = 10000;
 
 export function addTaxes(coords, amount, teamName = "Unbekannt") {
     const safeAmount = Math.min(MAX_TAX_AMOUNT, Math.max(0, Math.floor(Number(amount))));
