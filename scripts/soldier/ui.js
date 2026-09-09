@@ -2,7 +2,7 @@ import { world, system, ItemStack, EntityComponentTypes } from "@minecraft/serve
 import { ActionFormData, ModalFormData } from "@minecraft/server-ui";
 import { SOLDIERS } from "./config.js";
 import { initializeSoldierGroups, getSoldierGroups, createSoldierGroup, addSoldierToGroup, removeSoldierFromGroup, deleteSoldierGroup, commandGroupFollow, commandGroupStay, commandGroupStop, setGroupFormation } from "./groups.js";
-import { commandFollow, commandStay, commandAttack, commandDefend, commandStop } from "./command_manager.js";
+import { commandFollow, commandStay, commandAttack, commandDefend, commandStop, getSoldierMode, setSoldierMode, getSoldierModeName, SOLDIER_MODES } from "./command_manager.js";
 
 export const SOLDIER_TOOL_ID = "minecraft:stick";
 export const SOLDIER_TOOL_TAG = "siedler_soldier_control";
@@ -35,6 +35,7 @@ function ownedSoldiers(player) {
 function ownedGroups(player) { initializeSoldierGroups(); return getSoldierGroups(player.id); }
 function nameOf(s, i = 0) { return `§e${i + 1}. ${s.type ?? s.soldierType ?? "Soldat"} §7(Lv. ${s.level ?? 1})`; }
 function show(form, player) { return form.show(player).catch(e => { console.warn(`[SOLDIER UI] ${e}`); return { canceled: true }; }); }
+function modeLabel(soldier) { return getSoldierModeName(getSoldierMode(soldier)); }
 
 function selectedSoldierIds(player) {
     try { return JSON.parse(player.getDynamicProperty(SELECTION_PROPERTY) ?? "[]"); } catch { return []; }
@@ -42,9 +43,7 @@ function selectedSoldierIds(player) {
 function saveSelectedSoldierIds(player, ids) {
     player.setDynamicProperty(SELECTION_PROPERTY, JSON.stringify([...new Set(ids)].slice(0, 32)));
 }
-function isSelected(player, soldier) {
-    return selectedSoldierIds(player).includes(soldier?.entity?.id);
-}
+function isSelected(player, soldier) { return selectedSoldierIds(player).includes(soldier?.entity?.id); }
 function setSelected(player, soldier, selected) {
     if (!soldier?.entity?.isValid) return;
     const ids = selectedSoldierIds(player).filter(id => id !== soldier.entity.id);
@@ -57,38 +56,21 @@ function clearSelection(player) {
     for (const soldier of ownedSoldiers(player)) if (ids.includes(soldier.entity.id)) updateSelectionVisual(soldier.entity, false);
     saveSelectedSoldierIds(player, []);
 }
-
 function updateSelectionVisual(entity, selected) {
     if (!entity?.isValid) return;
-    try {
-        if (selected) entity.addTag(SELECTION_TAG);
-        else entity.removeTag(SELECTION_TAG);
-    } catch {}
+    try { if (selected) entity.addTag(SELECTION_TAG); else entity.removeTag(SELECTION_TAG); } catch {}
 }
-
 function ensureSelectionMarker(entity) {
     if (!entity?.isValid) return;
     try {
         let marker = markerIds.get(entity.id);
         if (marker) {
             const current = entity.dimension.getEntities({ tags: [MARKER_TAG], location: entity.location, maxDistance: 3 }).find(e => e.id === marker);
-            if (current?.isValid) {
-                current.teleport({ x: entity.location.x, y: entity.location.y + MARKER_OFFSET, z: entity.location.z });
-                return;
-            }
+            if (current?.isValid) { current.teleport({ x: entity.location.x, y: entity.location.y + MARKER_OFFSET, z: entity.location.z }); return; }
         }
-        const markerEntity = entity.dimension.spawnEntity("minecraft:armor_stand", {
-            x: entity.location.x,
-            y: entity.location.y + MARKER_OFFSET,
-            z: entity.location.z
-        });
-        markerEntity.addTag(MARKER_TAG);
-        markerEntity.addTag(`siedler_marker_for:${entity.id}`);
-        markerIds.set(entity.id, markerEntity.id);
-        system.runTimeout(() => {
-            try { if (markerEntity.isValid) markerEntity.remove(); } catch {}
-            if (markerIds.get(entity.id) === markerEntity.id) markerIds.delete(entity.id);
-        }, MARKER_LIFETIME);
+        const markerEntity = entity.dimension.spawnEntity("minecraft:armor_stand", { x: entity.location.x, y: entity.location.y + MARKER_OFFSET, z: entity.location.z });
+        markerEntity.addTag(MARKER_TAG); markerEntity.addTag(`siedler_marker_for:${entity.id}`); markerIds.set(entity.id, markerEntity.id);
+        system.runTimeout(() => { try { if (markerEntity.isValid) markerEntity.remove(); } catch {} if (markerIds.get(entity.id) === markerEntity.id) markerIds.delete(entity.id); }, MARKER_LIFETIME);
     } catch {}
 }
 
@@ -121,7 +103,7 @@ export async function openSoldierMenu(player) {
 async function openSoldierSelection(player) {
     const soldiers = ownedSoldiers(player);
     const form = new ActionFormData().title("§eMeine Soldaten").body(`${soldiers.length} Soldat(en) · §a✓ ausgewählt`);
-    soldiers.forEach((s,i) => form.button(`${isSelected(player,s) ? "§a✓ " : "§7○ "}${nameOf(s,i)}`));
+    soldiers.forEach((s,i) => form.button(`${isSelected(player,s) ? "§a✓ " : "§7○ "}${nameOf(s,i)}\n§7Modus: §f${modeLabel(s)}`));
     form.button("§8Zurück");
     const r = await show(form, player); if (r.canceled) return;
     if (r.selection === soldiers.length) return openSoldierMenu(player);
@@ -131,9 +113,10 @@ async function openSoldierSelection(player) {
 async function openSoldierActions(player, soldier) {
     if (!soldier?.entity?.isValid) return openSoldierSelection(player);
     const selected = isSelected(player, soldier);
-    const form = new ActionFormData().title("§eSoldat").body(`${nameOf(soldier)}\n${selected ? "§a● AUSGEWÄHLT" : "§7○ nicht ausgewählt"}`)
+    const form = new ActionFormData().title("§eSoldat").body(`${nameOf(soldier)}\n${selected ? "§a● AUSGEWÄHLT" : "§7○ nicht ausgewählt"}\n§7Angriffsmodus: §f${modeLabel(soldier)}`)
         .button(selected ? "§cAuswahl aufheben" : "§aSoldat auswählen")
-        .button("§aFolgen").button("§eBleiben").button("§cAngreifen").button("§6Verteidigen").button("§cStoppen").button("§8Zurück");
+        .button("§aFolgen").button("§eBleiben").button("§cAngreifen").button("§6Verteidigen").button("§cStoppen")
+        .button("§dAngriffsmodus ändern").button("§bZu mir teleportieren").button("§8Zurück");
     const r = await show(form, player); if (r.canceled) return;
     if (r.selection === 0) { setSelected(player, soldier, !selected); return openSoldierSelection(player); }
     switch (r.selection) {
@@ -142,9 +125,28 @@ async function openSoldierActions(player, soldier) {
         case 3: { const target = nearestEnemy(soldier); if (!target || !commandAttack(soldier,target)) player.sendMessage("§cKein gültiges feindliches Ziel."); break; }
         case 4: commandDefend(soldier,soldier.entity.location,8); break;
         case 5: commandStop(soldier); break;
+        case 6: return openModeMenu(player, [soldier]);
+        case 7: return teleportSoldiers(player, [soldier]);
         default: return openSoldierSelection(player);
     }
     player.sendMessage("§aBefehl ausgeführt."); return openSoldierSelection(player);
+}
+
+async function openModeMenu(player, soldiers) {
+    const valid = soldiers.filter(s => s?.entity?.isValid);
+    if (!valid.length) return openSoldierMenu(player);
+    const current = getSoldierMode(valid[0]);
+    const labels = ["§70 · Nichts angreifen","§a1 · Monster in der Nähe","§c2 · Feindliche Soldaten","§e3 · Tiere","§6 4 · Feindliche Dorfbewohner","§4 5 · Alles"];
+    const form = new ActionFormData().title("§dAngriffsmodus").body(`§7${valid.length} Soldat(en)\n§7Aktuell: §f${getSoldierModeName(current)}`);
+    labels.forEach(label => form.button(label));
+    form.button("§8Zurück");
+    const r = await show(form, player); if (r.canceled) return;
+    if (r.selection === labels.length) return valid.length === 1 ? openSoldierActions(player, valid[0]) : openSelectionActions(player, valid);
+    const mode = r.selection;
+    let count = 0;
+    for (const soldier of valid) if (setSoldierMode(soldier, mode)) count++;
+    player.sendMessage(`§aAngriffsmodus ${mode} für ${count} Soldat(en) gesetzt: §f${getSoldierModeName(mode)}`);
+    return valid.length === 1 ? openSoldierActions(player, valid[0]) : openSelectionActions(player, valid);
 }
 
 function nearestEnemy(soldier) {
@@ -161,9 +163,7 @@ async function openMultiSelection(player) {
     const soldiers = ownedSoldiers(player);
     if (!soldiers.length) { player.sendMessage("§cKeine eigenen Soldaten vorhanden."); return; }
     const form = new ModalFormData().title("§6Soldaten auswählen").label("§7Aktiviere Soldaten für deine aktuelle Auswahl.");
-    for (const s of soldiers) {
-        form.toggle(`${isSelected(player,s) ? "§a✓ " : "§7○ "}${nameOf(s)}`, { defaultValue: isSelected(player,s) });
-    }
+    for (const s of soldiers) form.toggle(`${isSelected(player,s) ? "§a✓ " : "§7○ "}${nameOf(s)}`, { defaultValue: isSelected(player,s) });
     const r = await show(form, player); if (r.canceled) return openSoldierMenu(player);
     clearSelection(player);
     const selected = soldiers.filter((_,i) => r.formValues?.[i] === true);
@@ -174,14 +174,16 @@ async function openMultiSelection(player) {
 async function openSelectionActions(player, selected) {
     if (!selected.length) { player.sendMessage("§eKeine Soldaten ausgewählt."); return openSoldierMenu(player); }
     const form = new ActionFormData().title("§6Auswahl").body(`§7${selected.length} Soldaten ausgewählt.\n§aDie Auswahl ist jetzt über den Einheiten sichtbar.`)
-        .button("§aFolgen").button("§eBleiben").button("§cStoppen").button("§bNeue Gruppe aus Auswahl").button("§dZu Gruppe hinzufügen").button("§8Auswahl ändern").button("§8Hauptmenü");
+        .button("§aFolgen").button("§eBleiben").button("§cStoppen").button("§dAngriffsmodus").button("§bTeleport zu mir").button("§bNeue Gruppe aus Auswahl").button("§dZu Gruppe hinzufügen").button("§8Auswahl ändern").button("§8Hauptmenü");
     const r = await show(form, player); if (r.canceled) return;
     if (r.selection===0) selected.forEach(s=>commandFollow(s));
     else if (r.selection===1) selected.forEach(s=>commandStay(s));
     else if (r.selection===2) selected.forEach(s=>commandStop(s));
-    else if (r.selection===3) { const g=createSoldierGroup(player.id,`Gruppe ${ownedGroups(player).length+1}`,selected); player.sendMessage(g?`§aGruppe erstellt (${selected.length}).`:`§cGruppe konnte nicht erstellt werden.`); }
-    else if (r.selection===4) return addSelectionToGroup(player,selected);
-    else if (r.selection===5) return openMultiSelection(player);
+    else if (r.selection===3) return openModeMenu(player, selected);
+    else if (r.selection===4) return teleportSoldiers(player, selected);
+    else if (r.selection===5) { const g=createSoldierGroup(player.id,`Gruppe ${ownedGroups(player).length+1}`,selected); player.sendMessage(g?`§aGruppe erstellt (${selected.length}).`:`§cGruppe konnte nicht erstellt werden.`); }
+    else if (r.selection===6) return addSelectionToGroup(player,selected);
+    else if (r.selection===7) return openMultiSelection(player);
     else return openSoldierMenu(player);
     player.sendMessage("§aBefehl auf Auswahl angewendet."); return openSoldierMenu(player);
 }
@@ -204,9 +206,7 @@ async function openGroupMenu(player) {
 
 async function createGroup(player) {
     const soldiers=ownedSoldiers(player); if(!soldiers.length){player.sendMessage("§cKeine Soldaten vorhanden.");return openGroupMenu(player);}
-    const form=new ModalFormData().title("§aGruppe erstellen")
-        .textField("Name","z.B. Erste Garde",{ defaultValue: "Gruppe 1" })
-        .slider("Soldatenradius",2,32,{ valueStep: 2, defaultValue: 16 });
+    const form=new ModalFormData().title("§aGruppe erstellen").textField("Name","z.B. Erste Garde",{ defaultValue: "Gruppe 1" }).slider("Soldatenradius",2,32,{ valueStep: 2, defaultValue: 16 });
     const r=await show(form,player); if(r.canceled)return openGroupMenu(player);
     const name=String(r.formValues?.[0]||`Gruppe ${ownedGroups(player).length+1}`).trim(); const radius=Number(r.formValues?.[1]??16); const r2=radius*radius;
     const selected=soldiers.filter(s=>{const p=s.entity.location,dx=p.x-player.location.x,dy=p.y-player.location.y,dz=p.z-player.location.z;return dx*dx+dy*dy+dz*dz<=r2;});
@@ -216,17 +216,46 @@ async function createGroup(player) {
 async function openGroupActions(player,group) {
     if(!group)return openGroupMenu(player);
     const form=new ActionFormData().title(`§b${group.name}`).body(`§7${group.soldierIds.length} Soldaten · Formation: ${group.formation}`)
-        .button("§aFolgen").button("§eBleiben").button("§cStoppen").button("§dFormation").button("§eMitglieder").button("§cGruppe löschen").button("§8Zurück");
+        .button("§aFolgen").button("§eBleiben").button("§cStoppen").button("§dAngriffsmodus").button("§bTeleport zu mir").button("§dFormation").button("§eMitglieder").button("§cGruppe löschen").button("§8Zurück");
     const r=await show(form,player);if(r.canceled)return;
-    if(r.selection===0)commandGroupFollow(group.id,player.id); else if(r.selection===1)commandGroupStay(group.id,player.id); else if(r.selection===2)commandGroupStop(group.id,player.id); else if(r.selection===3)return changeFormation(player,group); else if(r.selection===4)return manageMembers(player,group); else if(r.selection===5){if(deleteSoldierGroup(group.id,player.id))player.sendMessage("§aGruppe gelöscht.");return openGroupMenu(player);} else return openGroupMenu(player);
+    if(r.selection===0)commandGroupFollow(group.id,player.id);
+    else if(r.selection===1)commandGroupStay(group.id,player.id);
+    else if(r.selection===2)commandGroupStop(group.id,player.id);
+    else if(r.selection===3) return openModeMenu(player, getGroupSoldiers(player,group));
+    else if(r.selection===4) return teleportSoldiers(player, getGroupSoldiers(player,group));
+    else if(r.selection===5)return changeFormation(player,group);
+    else if(r.selection===6)return manageMembers(player,group);
+    else if(r.selection===7){if(deleteSoldierGroup(group.id,player.id))player.sendMessage("§aGruppe gelöscht.");return openGroupMenu(player);} else return openGroupMenu(player);
     player.sendMessage("§aGruppenbefehl ausgeführt.");return openGroupMenu(player);
+}
+
+function getGroupSoldiers(player, group) {
+    const ids = new Set(group?.soldierIds ?? []);
+    return ownedSoldiers(player).filter(s => ids.has(s.entity.id));
+}
+
+async function teleportSoldiers(player, soldiers) {
+    const valid = soldiers.filter(s => s?.entity?.isValid);
+    if (!valid.length) { player.sendMessage("§cKeine gültigen Soldaten ausgewählt."); return openSoldierMenu(player); }
+    let count = 0;
+    for (const soldier of valid) {
+        try {
+            const index = count;
+            const angle = index * 2.399963;
+            const radius = Math.min(2.5, 0.8 + Math.sqrt(index) * 0.65);
+            const location = { x: player.location.x + Math.cos(angle) * radius, y: player.location.y, z: player.location.z + Math.sin(angle) * radius };
+            if (soldier.entity.dimension.id !== player.dimension.id) soldier.entity.teleport(location, { dimension: player.dimension });
+            else soldier.entity.teleport(location);
+            count++;
+        } catch {}
+    }
+    player.sendMessage(`§a${count} Soldat(en) zu dir teleportiert.`);
+    return openSoldierMenu(player);
 }
 
 async function manageMembers(player,group) {
     const soldiers=ownedSoldiers(player); const form=new ModalFormData().title(`§eMitglieder: ${group.name}`).label("§7Aktiviere die Soldaten, die in der Gruppe bleiben sollen.");
-    for(const s of soldiers) {
-        form.toggle(nameOf(s), { defaultValue: group.soldierIds.includes(s.entity.id) });
-    }
+    for(const s of soldiers) form.toggle(nameOf(s), { defaultValue: group.soldierIds.includes(s.entity.id) });
     const r=await show(form,player);if(r.canceled)return openGroupActions(player,group);
     const wanted=new Set(soldiers.filter((_,i)=>r.formValues?.[i]===true).map(s=>s.entity.id));
     for(const s of soldiers){const inside=group.soldierIds.includes(s.entity.id);if(wanted.has(s.entity.id)&&!inside)addSoldierToGroup(group.id,player.id,s);if(!wanted.has(s.entity.id)&&inside)removeSoldierFromGroup(group.id,player.id,s);}
