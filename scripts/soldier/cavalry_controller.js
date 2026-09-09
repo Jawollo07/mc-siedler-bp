@@ -2,20 +2,17 @@ import { system } from "@minecraft/server";
 import { SOLDIERS, SOLDIER_CONFIG } from "./config.js";
 
 const TICK_INTERVAL = 1;
-const MOVE_IMPULSE = 0.032;
-const BRAKE_IMPULSE = 0.08;
-const MAX_SPEED = 0.62;
-const TURN_RESPONSE = 0.3;
+const MOVE_IMPULSE = 0.045;
+const BRAKE_IMPULSE = 0.12;
+const MAX_SPEED = 0.72;
+const TURN_RESPONSE = 0.34;
 const MOUNT_SEARCH_RADIUS = 7;
+const OBSTACLE_LOOK_AHEAD = 0.9;
+const JUMP_IMPULSE = 0.48;
+const JUMP_COOLDOWN = 500;
 
 let started = false;
 
-/**
- * Dedicated mounted movement layer.
- * The normal Soldier pathfinder operates on the rider entity. A horse must be
- * steered from the mount itself, otherwise the two movement systems can fight
- * each other and cause cavalry to stall, orbit targets or move backwards.
- */
 export function startCavalryController() {
     if (started) return;
     started = true;
@@ -24,13 +21,14 @@ export function startCavalryController() {
 }
 
 function updateCavalry() {
+    const now = Date.now();
     for (const soldier of SOLDIERS.values()) {
         if (soldier?.type !== "cavalry") continue;
-        if (!soldier.entity?.isValid) continue;
-        if (soldier.phase !== SOLDIER_CONFIG.STATES.MOVE) continue;
+        if (!soldier.entity?.isValid || soldier.phase !== SOLDIER_CONFIG.STATES.MOVE) continue;
 
         const mount = getMount(soldier);
         if (!mount) continue;
+        soldier.mount = mount;
 
         const target = getTarget(soldier, mount);
         if (!target) continue;
@@ -46,8 +44,7 @@ function updateCavalry() {
         soldier.desiredDirection.x = x;
         soldier.desiredDirection.z = z;
 
-        // The A* module is intentionally disabled for cavalry while mounted.
-        // This prevents rider-based waypoints from overwriting mount steering.
+        // Never let the rider A* movement overwrite the horse controller.
         if (soldier.pathfinding) {
             soldier.pathfinding.path = null;
             soldier.pathfinding.index = 0;
@@ -59,23 +56,59 @@ function updateCavalry() {
             const rotation = mount.getRotation?.() ?? { x: 0, y: 0 };
             const targetYaw = Math.atan2(-x, z) * 180 / Math.PI;
             const delta = normalizeAngle(targetYaw - rotation.y);
-            mount.setRotation?.({ x: rotation.x * 0.8, y: rotation.y + delta * TURN_RESPONSE });
+            mount.setRotation?.({ x: 0, y: rotation.y + delta * TURN_RESPONSE });
 
-            const velocity = mount.getVelocity?.() ?? { x: 0, z: 0 };
+            const velocity = mount.getVelocity?.() ?? { x: 0, y: 0, z: 0 };
             const speed = Math.hypot(velocity.x ?? 0, velocity.z ?? 0);
+            const acceleration = Math.max(0.01, 1 - Math.abs(delta) / 180 * 0.55);
             if (speed < MAX_SPEED) {
-                mount.applyImpulse?.({ x: x * MOVE_IMPULSE, y: 0, z: z * MOVE_IMPULSE });
-            } else if (speed > MAX_SPEED * 1.2) {
-                mount.applyImpulse?.({ x: -(velocity.x ?? 0) * BRAKE_IMPULSE, y: 0, z: -(velocity.z ?? 0) * BRAKE_IMPULSE });
+                const impulse = MOVE_IMPULSE * acceleration;
+                mount.applyImpulse?.({ x: x * impulse, y: 0, z: z * impulse });
+            } else if (speed > MAX_SPEED * 1.15) {
+                mount.applyImpulse?.({
+                    x: -(velocity.x ?? 0) * BRAKE_IMPULSE,
+                    y: 0,
+                    z: -(velocity.z ?? 0) * BRAKE_IMPULSE
+                });
+            }
+
+            if (now >= (soldier.cavalryNextJump ?? 0) && needsJump(mount, x, z)) {
+                mount.applyImpulse?.({ x: x * 0.06, y: JUMP_IMPULSE, z: z * 0.06 });
+                soldier.cavalryNextJump = now + JUMP_COOLDOWN;
             }
         } catch {}
+    }
+}
+
+function needsJump(mount, x, z) {
+    try {
+        const base = mount.location;
+        const px = Math.floor(base.x + x * OBSTACLE_LOOK_AHEAD);
+        const pz = Math.floor(base.z + z * OBSTACLE_LOOK_AHEAD);
+        const feet = mount.dimension.getBlock({ x: px, y: Math.floor(base.y), z: pz });
+        const head = mount.dimension.getBlock({ x: px, y: Math.floor(base.y + 1), z: pz });
+        const above = mount.dimension.getBlock({ x: px, y: Math.floor(base.y + 2), z: pz });
+        return !!feet && !!head && !!above && !isPassable(feet) && isPassable(head) && isPassable(above);
+    } catch {
+        return false;
+    }
+}
+
+function isPassable(block) {
+    try {
+        if (block.isAir || block.isLiquid) return true;
+        const id = String(block.typeId ?? "");
+        return id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air" ||
+            id === "minecraft:water" || id === "minecraft:flowing_water";
+    } catch {
+        return false;
     }
 }
 
 function getTarget(soldier, mount) {
     if (!soldier.targetId) return null;
     try {
-        return mount.dimension.getEntities({ location: mount.location, maxDistance: 32 })
+        return mount.dimension.getEntities({ location: mount.location, maxDistance: 36 })
             .find(entity => entity.id === soldier.targetId && entity.isValid) ?? null;
     } catch {
         return null;
@@ -84,7 +117,6 @@ function getTarget(soldier, mount) {
 
 function getMount(soldier) {
     if (soldier.mount?.isValid && soldier.mount.hasTag?.("soldier_mount")) return soldier.mount;
-
     try {
         const entities = soldier.entity.dimension.getEntities({ location: soldier.entity.location, maxDistance: MOUNT_SEARCH_RADIUS });
         const owned = entities.find(entity => {
@@ -99,6 +131,4 @@ function getMount(soldier) {
     return null;
 }
 
-function normalizeAngle(angle) {
-    return ((angle + 180) % 360 + 360) % 360 - 180;
-}
+function normalizeAngle(angle) { return ((angle + 180) % 360 + 360) % 360 - 180; }
