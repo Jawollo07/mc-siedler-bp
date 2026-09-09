@@ -94,3 +94,10 @@ Die lokale A*-Wegfindung arbeitet bewusst mit einem begrenzten Suchradius und ei
 ### Kavallerie
 
 Die Kavallerie wird über `cavalry_ai.js` und `cavalry_controller.js` direkt am Pferd gesteuert. Sie nähert sich Gegnern aktiv, chargt aus größerer Distanz, verursacht erhöhten Charge-Schaden und Knockback, passiert Ziele nach Treffern und nutzt eine Stuck-Recovery mit wechselnder Pass-Seite.
+
+## 📡 Essentials / TPA
+
+- `/siedler:tpa <Spieler>` und `/siedler:tpahere <Spieler>` verwenden einen nativen `PlayerSelector`.
+- Dadurch wird das Ziel direkt als `Player` an das Script übergeben und nicht mehr als fehleranfälliger String geparst.
+- Die Lösung ist auch für Aufrufe über `/execute as ... run` ausgelegt.
+- `tpaccept` und `tpdeny` arbeiten weiterhin mit der persistenten Spieler-ID der TPA-Anfrage.
