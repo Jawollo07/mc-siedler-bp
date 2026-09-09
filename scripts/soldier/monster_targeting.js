@@ -1,5 +1,6 @@
 import { system } from "@minecraft/server";
 import { SOLDIERS, SOLDIER_CONFIG } from "./config.js";
+import { getSoldierMode, SOLDIER_MODES } from "./command_manager.js";
 
 // Explicit hostile-mob whitelist. Passive/neutral animals are deliberately excluded.
 const MONSTER_TYPES = new Set([
@@ -59,6 +60,9 @@ function updateMonsterTargets() {
             if (soldier.targetId) continue;
             if (soldier.phase !== SOLDIER_CONFIG.STATES.IDLE) continue;
 
+            const mode = getSoldierMode(soldier);
+            if (mode !== SOLDIER_MODES.MONSTERS && mode !== SOLDIER_MODES.EVERYTHING) continue;
+
             const target = findNearestMonster(soldier);
             if (!target) continue;
 
@@ -93,7 +97,7 @@ function findNearestMonster(soldier) {
             }
         }
     } catch (error) {
-        console.warn(`[Soldier Monsters] Entity scan failed: ${formatError(error)}`);
+        console.warn(`[Soldier Monsters] Entity scan failed: ${error}`);
     }
 
     return best;
