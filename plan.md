@@ -13,7 +13,10 @@
 - [x] Claim-Block-Recovery und Item-Rückgabe
 - [x] Permanenter Monster-Token-TaxBonus
 - [x] Tagessteuer nur bei mindestens einem online Teammitglied
-- [x] Permanente Weakness gegen Mobs und PvP
+- [x] **Atomare Steuerbuchung ohne Emerald-Drops bei voller/ungeladener Steuerkiste**
+- [x] **Automatische Steuer-Wiederholungsversuche bei temporären Fehlern**
+- [x] **Persistente Steuerstatistik mit Gesamtzahlungen, letzter Zahlung und Fehlerzähler**
+- [x] **`/siedler:taxinfo` und `/siedler:taxstats` für detaillierte Steuerinformationen**
 - [x] Händler und Soldatenhändler
 - [x] Handelsfenster für spezialisierte Händler repariert
 - [x] Händler-Trade-Tables über Component Groups
