@@ -31,9 +31,15 @@
 - [x] Nahkampf-, Fernkampf- und Kavallerie-KI
 - [x] Lokale A*-Wegfindung mit Höhenwechseln, Umwegen und Stuck-Recovery
 - [x] Terrain-Bewegung und Überwindung ein Block hoher Hindernisse
-- [x] **Deutlich beschleunigte Soldier-Bewegung mit Level- und Kavallerie-Bonus**
-- [x] **Begrenzung der horizontalen Geschwindigkeit gegen unkontrollierte Beschleunigung**
-- [x] **Stärkerer Vorwärtsimpuls für schnelle Reaktion und Marschbewegung**
+- [x] Deutlich beschleunigte Soldier-Bewegung mit Level- und Kavallerie-Bonus
+- [x] Begrenzung der horizontalen Geschwindigkeit gegen unkontrollierte Beschleunigung
+- [x] Stärkerer Vorwärtsimpuls für schnelle Reaktion und Marschbewegung
+- [x] **Kavallerie-Controller mit direkter Pferdesteuerung und stabiler Kurvenfahrt**
+- [x] **Kavallerie-Charge aus größerer Distanz mit erhöhtem Schaden und Knockback**
+- [x] **Kavallerie-Pass-Manöver nach Treffern zur Vermeidung von Feststecken im Ziel**
+- [x] **Kavallerie-Stuck-Recovery mit wechselnder Pass-Seite**
+- [x] **Automatisches Überspringen ein Block hoher Hindernisse**
+- [x] **Kavallerie-Zielsuche auf feindliche Spieler/Soldaten und definierte Monster beschränkt**
 - [x] Bogenschützen mit ballistischer Pfeilphysik
 - [x] Spieler-Dashboard und Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
