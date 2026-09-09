@@ -11,6 +11,7 @@
 - Claim-Protection mit Block-Recovery und Item-Rückgabe
 - Zentraler Marktplatz und spezialisierte Händler
 - **Automatischer Marktbestand: fehlende Händler werden selbstständig nachgespawnt**
+- **Händler bleiben dauerhaft innerhalb des konfigurierten Marktplatzes**
 - **Verzauberungshändler-Villager mit vollständigem Pool aller definierten Angebote**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - **Beschleunigte Soldier-Bewegung mit Terrain-Unterstützung für Blöcke und Stufen**
@@ -46,6 +47,14 @@ enchantments
 Die Spawnposition liegt im konfigurierten `traderSpawn`-Bereich des Marktplatzes. Die Händler werden leicht verteilt gespawnt, damit nicht alle exakt im selben Block stehen. Die Wartung läuft beim Serverstart nach kurzer Verzögerung und anschließend alle 10 Sekunden.
 
 Wird ein Händler getötet, entfernt oder läuft er aus dem definierten Marktplatzbereich, erkennt die Wartung den fehlenden Bestand und erstellt automatisch einen Ersatz. Bereits vorhandene Händler werden dabei **nicht bei jedem Prüflauf dupliziert**.
+
+### Händler bleiben auf dem Marktplatz
+
+Händler mit einer konfigurierten Händlerrolle werden zusätzlich **jede Sekunde auf ihre Marktzugehörigkeit geprüft**. Sollte die normale Villager-KI einen Händler aus dem Markt herauslaufen lassen, wird er automatisch zur konfigurierten `traderSpawn`-Position des nächstgelegenen Marktes in seiner Dimension zurückteleportiert und dabei abgebremst.
+
+Dadurch bleiben auch Händler, die durch Vanilla-Navigation, Interaktionen oder andere Bewegungsursachen aus dem Bereich gelangen, innerhalb des Marktplatzes. Die automatische Bestandsprüfung zählt die Händler erst innerhalb des Marktes, sodass ein weggelaufener Händler nicht gleichzeitig einen unnötigen Ersatz-Händler erzeugt.
+
+Der `/siedler:trader`- und `/siedler:trader_here`-Command akzeptiert Händler-Spawns außerdem nur noch **innerhalb eines konfigurierten Marktplatzes**.
 
 Die gewünschte Anzahl pro Typ kann direkt am Markt über `traderCountPerType` angepasst werden. Aktuell ist sie auf `1` gesetzt.
 
