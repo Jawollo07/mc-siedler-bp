@@ -8,6 +8,7 @@ const SOLDIER_TRADER_VARIANT = 6;
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
 const AUTO_TRADER_INTERVAL = 200; // 10 seconds
 const AUTO_TRADER_INITIAL_DELAY = 40; // 2 seconds after startup
+const TRADER_CONFINEMENT_INTERVAL = 20; // 1 second
 
 const TRADER_TYPES = {
     food: { event: "siedler:set_food", name: "§aLebensmittelhändler", tag: "trader_food" },
@@ -105,6 +106,19 @@ function spawnTrader(player, type, location) {
         return;
     }
 
+    const market = MARKET_PLACES.find(candidate =>
+        candidate.enabled && candidate.dimension === player.dimension?.id &&
+        location.x >= Math.min(candidate.min.x, candidate.max.x) &&
+        location.x <= Math.max(candidate.min.x, candidate.max.x) &&
+        location.z >= Math.min(candidate.min.z, candidate.max.z) &&
+        location.z <= Math.max(candidate.min.z, candidate.max.z)
+    );
+
+    if (!market) {
+        reply(player, "§cHändler können nur innerhalb eines Marktplatzes gespawnt werden.");
+        return;
+    }
+
     const trader = spawnTraderAt(player.dimension, type, location, false);
     if (!trader) {
         reply(player, "§cHändler konnte nicht gespawnt werden.");
@@ -137,6 +151,15 @@ function traderHasRole(trader, type) {
     return false;
 }
 
+function isInsideMarket(location, market) {
+    if (!location || !market) return false;
+    const minX = Math.min(market.min.x, market.max.x);
+    const maxX = Math.max(market.min.x, market.max.x);
+    const minZ = Math.min(market.min.z, market.max.z);
+    const maxZ = Math.max(market.min.z, market.max.z);
+    return location.x >= minX && location.x <= maxX && location.z >= minZ && location.z <= maxZ;
+}
+
 function getAutomaticTraderLocation(market, index, total) {
     const configured = market.traderSpawn;
     const centerX = configured?.x ?? ((market.min.x + market.max.x) / 2);
@@ -154,6 +177,64 @@ function getAutomaticTraderLocation(market, index, total) {
     };
 }
 
+function getMarketForTrader(trader) {
+    if (!trader?.isValid) return null;
+    const dimensionId = trader.dimension?.id;
+    const markets = MARKET_PLACES.filter(market => market.enabled && market.dimension === dimensionId);
+    if (markets.length === 0) return null;
+
+    const inside = markets.find(market => isInsideMarket(trader.location, market));
+    if (inside) return inside;
+
+    // If a trader somehow leaves the market, return the nearest configured
+    // market in this dimension so it can be brought back immediately.
+    let nearest = null;
+    let nearestDistance = Infinity;
+    for (const market of markets) {
+        const spawn = market.traderSpawn ?? {
+            x: (market.min.x + market.max.x) / 2,
+            y: (market.min.y ?? 0) + 1,
+            z: (market.min.z + market.max.z) / 2
+        };
+        const dx = trader.location.x - spawn.x;
+        const dz = trader.location.z - spawn.z;
+        const distance = dx * dx + dz * dz;
+        if (distance < nearestDistance) {
+            nearest = market;
+            nearestDistance = distance;
+        }
+    }
+    return nearest;
+}
+
+function confineTrader(trader) {
+    if (!trader?.isValid || trader.typeId !== TRADER_TYPE || !hasTraderRole(trader)) return false;
+
+    const market = getMarketForTrader(trader);
+    if (!market || isInsideMarket(trader.location, market)) return false;
+
+    const target = getAutomaticTraderLocation(market, 0, 1);
+    try {
+        trader.teleport(target, { dimension: trader.dimension, keepVelocity: false });
+        logger.debug(`Händler zurück auf den Marktplatz teleportiert: type=${trader.typeId}, market=${market.id}`);
+        return true;
+    } catch (error) {
+        logger.warn(`Händler konnte nicht auf den Marktplatz zurückgesetzt werden: ${error}`);
+        return false;
+    }
+}
+
+function confineAllTraders() {
+    for (const dimensionId of ["overworld", "nether", "the_end"]) {
+        try {
+            const dimension = world.getDimension(dimensionId);
+            for (const trader of getTraderEntities(dimension)) confineTrader(trader);
+        } catch (error) {
+            logger.debug(`Händler-Eingrenzung ${dimensionId} fehlgeschlagen: ${error}`);
+        }
+    }
+}
+
 function maintainMarketTraders() {
     for (const market of MARKET_PLACES) {
         if (!market.enabled) continue;
@@ -162,6 +243,11 @@ function maintainMarketTraders() {
             const dimension = world.getDimension(market.dimension);
             const traders = getTraderEntities(dimension);
             const targetPerType = Math.max(1, Number(market.traderCountPerType ?? 1));
+
+            // Keep every configured trader physically inside its market before
+            // counting the current stock. This prevents wander-off traders from
+            // causing replacement duplicates.
+            for (const trader of traders) confineTrader(trader);
 
             // Initialize old/untyped trader entities first so they can be
             // counted correctly on the next pass instead of creating duplicates.
@@ -175,11 +261,7 @@ function maintainMarketTraders() {
                 if (!traderHasRole(trader, "food") && !traderHasRole(trader, "building") && !traderHasRole(trader, "resources") && !traderHasRole(trader, "tools") && !traderHasRole(trader, "weapons") && !traderHasRole(trader, "supplies") && !traderHasRole(trader, "soldiers") && !traderHasRole(trader, "enchantments")) continue;
 
                 // Only count traders that are currently inside this market.
-                const minX = Math.min(market.min.x, market.max.x);
-                const maxX = Math.max(market.min.x, market.max.x);
-                const minZ = Math.min(market.min.z, market.max.z);
-                const maxZ = Math.max(market.min.z, market.max.z);
-                if (trader.location.x < minX || trader.location.x > maxX || trader.location.z < minZ || trader.location.z > maxZ) continue;
+                if (!isInsideMarket(trader.location, market)) continue;
 
                 for (const type of TRADER_TYPE_KEYS) {
                     if (traderHasRole(trader, type)) {
@@ -215,6 +297,7 @@ if (world.afterEvents?.entitySpawn?.subscribe) {
         system.run(() => {
             try {
                 if (!hasTraderRole(trader)) applyTraderType(trader, "food");
+                confineTrader(trader);
             } catch (error) {
                 logger.warn(`Spawn-Initialisierung fehlgeschlagen: ${error}`);
             }
@@ -237,6 +320,10 @@ system.runInterval(() => {
         }
     }
 }, 200);
+
+// Hard confinement: traders are checked every second and immediately returned
+// to the configured market if vanilla AI makes them wander outside.
+system.runInterval(confineAllTraders, TRADER_CONFINEMENT_INTERVAL);
 
 // Keep the configured market staffed automatically. Missing or killed traders
 // are recreated; existing traders are never duplicated just because the timer runs.
@@ -324,4 +411,4 @@ system.beforeEvents.startup.subscribe((event) => {
     });
 });
 
-logger.success("Händler-Commands, Recovery und automatischer Marktbestand geladen");
+logger.success("Händler-Commands, Recovery, Marktbestand und Händler-Eingrenzung geladen");
