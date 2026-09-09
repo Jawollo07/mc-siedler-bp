@@ -59,6 +59,7 @@
 - [x] Spieler-Dashboard und Serverstatistiken
 - [x] Resource Pack mit Custom-Soldaten
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
+- [x] **TPA/TPAHere mit nativer PlayerSelector-Zielauflösung, auch bei `/execute as ... run`**
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
