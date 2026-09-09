@@ -16,7 +16,11 @@ export const MARKET_PLACES = [
         enabled: true,
         dimension: "overworld",
         min: { x: 36, y: 106, z: 67 },
-        max: { x: -18, y: 106, z: 13 }
+        max: { x: -18, y: 106, z: 13 },
+        // Central spawn area used by the automatic trader system.
+        traderSpawn: { x: 9.5, y: 107, z: 40.5 },
+        // One trader of every configured role is kept alive at the market.
+        traderCountPerType: 1
     }
 ];
 
