@@ -15,6 +15,7 @@
 - **Verzauberungshändler-Villager mit vollständigem Pool aller definierten Angebote**
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - **Beschleunigte Soldier-Bewegung mit Level-/Kavallerie-Bonus, Geschwindigkeitslimit und Terrain-Unterstützung**
+- **Verbesserte Kavallerie mit direkter Mount-Steuerung, Charge/Pass-Taktik und Hindernissprüngen**
 - **Erweiterte lokale A*-Wegfindung mit Höhenwechseln, Umwegen und Stuck-Recovery**
 - **Automatische Zielsuche für nahe feindliche Monster**
 - Bogenschützen mit ballistischer Pfeilphysik
@@ -29,27 +30,36 @@
 
 Das Soldier-System befindet sich unter `scripts/soldier/` und unterstützt Infanterie, Bogenschützen und Kavallerie mit Owner-Zuordnung, Leveln, XP, Ausrüstung, KI, Befehlen und Gruppenformationen.
 
+### Kavallerie
+
+Die Kavallerie wird über `cavalry_ai.js` und den dedizierten `cavalry_controller.js` direkt am Pferd gesteuert. Der normale Rider-A*-Steuervektor greift nicht in die Mount-Bewegung ein.
+
+Die Kavallerie:
+
+- nähert sich Gegnern aktiv und hält die Bewegung auch im Nahbereich aufrecht
+- startet Charges bereits aus größerer Entfernung
+- verursacht beim Charge erhöhten Schaden und zusätzlichen Knockback
+- passiert das Ziel nach einem Treffer, statt darin stehenzubleiben
+- wechselt bei Blockade die Pass-Seite und versucht die Annäherung erneut
+- verwendet eine höhere Höchstgeschwindigkeit als normale Soldiers
+- dreht das Pferd weich in Richtung des aktuellen Ziels
+- springt bei einem erkannten ein Block hohen Hindernis automatisch
+- verfolgt nur echte Feinde: feindliche Spieler/Soldaten sowie die definierte Monster-Whitelist
+- greift keine Tiere, Villager, Händler oder eigenen Mounts an
+
+Dadurch verhält sich Kavallerie stärker wie eine mobile Stoßtruppe statt wie ein normaler Soldier auf einem Pferd.
+
 ### Schnelle Soldier-Bewegung
 
-`scripts/soldier/terrain_movement.js` ergänzt die normale KI-Bewegung um einen stärkeren, aber begrenzten Vorwärtsimpuls. Die Geschwindigkeit wird dabei nicht unbegrenzt hochgeschaukelt:
-
-- schnellerer Vorwärtsimpuls als zuvor
-- Level-Bonus von Level 1–7
-- zusätzlicher Geschwindigkeitsbonus für Kavallerie
-- horizontale Geschwindigkeit wird auf ca. **0.55 Blöcke/Tick** begrenzt
-- Terrain-Erkennung für solide Blöcke direkt vor dem Soldier
-- Sprungimpuls für ein Block hohe Hindernisse und Stufen
-- A*-Wegpunkte können weiterhin gezielte Sprünge anfordern
-
-Damit sollen Soldiers deutlich zügiger reagieren und Wege ablaufen, ohne durch immer weitere Impulse unkontrolliert beschleunigt zu werden.
+Die normale Soldier-Bewegung verwendet einen stärkeren, aber begrenzten Vorwärtsimpuls. Level 1–7 erhöhen die Reaktionsgeschwindigkeit; die horizontale Geschwindigkeit bleibt begrenzt. Terrain-Sprünge und lokale A*-Wegfindung bleiben aktiv.
 
 ### Persistenz nach Neustarts
 
-Die Soldaten selbst bleiben als Minecraft-Entities erhalten. Die interne JavaScript-Map `SOLDIERS` ist dagegen nur zur Laufzeit vorhanden. `scripts/soldier/registry.js` baut diese Registry nach jedem Serverstart aus den tatsächlich vorhandenen Soldier-Entities und deren Dynamic Properties (`soldier:ownerId`, `soldier:type`, `soldier:level`) wieder auf.
+Die Soldier-Registry wird nach Serverstarts aus den vorhandenen Soldier-Entities und Dynamic Properties rekonstruiert.
 
 ### Wegfindung und Terrain
 
-`scripts/soldier/pathfinding.js` ergänzt die Impulsbewegung um lokale A*-Wegfindung. Sie berücksichtigt begehbare Fuß-/Kopfhöhe, festen Untergrund, Höhenwechsel, diagonale Bewegung ohne Corner-Cutting, Terrain-Kosten, Türen/Trapdoors, Umwege und Stuck-Recovery. Für Kavallerie übernimmt `cavalry_controller.js` die Mount-Steuerung direkt.
+`scripts/soldier/pathfinding.js` bietet lokale A*-Wegfindung mit Höhenwechseln, Umwegen, Terrain-Kosten, Türen/Trapdoors, Corner-Cutting-Schutz und Stuck-Recovery. Kavallerie nutzt für die Mount-Bewegung den dedizierten Controller.
 
 ### Monster-Zielsuche
 
@@ -61,7 +71,7 @@ Die Soldaten selbst bleiben als Minecraft-Entities erhalten. Die interne JavaScr
 /siedler:soldier_tp [Target]
 ```
 
-Unterstützte Ziele sind `all`, `selected`, `selection`, `staff`, `nearest`, `single`, `group:<Name>`, ein Gruppenname, `soldier:<Entity-ID>` oder ein Soldier-NameTag. Owner-Prüfungen verhindern das Übernehmen fremder Soldaten. Kavallerie-Mounts werden mitgeführt.
+Unterstützte Ziele sind `all`, `selected`, `selection`, `staff`, `nearest`, `single`, `group:<Name>`, ein Gruppenname, `soldier:<Entity-ID>` oder ein Soldier-NameTag. Kavallerie-Mounts werden mitgeführt.
 
 ### Soldier-Commands
 
@@ -82,11 +92,11 @@ Unterstützte Ziele sind `all`, `selected`, `selection`, `staff`, `nearest`, `si
 
 ## 🛒 Händler
 
-Das Händler-System verwendet die Entity `siedler:trader` und hält die definierten Händlerrollen automatisch am konfigurierten Marktplatz. Händler, die den Bereich verlassen, werden zurückgesetzt; fehlende Händler werden nachgespawnt.
+Das Händler-System verwendet die Entity `siedler:trader` und hält die definierten Händlerrollen automatisch am konfigurierten Marktplatz.
 
 ## 🛡️ Anti-AFK
 
-Das Anti-AFK-System liegt unter `scripts/antiafk/` und erkennt Inaktivität über Bewegung sowie relevante Spieleraktionen. Es unterstützt Warnungen, AFK-Markierung, automatische Kicks und manuelle AFK-Steuerung.
+Das Anti-AFK-System liegt unter `scripts/antiafk/` und erkennt Inaktivität über Bewegung sowie relevante Spieleraktionen.
 
 ## 🏹 Weitere Systeme
 
