@@ -5,28 +5,19 @@ import { getTeams, saveTeams } from "../teams/index.js";
 import { countVillagersInTeamClaims } from "../claims/utils.js";
 import { showTaxStatsForm } from "./stats.js";
 
-const MORNING_START = 0;
-const MORNING_WINDOW = 200;
-const LAST_PAID_DAY_PROPERTY = "tax:lastPaidDay";
 const OP_PERMISSION = CommandPermissionLevel.GameDirectors;
-let dayStarted = false;
+const TAX_CHECK_INTERVAL = 20;
+const TAX_RETRY_INTERVAL = 1200; // 60 seconds
 
 system.beforeEvents.startup.subscribe((event) => registerTaxCommands(event.customCommandRegistry));
 
 system.runInterval(() => {
     try {
-        const timeNow = world.getTimeOfDay();
-        const currentDay = Math.floor(world.getAbsoluteTime() / 24000);
-        if (timeNow >= MORNING_START && timeNow < MORNING_START + MORNING_WINDOW) {
-            if (!dayStarted) {
-                dayStarted = true;
-                payTaxesOncePerDay(currentDay);
-            }
-        } else dayStarted = false;
+        processDailyTaxes();
     } catch (error) {
-        console.error(`[Steuern] Tagesprüfung fehlgeschlagen: ${error}`);
+        console.error(`[Steuern] Tagesabrechnung fehlgeschlagen: ${error}`);
     }
-}, 20);
+}, TAX_CHECK_INTERVAL);
 
 function playerOnly(origin) {
     const player = origin?.sourceEntity;
@@ -34,90 +25,133 @@ function playerOnly(origin) {
 }
 
 function getCurrentPlayer() {
-    const players = world.getAllPlayers();
-    return players.length > 0 ? players[0] : null;
-}
-
-function getLastPaidDay() {
-    const value = world.getDynamicProperty(LAST_PAID_DAY_PROPERTY);
-    return typeof value === "number" && Number.isFinite(value) ? Math.floor(value) : -1;
-}
-
-function setLastPaidDay(day) {
-    try {
-        world.setDynamicProperty(LAST_PAID_DAY_PROPERTY, Math.floor(day));
-        return true;
-    } catch (error) {
-        console.error(`[Steuern] Konnte letzten Auszahlungstag nicht speichern: ${error}`);
-        return false;
-    }
-}
-
-function payTaxesOncePerDay(currentDay) {
-    if (getLastPaidDay() === currentDay) return;
-    if (!setLastPaidDay(currentDay)) return;
-    payAllTeamTaxes();
-
-    const player = getCurrentPlayer();
-    if (player && typeof showTaxStatsForm === "function") {
-        showTaxStatsForm(player);
-    }
+    return world.getAllPlayers()[0] ?? null;
 }
 
 function isTeamMemberOnline(teamData) {
     if (!Array.isArray(teamData?.players) || teamData.players.length === 0) return false;
-
-    for (const player of world.getAllPlayers()) {
-        if (teamData.players.includes(player.id)) return true;
-    }
-
-    return false;
+    const onlineIds = new Set(world.getAllPlayers().map(player => player.id));
+    return teamData.players.some(id => onlineIds.has(id));
 }
 
-function payAllTeamTaxes() {
+function ensureTaxData(teamData) {
+    if (!teamData || typeof teamData !== "object") return false;
+
+    let changed = false;
+    const defaults = {
+        totalTaxes: 0,
+        villagerCount: 0,
+        lastPaidDay: -1,
+        lastTaxAmount: 0,
+        lastTaxBonus: 0,
+        lastPaymentStatus: "never",
+        taxFailures: 0,
+        lastTaxAttemptDay: -1,
+        lastTaxAttemptTick: -1
+    };
+
+    for (const [key, value] of Object.entries(defaults)) {
+        if (!Object.prototype.hasOwnProperty.call(teamData, key)) {
+            teamData[key] = value;
+            changed = true;
+        }
+    }
+
+    const numericFields = ["totalTaxes", "villagerCount", "lastPaidDay", "lastTaxAmount", "lastTaxBonus", "taxFailures", "lastTaxAttemptDay", "lastTaxAttemptTick"];
+    for (const key of numericFields) {
+        const value = Number(teamData[key]);
+        if (!Number.isFinite(value)) {
+            teamData[key] = defaults[key];
+            changed = true;
+        } else if (teamData[key] !== Math.floor(value)) {
+            teamData[key] = Math.floor(value);
+            changed = true;
+        }
+    }
+
+    return changed;
+}
+
+function shouldAttemptTax(teamData, currentDay, currentTick) {
+    if (Number(teamData.lastPaidDay) === currentDay) return false;
+    if (Number(teamData.lastTaxAttemptDay) !== currentDay) return true;
+    return currentTick - Number(teamData.lastTaxAttemptTick) >= TAX_RETRY_INTERVAL;
+}
+
+function processDailyTaxes() {
     const teams = getTeams();
-    let paidCount = 0;
-    let skippedOfflineCount = 0;
+    const currentDay = Math.floor(world.getAbsoluteTime() / 24000);
+    const currentTick = world.getAbsoluteTime();
+    let changed = false;
 
     for (const [teamName, data] of Object.entries(teams)) {
-        if (!data?.taxChest) continue;
-
-        // Taxes are only collected while at least one member of the team is online.
-        if (!isTeamMemberOnline(data)) {
-            skippedOfflineCount++;
-            console.info(`[Steuern] Team "${teamName}" ist vollständig offline – Tagessteuer wird nicht eingezogen.`);
-            continue;
+        if (!ensureTaxData(data)) {
+            // No migration was required for this team.
+        } else {
+            changed = true;
         }
 
-        try {
-            const villagers = countVillagersInTeamClaims(teamName, "villager");
-            const tax = calculateTax(villagers, data.taxBonus);
-            if (tax.total <= 0) continue;
+        if (!data?.taxChest || !isTeamMemberOnline(data)) continue;
+        if (!shouldAttemptTax(data, currentDay, currentTick)) continue;
 
-            const result = addTaxes(data.taxChest, tax.total, teamName);
-            if (!result?.success) continue;
+        data.lastTaxAttemptDay = currentDay;
+        data.lastTaxAttemptTick = currentTick;
+        changed = true;
 
-            paidCount++;
-            // TaxBonus is permanent and therefore remains stored after payout.
-            notifyTeamMembers(teamName, data, tax, result);
-        } catch (error) {
-            console.error(`[Steuern] Fehler für Team "${teamName}": ${error}`);
-        }
+        const paid = processTeamTax(teamName, data, currentDay);
+        if (paid) changed = true;
     }
 
-    if (paidCount > 0) console.info(`[Steuern] ${paidCount} Team(s) haben ihre Tagessteuer erhalten.`);
-    if (skippedOfflineCount > 0) console.info(`[Steuern] ${skippedOfflineCount} Team(s) waren bei der Tagesabrechnung vollständig offline.`);
+    if (changed) saveTeams(teams);
 }
 
-function notifyTeamMembers(teamName, teamData, tax, result) {
+function processTeamTax(teamName, teamData, currentDay) {
+    try {
+        const villagers = countVillagersInTeamClaims(teamName, "villager");
+        const tax = calculateTax(villagers, normalizeTaxBonus(teamData.taxBonus));
+
+        teamData.villagerCount = tax.villagers;
+        teamData.lastTaxBonus = tax.bonus;
+
+        if (tax.total <= 0) {
+            teamData.lastPaidDay = currentDay;
+            teamData.lastTaxAmount = 0;
+            teamData.lastPaymentStatus = "no_tax";
+            return true;
+        }
+
+        const result = addTaxes(teamData.taxChest, tax.total, teamName);
+        if (!result?.success || result.inserted !== tax.total) {
+            teamData.taxFailures = Math.max(0, Number(teamData.taxFailures) || 0) + 1;
+            teamData.lastPaymentStatus = result?.reason || "failed";
+            console.warn(`[Steuern] Team "${teamName}" konnte nicht abgerechnet werden: ${result?.reason || "unknown"}. Neuer Versuch später.`);
+            return true;
+        }
+
+        teamData.lastPaidDay = currentDay;
+        teamData.lastTaxAmount = tax.total;
+        teamData.totalTaxes = Math.max(0, Number(teamData.totalTaxes) || 0) + tax.total;
+        teamData.taxFailures = 0;
+        teamData.lastPaymentStatus = "paid";
+
+        notifyTeamMembers(teamName, teamData, tax);
+        return true;
+    } catch (error) {
+        teamData.taxFailures = Math.max(0, Number(teamData.taxFailures) || 0) + 1;
+        teamData.lastPaymentStatus = "exception";
+        console.error(`[Steuern] Fehler für Team "${teamName}": ${error}`);
+        return true;
+    }
+}
+
+function notifyTeamMembers(teamName, teamData, tax) {
     const color = teamData.color || "§f";
-    const storageText = result.dropped > 0
-        ? ` §7(${result.inserted} in Kiste, ${result.dropped} daneben abgelegt)`
-        : "";
-    const message = `§a[Steuern] ${color}${teamName}§a erhielt §e${tax.total} Emeralds§a §7(${tax.villagers} Dorfbewohner + ${tax.bonus} permanenter Token-Bonus)${storageText}`;
+    const message = `§a[Steuern] ${color}${teamName}§a: §e${tax.total} Emeralds§a eingezahlt §7(${tax.villagers} Dorfbewohner × ${2} + ${tax.bonus} permanenter Token-Bonus)`;
 
     for (const player of world.getAllPlayers()) {
-        if (Array.isArray(teamData.players) && teamData.players.includes(player.id)) player.sendMessage(message);
+        if (Array.isArray(teamData.players) && teamData.players.includes(player.id)) {
+            player.sendMessage(message);
+        }
     }
 }
 
@@ -183,7 +217,7 @@ function registerTaxCommands(registry) {
 
     registry.registerCommand({
         name: "siedler:taxinfo",
-        description: "Zeigt die tägliche Steuer inklusive permanentem Monster-Token-Bonus",
+        description: "Zeigt den aktuellen Steuerstatus eines Teams",
         permissionLevel: OP_PERMISSION,
         cheatsRequired: false,
         mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }]
@@ -194,14 +228,38 @@ function registerTaxCommands(registry) {
         system.run(() => {
             const result = getTeamOrTell(player, teamName);
             if (!result) return;
+            const data = result.teamData;
             const villagers = countVillagersInTeamClaims(teamName, "villager");
-            const bonus = normalizeTaxBonus(result.teamData.taxBonus);
+            const bonus = normalizeTaxBonus(data.taxBonus);
             const tax = calculateTax(villagers, bonus);
-            player.sendMessage(`§6--- Steuerinfo: ${result.teamData.color || "§f"}${teamName}§6 ---`);
+
+            player.sendMessage(`§6--- Steuerinfo: ${data.color || "§f"}${teamName}§6 ---`);
             player.sendMessage(`§7Dorfbewohner: §e${tax.villagers}`);
-            player.sendMessage(`§7Permanenter Monster-Token-Bonus: §e+${tax.bonus} Emeralds/Tag`);
-            player.sendMessage(`§7Tägliche Steuer: §e${tax.total} Emeralds`);
-            player.sendMessage("§7Bonusquelle: §6besiegte Monster-Tokens");
+            player.sendMessage(`§7Steuer pro Dorfbewohner: §e${2} Emeralds/Tag`);
+            player.sendMessage(`§7Permanenter Token-Bonus: §e+${tax.bonus} Emeralds/Tag`);
+            player.sendMessage(`§7Nächste Tagessteuer: §e${tax.total} Emeralds`);
+            player.sendMessage(`§7Bisher insgesamt eingezahlt: §e${data.totalTaxes ?? 0} Emeralds`);
+            player.sendMessage(`§7Letzte Zahlung: §e${data.lastTaxAmount ?? 0} Emeralds§7, Tag ${data.lastPaidDay ?? "Nie"}`);
+            player.sendMessage(`§7Status: §e${data.lastPaymentStatus ?? "never"}§7, Fehlversuche: §e${data.taxFailures ?? 0}`);
+            player.sendMessage(`§7Steuerkiste: ${data.taxChest ? "§aKonfiguriert" : "§cNicht konfiguriert"}`);
+        });
+        return { status: CustomCommandStatus.Success };
+    });
+
+    registry.registerCommand({
+        name: "siedler:taxstats",
+        description: "Öffnet die Steuerstatistik eines Teams",
+        permissionLevel: OP_PERMISSION,
+        cheatsRequired: false,
+        mandatoryParameters: [{ type: CustomCommandParamType.String, name: "team" }]
+    }, (origin, team) => {
+        const player = playerOnly(origin);
+        if (!player) return { status: CustomCommandStatus.Failure };
+        const teamName = String(team ?? "").trim();
+        system.run(() => {
+            if (!getTeamOrTell(player, teamName)) return;
+            const form = showTaxStatsForm(teamName);
+            if (form) form.show(player).catch(() => {});
         });
         return { status: CustomCommandStatus.Success };
     });
