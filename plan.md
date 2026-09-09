@@ -38,6 +38,9 @@
 - [x] **Modus 5: alle geeigneten lebenden Ziele, mit Team-Schutz für Spieler/Soldaten**
 - [x] **Persistenter `soldier:mode`-Dynamic-Property pro Soldier**
 - [x] **`/siedler:soldier_mode <0-5>` für ausgewählte bzw. nächstgelegene eigene Soldiers**
+- [x] **Soldatenstab-UI: Angriffsmodus für Einzel-Soldier und Mehrfachauswahl**
+- [x] **Soldatenstab-UI: Einzel-, Mehrfach- und Gruppen-Teleport zum Spieler**
+- [x] **Gruppen-UI: Angriffsmodus und Teleport für alle Gruppenmitglieder**
 - [x] Explizite autonome Zielsuche für feindliche Monster
 - [x] Passive/neutrale Tiere aus autonomer Zielsuche ausgeschlossen
 - [x] Nahkampf-, Fernkampf- und Kavallerie-KI
