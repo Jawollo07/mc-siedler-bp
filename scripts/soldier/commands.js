@@ -57,10 +57,10 @@ function findGroup(ownerId, name) {
 }
 
 function registerSoldierCommands(registry) {
-    registry.registerCommand({ name: "siedler:soldier_tool", description: "Gibt den Soldatenstab zur Soldatenverwaltung", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false }, origin => {
+    registry.registerCommand({ name: "siedler:soldier_tool", description: "Gibt den Soldatenstab zur Soldatenverwaltung", permissionLevel: CommandPermissionLevel.Any, cheatsRequired: false }, origin => {
         const player = playerOnly(origin); if (!player) return result(false); system.run(() => giveSoldierTool(player)); return result(true);
     });
-    registry.registerCommand({ name: "siedler:soldier_tp", description: "Teleportiert eigene Soldaten, Gruppen oder die Stab-Auswahl zum Spieler", permissionLevel: CommandPermissionLevel.GameDirectors, cheatsRequired: false, optionalParameters: [{ type: CustomCommandParamType.String, name: "Target" }] }, (origin, target) => {
+    registry.registerCommand({ name: "siedler:soldier_tp", description: "Teleportiert eigene Soldaten, Gruppen oder die Stab-Auswahl zum Spieler", permissionLevel: CommandPermissionLevel.Any, cheatsRequired: false, optionalParameters: [{ type: CustomCommandParamType.String, name: "Target" }] }, (origin, target) => {
         const player = playerOnly(origin); if (!player) return result(false);
         const label = !target ? "alle eigenen Soldaten" : String(target);
         const selection = resolveTeleportSelection(player, target ?? "");
