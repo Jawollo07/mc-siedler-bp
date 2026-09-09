@@ -26,6 +26,15 @@
 - [x] `/siedler:soldier_tp` mit all / selected / staff / nearest / group / Einzelziel
 - [x] Persistente Soldier-Registry nach Serverneustarts
 - [x] Soldier-Zielsuche und Team-/Feinderkennung
+- [x] **Konfigurierbare autonome Soldier-Angriffsmodi 0–5**
+- [x] **Modus 0: keine autonomen Angriffe**
+- [x] **Modus 1: Monster-Zielsuche**
+- [x] **Modus 2: feindliche Soldier-Zielsuche über Team-Diplomatie**
+- [x] **Modus 3: Tier-Zielsuche**
+- [x] **Modus 4: feindliche Villager über Claim-Team/Diplomatie**
+- [x] **Modus 5: alle geeigneten lebenden Ziele, mit Team-Schutz für Spieler/Soldaten**
+- [x] **Persistenter `soldier:mode`-Dynamic-Property pro Soldier**
+- [x] **`/siedler:soldier_mode <0-5>` für ausgewählte bzw. nächstgelegene eigene Soldiers**
 - [x] Explizite autonome Zielsuche für feindliche Monster
 - [x] Passive/neutrale Tiere aus autonomer Zielsuche ausgeschlossen
 - [x] Nahkampf-, Fernkampf- und Kavallerie-KI
