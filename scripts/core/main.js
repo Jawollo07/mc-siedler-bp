@@ -24,6 +24,7 @@ import "./dynamic_properties.js";
 // -----------------------------------------------------------------------------
 import ".././teams/index.js";
 import ".././teams/chat.js";
+import ".././teams/elimination.js";
 
 // -----------------------------------------------------------------------------
 // Economy
@@ -74,7 +75,7 @@ import ".././soldier/trader.js";
 import ".././soldier/level.js";
 
 const VERSION = version;
-const MODULE_COUNT = 21;
+const MODULE_COUNT = 22;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
 
@@ -116,7 +117,7 @@ function finishStartup() {
         console.info("----------------------------------------");
         console.info("[Loader] ✓ All modules initialized.");
         console.info(`[Loader] Loaded ${MODULE_COUNT} modules.`);
-        console.info("[Loader] Teams · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier");
+        console.info("[Loader] Teams · Elimination · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier");
         console.info(`[Loader] Version: ${VERSION}`);
         console.info("----------------------------------------");
     });
