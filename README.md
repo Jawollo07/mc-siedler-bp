@@ -32,6 +32,7 @@ Das System liegt unter `scripts/minefield/index_v2.js`. Das platzierbare Item is
 - Explosionen zerstören **keine Blöcke**, dürfen aber Feuer erzeugen.
 - Scharfe Minen in ca. 3,25 Blöcken Entfernung können eine Kettenreaktion auslösen.
 - Nach der Explosion wird die Mine nach 15 Sekunden automatisch wieder scharf.
+- Der persistente Minenspeicher wird **erst nach der Bedrock-Early-Execution-Phase** gelesen, damit `world.getDynamicProperty()` beim Modulstart keinen Early-Execution-Fehler verursacht.
 
 ### 🎛️ Minen-UI
 
