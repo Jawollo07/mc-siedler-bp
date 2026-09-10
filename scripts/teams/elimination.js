@@ -97,7 +97,7 @@ function handleEliminationBlockBreak(event) {
     const player = event?.player;
     const blockType = getBrokenBlockType(event);
 
-    if (!player?.isValid || blockType !== ELIMINATION_BLOCK_TYPE) return;
+    if (!player?.isValid || blockType !== ELIMINATION_BLOCK_TYPE || !event?.block?.location) return;
 
     const claim = getClaimAt(event.block.location);
     const teamName = claim?.team ?? null;
@@ -117,11 +117,24 @@ function handleEliminationBlockBreak(event) {
     markTeamEliminated(teamName);
 }
 
+function getPlayerTeamName(player) {
+    if (!player?.id) return null;
+    const teams = getTeams();
+
+    for (const [teamName, team] of Object.entries(teams)) {
+        if (Array.isArray(team?.players) && team.players.includes(player.id)) {
+            return teamName;
+        }
+    }
+
+    return null;
+}
+
 function handlePlayerDeath(event) {
     const player = event?.deadEntity;
     if (player?.typeId !== "minecraft:player" || !player.id) return;
 
-    const teamName = getTeams()[getPlayerTeamName(player)] ? getPlayerTeamName(player) : null;
+    const teamName = getPlayerTeamName(player);
     if (!teamName || !isTeamEliminated(teamName)) return;
 
     if (!markPlayerEliminated(player)) return;
@@ -136,19 +149,6 @@ function handlePlayerDeath(event) {
     logger.info(`Ausgeschiedener Spieler gestorben: ${player.name} (${player.id}), Team=${teamName}`);
 }
 
-function getPlayerTeamName(player) {
-    if (!player?.id) return null;
-    const teams = getTeams();
-
-    for (const [teamName, team] of Object.entries(teams)) {
-        if (Array.isArray(team?.players) && team.players.includes(player.id)) {
-            return teamName;
-        }
-    }
-
-    return null;
-}
-
 function handlePlayerSpawn(event) {
     const player = event?.player;
     if (!player?.isValid || !player.id) return;
@@ -159,6 +159,16 @@ function handlePlayerSpawn(event) {
         const currentPlayer = world.getPlayers().find(candidate => candidate.id === player.id);
         if (currentPlayer) setSpectator(currentPlayer, "permanente Eliminierung");
     }, 1);
+}
+
+function enforcePermanentSpectator() {
+    const eliminatedPlayers = getEliminatedPlayers();
+    if (!eliminatedPlayers.length) return;
+
+    for (const player of world.getPlayers()) {
+        if (!player?.isValid || !eliminatedPlayers.includes(player.id)) continue;
+        setSpectator(player, "permanente Eliminierung");
+    }
 }
 
 export function registerEliminationSystem() {
@@ -182,6 +192,10 @@ export function registerEliminationSystem() {
     } else {
         logger.warn("playerSpawn-API nicht verfügbar; Spectator-Wiederherstellung deaktiviert.");
     }
+
+    // Guarantees that an eliminated player cannot leave spectator mode again,
+    // including after commands or other systems change the game mode.
+    system.runInterval(enforcePermanentSpectator, 20);
 
     logger.success(`Team-Eliminierung geladen – Eliminationsblock: ${ELIMINATION_BLOCK_TYPE}`);
 }
