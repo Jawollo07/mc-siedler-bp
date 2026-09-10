@@ -66,6 +66,9 @@
 - [x] **Essentials-Enderchest mit `/ec` und 27 persistenten persönlichen Slots**
 - [x] **Enderchest-Einlagerung und -Entnahme über die bestehende Server-UI**
 - [x] **Persistente Speicherung von Mengen, Custom-Namen, Lore, Verzauberungen und Haltbarkeit soweit API-seitig verfügbar**
+- [x] **Gemeinsame Team-Doppelchest mit 54 persistenten Slots pro Team**
+- [x] **`/siedler:teamchest` bzw. `/teamchest` für den gemeinsamen Team-Speicher**
+- [x] **Zugriff auf die Team-Doppelchest ausschließlich für aktuelle Teammitglieder**
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
@@ -91,7 +94,7 @@
 ### Soldier-KI v2
 
 1. Erweiterte Wegfindung in realen Serverlogs testen und Performance bei großen Gruppen messen
-2. komplexe Treppen, Slabs, Türen/Trapdoors und weitere Sonderblock-Geometrien im Spiel testen
+2. Komplexe Treppen, Slabs, Türen/Trapdoors und weitere Sonderblock-Geometrien im Spiel testen
 3. 2-Block-Drops und schwieriges Gelände auf sichere Navigation testen
 4. Charge-Lane auf Hindernisse prüfen
 5. echte Nahkampf-Hitbox berücksichtigen
