@@ -58,9 +58,10 @@ import ".././soldier/level.js";
 // Minefield
 // v2 contains the complete team/diplomacy integration and persistent mine groups.
 import ".././minefield/index_v2.js";
+import ".././minefield/ui.js";
 
 const VERSION = version;
-const MODULE_COUNT = 23;
+const MODULE_COUNT = 24;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
 
@@ -85,7 +86,7 @@ function finishStartup() {
         console.info("----------------------------------------");
         console.info("[Loader] ✓ All modules initialized.");
         console.info(`[Loader] Loaded ${MODULE_COUNT} modules.`);
-        console.info("[Loader] Teams · Elimination · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier · Minefield");
+        console.info("[Loader] Teams · Elimination · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier · Minefield · Minefield UI");
         console.info(`[Loader] Version: ${VERSION}`);
         console.info("----------------------------------------");
     });
