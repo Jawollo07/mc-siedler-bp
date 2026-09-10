@@ -74,8 +74,13 @@ import ".././soldier/index.js";
 import ".././soldier/trader.js";
 import ".././soldier/level.js";
 
+// -----------------------------------------------------------------------------
+// Minefield
+// -----------------------------------------------------------------------------
+import ".././minefield/index.js";
+
 const VERSION = version;
-const MODULE_COUNT = 22;
+const MODULE_COUNT = 23;
 const STARTUP_DELAY = 20;
 const WATCHDOG_INTERVAL = 200;
 
@@ -117,7 +122,7 @@ function finishStartup() {
         console.info("----------------------------------------");
         console.info("[Loader] ✓ All modules initialized.");
         console.info(`[Loader] Loaded ${MODULE_COUNT} modules.`);
-        console.info("[Loader] Teams · Elimination · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier");
+        console.info("[Loader] Teams · Elimination · Taxes · Claims · Market · Trader · Monster · Pillager · Outposts · Essentials · Anti-AFK · Soldier · Minefield");
         console.info(`[Loader] Version: ${VERSION}`);
         console.info("----------------------------------------");
     });
