@@ -32,7 +32,7 @@
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
 - **Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik**
 - **Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Steuerstatistik**
-- **Wiederverwendbares Minenfeld mit verzögerter Explosion, Warnsound, Kettenreaktion, Feuer und automatischem Wiederscharfmachen**
+- **Wiederverwendbares Minenfeld mit verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz und Kontrollsystem**
 
 ## 💣 Minenfeld
 
@@ -40,80 +40,37 @@ Das Minenfeld-System befindet sich unter `scripts/minefield/index.js`. Das platz
 
 - `/give @s siedler:mine` gibt eine Minenladung.
 - Mit der Minenladung einen Block anvisieren und benutzen, um dort eine Mine zu platzieren.
+- Jede Mine speichert persistent ihre **Mine-ID, Besitzer-ID und das Team des Besitzers**.
 - Nach kurzer Aktivierungszeit wird die Mine scharf.
-- Betritt ein Spieler den Bereich der Mine, wird sie ausgelöst.
-- Sofort erscheint eine kurze Warnung und ein Warnsound; nach **1 Sekunde** folgt die Explosion.
+- Standardmäßig lösen **nur feindliche Teams** eine Team-Mine aus.
+- Das eigene Team und verbündete Teams können die eigene Mine sicher betreten.
+- Neutrale Teams können optional ebenfalls als Auslöser zugelassen werden.
+- Spieler ohne Team gelten gegenüber einer Team-Mine als fremd und können sie auslösen.
+- Betritt ein erlaubter Auslöser den Bereich der Mine, erscheint die Warnung mit Sound; nach **1 Sekunde** folgt die Explosion.
 - Explosionen können weitere scharfe Minen im Umkreis von ca. **3,25 Blöcken** als Kettenreaktion auslösen.
 - Die Explosion verursacht **keinen Blockschaden**, darf aber **Feuer erzeugen**.
 - Nach der Explosion wird die Mine deaktiviert und nach **15 Sekunden** automatisch wieder scharf.
 - Die Minenpositionen und Zustände werden persistent über die World Dynamic Property `minefield:mines` gespeichert.
 - Es können bis zu **2000** Minen gleichzeitig gespeichert werden.
 
-## 📦 Essentials / Lager
+### 🎛️ Minen-Kontrolle
 
-### Persönlicher Enderchest
-
-Das persönliche Enderchest-System befindet sich unter `scripts/essentials/enderchest.js`.
-
-- `/ec` öffnet den persönlichen Enderchest.
-- Jeder Spieler besitzt **27 persistente Slots**.
-- Items können aus dem normalen Inventar eingelagert und wieder herausgenommen werden.
-- Die Speicherung erfolgt pro Spieler über Dynamic Properties und ist damit unabhängig von Position, Dimension und Serverneustarts.
-- Mengen, Custom-Namen, Lore, Verzauberungen und Haltbarkeit werden soweit API-seitig verfügbar mitgespeichert.
-
-### Team-Doppelchest
-
-Die gemeinsame Team-Doppelchest befindet sich unter `scripts/essentials/teamchest.js`.
-
-- `/siedler:teamchest` bzw. die Kurzform **`/teamchest`** öffnet den gemeinsamen Speicher des eigenen Teams.
-- Jedes Team besitzt einen eigenen **54-Slot-Speicher**, entsprechend einer Vanilla-Doppelchest.
-- Nur Spieler, die aktuell Mitglied des Teams sind, können auf dessen Speicher zugreifen.
-- Alle Teammitglieder teilen sich exakt denselben Inhalt.
-- Items können eingelagert, entnommen und ersetzt werden.
-- Die Daten werden persistent über die World Dynamic Property `essentials:teamchests` gespeichert.
-- Beim Zugriff wird die Teamzugehörigkeit über die persistente Spieler-ID aufgelöst.
-- Teamchests sind damit unabhängig von einer tatsächlichen Chest-Blockposition und funktionieren auch nach Serverneustarts.
-
-## ☠️ Team-Eliminierung
-
-Das Eliminationssystem befindet sich unter `scripts/teams/elimination.js`.
-
-- Der aktuell konfigurierte Eliminationsblock ist `minecraft:beacon`.
-- Wird dieser Block innerhalb eines Claims abgebaut, wird das zugehörige Claim-Team dauerhaft als **ausgeschieden** markiert.
-- Alle Spieler erhalten sofort einen Broadcast über das ausgeschiedene Team.
-- Stirbt danach ein Mitglied des ausgeschiedenen Teams, wird seine Spieler-ID dauerhaft als ausgeschieden gespeichert und der Spieler nach dem Tod permanent in den Spectator-Modus gesetzt.
-- Beim erneuten Spawn wird der Spectator-Modus erneut gesetzt, sodass er nicht durch Respawn/Serverneustart verloren geht.
-- Die Eliminationsdaten werden in World Dynamic Properties gespeichert und sind damit unabhängig von den aktuellen Online-Spielern.
-- Der Blocktyp kann direkt über `ELIMINATION_BLOCK_TYPE` in `scripts/teams/elimination.js` geändert werden.
-
-## ⚔️ Soldier-System
-
-Das Soldier-System befindet sich unter `scripts/soldier/` und unterstützt Infanterie, Bogenschützen und Kavallerie mit Owner-Zuordnung, Leveln, XP, Ausrüstung, KI, Befehlen und Gruppenformationen.
-
-### 🎯 Soldier-Angriffsmodi
-
-Jeder Soldier besitzt einen separat gespeicherten Angriffsmodus. Der Modus beeinflusst nur die **autonome Zielsuche**; manuell erteilte Befehle haben weiterhin Vorrang.
-
-| Modus | Verhalten |
-|---:|---|
-| `0` | **Nichts angreifen** |
-| `1` | **Monster in der Nähe** |
-| `2` | **Feindliche Soldaten** |
-| `3` | **Tiere** |
-| `4` | **Feindliche Dorfbewohner** |
-| `5` | **Alles** – Spieler/Soldaten weiterhin nur bei feindlicher Beziehung |
-
-Der Standardmodus für neue bzw. bisher nicht gespeicherte Soldiers ist `1` (Monster).
-
-Der Modus kann per Command oder vollständig über den Soldatenstab gesteuert werden:
+Spieler können nur die Minen ihres eigenen Teams kontrollieren; Admins/Game Directors können alle Minen kontrollieren. Die Kontrolle erfolgt für die nächste kontrollierbare Mine innerhalb von **8 Blöcken**.
 
 ```text
-/siedler:soldier_mode <0-5>
+/siedler:mine_list
+/siedler:mine_status
+/siedler:mine_arm
+/siedler:mine_disarm
+/siedler:mine_remove
+/siedler:mine_clear
+/siedler:mine_mode <0-2>
 ```
 
-## 📡 Essentials / TPA
+Modi für `/siedler:mine_mode`:
 
-- `/siedler:tpa <Spieler>` und `/siedler:tpahere <Spieler>` verwenden einen nativen `PlayerSelector`.
-- Dadurch wird das Ziel direkt als `Player` an das Script übergeben und nicht mehr als fehleranfälliger String geparst.
-- Die Lösung ist auch für Aufrufe über `/execute as ... run` ausgelegt.
-- `tpaccept` und `tpdeny` arbeiten weiterhin mit der persistenten Spieler-ID der TPA-Anfrage.
+- `0` = nur feindliche Teams auslösen
+- `1` = feindliche + neutrale Teams auslösen
+- `2` = jeder Spieler kann auslösen
+
+Damit kann ein Team seine Verteidigungsminen gezielt **scharf/entschärfen, entfernen und den Auslösemodus ändern**. Der Zustand bleibt persistent über Neustarts erhalten.
