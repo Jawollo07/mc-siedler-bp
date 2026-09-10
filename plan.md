@@ -69,6 +69,10 @@
 - [x] **Gemeinsame Team-Doppelchest mit 54 persistenten Slots pro Team**
 - [x] **`/siedler:teamchest` bzw. `/teamchest` für den gemeinsamen Team-Speicher**
 - [x] **Zugriff auf die Team-Doppelchest ausschließlich für aktuelle Teammitglieder**
+- [x] **Minenfeld-Item `siedler:mine` mit platzierbaren persistenten Minen**
+- [x] **Minen-Auslösung beim Betreten mit Warnung/Sound und 1-Sekunden-Verzögerung**
+- [x] **Kettenreaktion benachbarter scharfer Minen**
+- [x] **Automatisches Wiederscharfmachen der Mine nach 15 Sekunden**
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
