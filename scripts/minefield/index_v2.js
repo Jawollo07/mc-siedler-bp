@@ -15,6 +15,7 @@ const EXPLOSION_RADIUS = 4;
 const MAX_MINES = 2000;
 const CONTROL_RADIUS = 8;
 const GROUP_RADIUS_DEFAULT = 8;
+const MONSTER_TRIGGER_RADIUS = 0.9;
 const TRIGGER_MODE = Object.freeze({ HOSTILE: 0, HOSTILE_NEUTRAL: 1, EVERYONE: 2 });
 
 let mines = [];
@@ -56,6 +57,11 @@ function placeMine(p){
 }
 function canManage(p,m){if(!p?.isValid||!m)return false;if(p.commandPermissionLevel>=CommandPermissionLevel.GameDirectors)return true;return !!m.ownerTeam&&getPlayerTeam(p)===m.ownerTeam;}
 function canTrigger(p,m){if(!m||!p)return false;if(!m.ownerTeam)return true;const t=getPlayerTeam(p);if(t&&t===m.ownerTeam)return false;if(!t)return true;const r=getTeamRelation(m.ownerTeam,t);if(r===TEAM_RELATION.FRIENDLY)return false;if(m.triggerMode===2)return true;if(m.triggerMode===1)return r===TEAM_RELATION.HOSTILE||r===TEAM_RELATION.NEUTRAL;return r===TEAM_RELATION.HOSTILE;}
+function isMonster(entity){
+    if(!entity?.isValid)return false;
+    if(entity.typeId==="siedler:monster")return true;
+    try{return entity.getComponent("minecraft:type_family")?.hasTypeFamily("monster")===true;}catch{return false;}
+}
 function warning(m){try{const d=world.getDimension(m.dimension);d.spawnParticle("minecraft:basic_smoke_particle",m);for(const p of d.getPlayers({location:m,maxDistance:6})){p.playSound("note.pling",{volume:.9,pitch:1.8});p.sendMessage("§c⚠ MINE! §7Explosion in §e1 Sekunde§7!");}}catch(error){logger.warn("Mine warning failed",error);}}
 function schedule(i,fromGroup=false){const m=mines[i];if(!m||m.detonating||!m.armed)return;m.detonating=true;m.armed=false;warning(m);const id=m.id;save();system.runTimeout(()=>detonateById(id),DETONATION_DELAY_TICKS);if(!fromGroup&&m.group){for(let j=0;j<mines.length;j++){const o=mines[j];if(j!==i&&o?.armed&&!o.detonating&&o.group===m.group&&o.dimension===m.dimension&&o.ownerTeam===m.ownerTeam)schedule(j,true);}}}
 function detonateById(id){const i=mines.findIndex(m=>m.id===id);if(i>=0)detonate(i);}
@@ -85,7 +91,41 @@ function registerCommands(r){
     reg("siedler:mine_group_mode","Setzt den Modus einer Gruppe.",[{type:CustomCommandParamType.String,name:"gruppe"},{type:CustomCommandParamType.Integer,name:"modus"}],(p,g,m)=>{m=Number(m);if(![0,1,2].includes(m))return p.sendMessage("§c[Mine] 0=Feinde, 1=Feinde+Neutral, 2=Alle.");groupMode(p,g,m);});
     reg("siedler:mine_group_detonate","Zündet alle scharfen Gruppenminen gleichzeitig.",[{type:CustomCommandParamType.String,name:"gruppe"}],groupDetonate);
 }
-function scan(){const now=system.currentTick;let changed=false;for(const m of mines){if(!m.armed&&!m.detonating&&m.armAt>0&&now>=m.armAt&&m.rearmAt===0){m.armed=true;m.armAt=0;changed=true;}if(!m.armed&&!m.detonating&&m.rearmAt>0&&now>=m.rearmAt){m.armed=true;m.rearmAt=0;changed=true;}}for(const p of world.getAllPlayers()){if(!p?.isValid)continue;for(let i=0;i<mines.length;i++){const m=mines[i];if(!m?.armed||m.detonating||m.dimension!==p.dimension.id)continue;if(distanceSquared(m,p.location)<=.75*.75&&canTrigger(p,m))schedule(i);}}if(changed)save();}
+function scan(){
+    const now=system.currentTick;let changed=false;
+    for(const m of mines){
+        if(!m.armed&&!m.detonating&&m.armAt>0&&now>=m.armAt&&m.rearmAt===0){m.armed=true;m.armAt=0;changed=true;}
+        if(!m.armed&&!m.detonating&&m.rearmAt>0&&now>=m.rearmAt){m.armed=true;m.rearmAt=0;changed=true;}
+    }
+    for(const p of world.getAllPlayers()){
+        if(!p?.isValid)continue;
+        for(let i=0;i<mines.length;i++){
+            const m=mines[i];
+            if(!m?.armed||m.detonating||m.dimension!==p.dimension.id)continue;
+            if(distanceSquared(m,p.location)<=.75*.75&&canTrigger(p,m))schedule(i);
+        }
+    }
+    // Monsters are independent of the player/team trigger mode and always trigger armed mines.
+    for(const m of mines){
+        if(!m?.armed||m.detonating)continue;
+        try{
+            const d=world.getDimension(m.dimension);
+            const monsters=d.getEntities({location:m,maxDistance:MONSTER_TRIGGER_RADIUS,families:["monster"]});
+            if(monsters.some(isMonster)){
+                const i=mines.indexOf(m);
+                if(i>=0)schedule(i);
+                continue;
+            }
+            // Custom Siedler monsters may not declare the vanilla "monster" family.
+            const custom=d.getEntities({location:m,maxDistance:MONSTER_TRIGGER_RADIUS,type:"siedler:monster"});
+            if(custom.some(isMonster)){
+                const i=mines.indexOf(m);
+                if(i>=0)schedule(i);
+            }
+        }catch(error){logger.debug(`Monster scan skipped for mine ${m.id}: ${error?.message??error}`);}
+    }
+    if(changed)save();
+}
 try{world.afterEvents.itemUse.subscribe(e=>{const p=e.source;if(p?.typeId==="minecraft:player"&&e.itemStack?.typeId===ITEM_ID)placeMine(p);});system.beforeEvents.startup.subscribe(e=>registerCommands(e.customCommandRegistry));}catch(error){logger.error("Could not initialize minefield events",error);}
 
 // World dynamic properties are unavailable during Bedrock early-execution.
