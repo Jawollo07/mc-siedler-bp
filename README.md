@@ -8,6 +8,7 @@
 ## 📖 Systeme
 
 - Teams, Diplomatie, Claims und Wirtschaft
+- **Team-Eliminierung: konfigurierbarer Eliminationsblock, Team-Out-Broadcast und permanenter Spectator nach dem Tod**
 - Claim-Protection mit Block-Recovery und Item-Rückgabe
 - Zentraler Marktplatz und spezialisierte Händler
 - **Automatischer Marktbestand: fehlende Händler werden selbstständig nachgespawnt**
@@ -29,6 +30,18 @@
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
 - **Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik**
 - **Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Steuerstatistik**
+
+## ☠️ Team-Eliminierung
+
+Das Eliminationssystem befindet sich unter `scripts/teams/elimination.js`.
+
+- Der aktuell konfigurierte Eliminationsblock ist `minecraft:beacon`.
+- Wird dieser Block innerhalb eines Claims abgebaut, wird das zugehörige Claim-Team dauerhaft als **ausgeschieden** markiert.
+- Alle Spieler erhalten sofort einen Broadcast über das ausgeschiedene Team.
+- Stirbt danach ein Mitglied des ausgeschiedenen Teams, wird seine Spieler-ID dauerhaft als ausgeschieden gespeichert und der Spieler nach dem Tod permanent in den Spectator-Modus gesetzt.
+- Beim erneuten Spawn wird der Spectator-Modus erneut gesetzt, sodass er nicht durch Respawn/Serverneustart verloren geht.
+- Die Eliminationsdaten werden in World Dynamic Properties gespeichert und sind damit unabhängig von den aktuellen Online-Spielern.
+- Der Blocktyp kann direkt über `ELIMINATION_BLOCK_TYPE` in `scripts/teams/elimination.js` geändert werden.
 
 ## ⚔️ Soldier-System
 
