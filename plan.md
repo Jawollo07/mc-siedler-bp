@@ -74,6 +74,10 @@
 - [x] **Kettenreaktion benachbarter scharfer Minen**
 - [x] **Explosion ohne Blockschaden, aber mit Feuer**
 - [x] **Automatisches Wiederscharfmachen der Mine nach 15 Sekunden**
+- [x] **Minenkontrollsystem: Auflisten, Status, Scharf-/Entschärfen, Entfernen und Leeren eigener Team-Minen**
+- [x] **Minen-Auslösemodi 0–2 mit persistenter Speicherung**
+- [x] **Team-Integration über Spieler-ID und Diplomatie: eigenes/verbündetes Team geschützt**
+- [x] **Neutrale Teams optional als Auslöser, ungeteamte Spieler als fremde Auslöser**
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
