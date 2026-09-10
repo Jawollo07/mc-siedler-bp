@@ -17,11 +17,11 @@
 - Anti-AFK und zentralisiertes Logging
 - Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik
 - Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
-- **Minenfeld mit verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz und Minengruppen**
+- **Minenfeld mit verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen und Verwaltungs-UI**
 
 ## 💣 Minenfeld
 
-Das System liegt unter `scripts/minefield/index.js`. Das platzierbare Item ist `siedler:mine`.
+Das System liegt unter `scripts/minefield/index_v2.js`. Das platzierbare Item ist `siedler:mine`.
 
 - `/give @s siedler:mine` gibt eine Minenladung.
 - Mit der Minenladung einen Block anvisieren und benutzen, um eine Mine zu platzieren.
@@ -33,21 +33,31 @@ Das System liegt unter `scripts/minefield/index.js`. Das platzierbare Item ist `
 - Scharfe Minen in ca. 3,25 Blöcken Entfernung können eine Kettenreaktion auslösen.
 - Nach der Explosion wird die Mine nach 15 Sekunden automatisch wieder scharf.
 
-### 🎛️ Einzelmine
+### 🎛️ Minen-UI
+
+Mit
 
 ```text
-/siedler:mine_list
-/siedler:mine_status
-/siedler:mine_arm
-/siedler:mine_disarm
-/siedler:mine_remove
-/siedler:mine_clear
-/siedler:mine_mode <0-2>
+/siedler:mines
 ```
+
+öffnet sich die grafische **Minenfeld-Verwaltung**. Dort können Einzelminen und Minengruppen ohne manuelle Befehle verwaltet werden.
+
+Die UI bietet:
+
+- Einzelmine scharf/entschärfen/entfernen
+- alle eigenen Team-Minen der Dimension löschen
+- Mine-Liste und Status
+- Minengruppe erstellen und Radius festlegen
+- vorhandene Gruppen anzeigen
+- Gruppe scharf/entschärfen/entfernen
+- Gruppe manuell zünden
+- Gruppen-Auslösemodus einstellen
+- Auslösemodus einer einzelnen Mine einstellen
 
 ### 💣 Minengruppen
 
-Mehrere eigene Team-Minen können zu einer **persistenten Gruppe** zusammengefasst werden. Eine Gruppenzündung startet die Warnung und Explosion für alle Gruppenmitglieder im selben Tick, also praktisch gleichzeitig. Wird eine Gruppenmine von einem Gegner betreten, wird ebenfalls die gesamte Gruppe synchron gezündet.
+Mehrere eigene Team-Minen können zu einer **persistenten Gruppe** zusammengefasst werden. Eine Gruppenzündung startet die Warnung und Explosion für alle Gruppenmitglieder praktisch gleichzeitig. Wird eine Gruppenmine von einem Gegner betreten, wird ebenfalls die gesamte Gruppe synchron gezündet.
 
 ```text
 /siedler:mine_group_create <gruppe> <radius>
