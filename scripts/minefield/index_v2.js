@@ -16,11 +16,15 @@ const MAX_MINES = 2000;
 const CONTROL_RADIUS = 8;
 const GROUP_RADIUS_DEFAULT = 8;
 const MONSTER_TRIGGER_RADIUS = 0.9;
+const PLACEMENT_RANGE = 6;
+const PLACEMENT_COOLDOWN_TICKS = 5;
+const MINE_SPACING = 0.75;
 const TRIGGER_MODE = Object.freeze({ HOSTILE: 0, HOSTILE_NEUTRAL: 1, EVERYONE: 2 });
 
 let mines = [];
 let loaded = false;
 let saving = false;
+const placementCooldown = new Map();
 
 function distanceSquared(a,b){return (a.x-b.x)**2+(a.y-b.y)**2+(a.z-b.z)**2;}
 function createMineId(){return `m${Date.now().toString(36)}${Math.random().toString(36).slice(2,8)}`;}
@@ -44,16 +48,56 @@ function save(){
     try{world.setDynamicProperty(STORAGE_KEY,JSON.stringify(mines.map(({detonating,...m})=>m)));}
     catch(error){logger.error("Failed to save mines",error);}finally{saving=false;}
 }
-function getTargetBlock(p){try{return p.getBlockFromViewDirection({maxDistance:6,includeLiquidBlocks:false})?.block??null;}catch{return null;}}
+function getTargetBlock(p){try{return p.getBlockFromViewDirection({maxDistance:PLACEMENT_RANGE,includeLiquidBlocks:false})?.block??null;}catch{return null;}}
+function getPlacementLocation(block){return {x:Math.floor(block.location.x)+.5,y:Math.floor(block.location.y)+1.05,z:Math.floor(block.location.z)+.5};}
+function isAirOrReplaceable(block){
+    if(!block)return false;
+    try{if(block.isAir)return true;}catch{}
+    const id=String(block.typeId??"").toLowerCase();
+    return id==="minecraft:air"||id==="minecraft:cave_air"||id==="minecraft:void_air";
+}
+function isLiquid(block){
+    if(!block)return true;
+    try{if(block.isLiquid)return true;}catch{}
+    const id=String(block.typeId??"").toLowerCase();
+    return id.includes("water")||id.includes("lava");
+}
+function hasMineAt(l,d){return mines.some(m=>!m.detonating&&m.dimension===d&&distanceSquared(m,l)<MINE_SPACING*MINE_SPACING);}
+function isValidMineSupport(block){
+    if(!block||isLiquid(block))return false;
+    try{return block.isSolid===true;}catch{}
+    const id=String(block.typeId??"").toLowerCase();
+    return id!=="minecraft:air"&&id!=="minecraft:cave_air"&&id!=="minecraft:void_air"&&!id.includes("water")&&!id.includes("lava");
+}
+function isPlayerInsidePlacement(p,l){return Math.abs(p.location.x-l.x)<.8&&Math.abs(p.location.y-l.y)<1.9&&Math.abs(p.location.z-l.z)<.8;}
 function consumeMine(p){try{const c=p.getComponent("minecraft:inventory")?.container,s=c?.getItem(p.selectedSlotIndex);if(!s||s.typeId!==ITEM_ID)return false;if(s.amount<=1)c.setItem(p.selectedSlotIndex,undefined);else{s.amount--;c.setItem(p.selectedSlotIndex,s);}return true;}catch(error){logger.warn("Could not consume mine item",error);return false;}}
-function hasMineAt(l,d){return mines.some(m=>!m.detonating&&m.dimension===d&&distanceSquared(m,l)<.55*.55);}
 function placeMine(p){
-    const b=getTargetBlock(p);if(!b)return p.sendMessage("§c[Mine] Richte den Blick auf einen Block, um eine Mine zu platzieren.");
-    const l={x:Math.floor(b.location.x),y:Math.floor(b.location.y)+1,z:Math.floor(b.location.z)};
-    if(hasMineAt({...l,y:l.y+.05},p.dimension.id))return p.sendMessage("§e[Mine] Hier liegt bereits eine Mine.");
-    if(mines.length>=MAX_MINES)return p.sendMessage(`§c[Mine] Das Limit von ${MAX_MINES} Minen ist erreicht.`);if(!consumeMine(p))return;
-    const team=getPlayerTeam(p);mines.push({id:createMineId(),x:l.x+.5,y:l.y+.05,z:l.z+.5,dimension:p.dimension.id,ownerId:p.id??null,ownerTeam:team,group:null,triggerMode:0,armed:false,armAt:system.currentTick+ARM_DELAY_TICKS,rearmAt:0,detonating:false});
-    save();p.playSound("random.click",{volume:.7,pitch:.7});p.sendMessage(`§7[Mine] Mine platziert${team?` für Team §f${team}`:""}. §8Sie wird gleich scharf.`);
+    if(!p?.isValid)return;
+    const playerId=p.id??p.name;
+    const nextAllowed=placementCooldown.get(playerId)??0;
+    if(system.currentTick<nextAllowed)return;
+    placementCooldown.set(playerId,system.currentTick+PLACEMENT_COOLDOWN_TICKS);
+
+    const b=getTargetBlock(p);
+    if(!b)return p.sendMessage("§c[Mine] Richte den Blick auf einen Block, um eine Mine zu platzieren.");
+    if(isLiquid(b))return p.sendMessage("§c[Mine] Auf Flüssigkeiten kann keine Mine platziert werden.");
+    if(!isValidMineSupport(b))return p.sendMessage("§c[Mine] Dieser Block eignet sich nicht als Untergrund für eine Mine.");
+
+    const l=getPlacementLocation(b);
+    let target;
+    try{target=p.dimension.getBlock({x:Math.floor(l.x),y:Math.floor(l.y),z:Math.floor(l.z)});}catch(error){logger.debug(`Mine placement block lookup failed: ${error?.message??error}`);return p.sendMessage("§c[Mine] Die Zielposition ist gerade nicht verfügbar.");}
+    if(!isAirOrReplaceable(target))return p.sendMessage("§c[Mine] Der Platz über dem Block ist nicht frei.");
+    if(isPlayerInsidePlacement(p,l))return p.sendMessage("§c[Mine] Du stehst direkt auf der Zielposition.");
+    if(hasMineAt(l,p.dimension.id))return p.sendMessage("§e[Mine] Hier liegt bereits eine Mine oder eine andere Mine ist zu nah.");
+    if(mines.length>=MAX_MINES)return p.sendMessage(`§c[Mine] Das Limit von ${MAX_MINES} Minen ist erreicht.`);
+    if(!consumeMine(p))return p.sendMessage("§c[Mine] Keine Minenladung im ausgewählten Slot gefunden.");
+
+    const team=getPlayerTeam(p);
+    mines.push({id:createMineId(),x:l.x,y:l.y,z:l.z,dimension:p.dimension.id,ownerId:p.id??null,ownerTeam:team,group:null,triggerMode:0,armed:false,armAt:system.currentTick+ARM_DELAY_TICKS,rearmAt:0,detonating:false});
+    save();
+    try{p.playSound("random.click",{volume:.7,pitch:.7});}catch{}
+    p.sendMessage(`§a[Mine] ✓ Mine platziert bei §f${Math.floor(l.x)}, ${Math.floor(l.y)}, ${Math.floor(l.z)}§a${team?` für Team §f${team}`:""}.`);
+    p.sendMessage("§7[Mine] Sie wird in §e1 Sekunde§7 automatisch scharf.");
 }
 function canManage(p,m){if(!p?.isValid||!m)return false;if(p.commandPermissionLevel>=CommandPermissionLevel.GameDirectors)return true;return !!m.ownerTeam&&getPlayerTeam(p)===m.ownerTeam;}
 function canTrigger(p,m){if(!m||!p)return false;if(!m.ownerTeam)return true;const t=getPlayerTeam(p);if(t&&t===m.ownerTeam)return false;if(!t)return true;const r=getTeamRelation(m.ownerTeam,t);if(r===TEAM_RELATION.FRIENDLY)return false;if(m.triggerMode===2)return true;if(m.triggerMode===1)return r===TEAM_RELATION.HOSTILE||r===TEAM_RELATION.NEUTRAL;return r===TEAM_RELATION.HOSTILE;}
@@ -116,7 +160,6 @@ function scan(){
                 if(i>=0)schedule(i);
                 continue;
             }
-            // Custom Siedler monsters may not declare the vanilla "monster" family.
             const custom=d.getEntities({location:m,maxDistance:MONSTER_TRIGGER_RADIUS,type:"siedler:monster"});
             if(custom.some(isMonster)){
                 const i=mines.indexOf(m);
@@ -132,4 +175,4 @@ try{world.afterEvents.itemUse.subscribe(e=>{const p=e.source;if(p?.typeId==="min
 // The first persistent read is therefore delayed until the next tick.
 system.runTimeout(load, 1);
 system.runInterval(scan, SCAN_INTERVAL);
-logger.success("Minefield v2 loaded: teams, diplomacy, persistent mine groups and synchronized detonation.");
+logger.success("Minefield v2 loaded: robust placement, teams, diplomacy, persistent groups and synchronized detonation.");
