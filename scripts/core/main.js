@@ -56,7 +56,8 @@ import ".././soldier/trader.js";
 import ".././soldier/level.js";
 
 // Minefield
-// v2 contains the complete team/diplomacy integration and persistent mine groups.
+// index_v2 contains the complete minefield implementation including placement,
+// persistence, teams, diplomacy, monsters, groups and detonation logic.
 import ".././minefield/index_v2.js";
 import ".././minefield/ui.js";
 
