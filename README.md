@@ -25,8 +25,11 @@ Das komplette Minenfeld-System liegt zentral unter `scripts/minefield/index_v2.j
 
 - `/give @s siedler:mine` gibt eine Minenladung.
 - Mit der Minenladung einen geeigneten Block anvisieren und benutzen, um eine Mine zu platzieren.
-- Die Platzierung wird auf einen freien Block geprüft; Flüssigkeiten und bereits belegte Positionen werden abgelehnt.
-- Doppelplatzierungen werden verhindert und das Item wird erst bei erfolgreicher Platzierung verbraucht.
+- Die Platzierung wird auf einen festen Untergrund und einen **freien Block darüber** geprüft; Flüssigkeiten und ungeeignete Positionen werden abgelehnt.
+- Doppelplatzierungen bzw. zu dicht nebeneinander liegende Minen werden verhindert.
+- Das Item wird **erst nach erfolgreicher Validierung** verbraucht.
+- Eine kurze Platzierungs-Sperre verhindert Doppel-Auslösungen durch mehrfach eintreffende Item-Use-Events.
+- Nach erfolgreicher Platzierung werden Position und Team direkt bestätigt; die Mine wird nach 1 Sekunde automatisch scharf.
 - Jede Mine speichert persistent **Mine-ID, Besitzer-ID, Besitzer-Team, Auslösemodus und optional eine Gruppe**.
 - Eigene und verbündete Teams lösen Team-Minen nicht aus.
 - Modus `0` = nur Feinde, `1` = Feinde + Neutral, `2` = alle Spieler.
@@ -37,7 +40,7 @@ Das komplette Minenfeld-System liegt zentral unter `scripts/minefield/index_v2.j
 - Nach der Explosion wird die Mine nach 15 Sekunden automatisch wieder scharf.
 - Der persistente Minenspeicher wird **erst nach der Bedrock-Early-Execution-Phase** gelesen, damit `world.getDynamicProperty()` beim Modulstart keinen Early-Execution-Fehler verursacht.
 - Das Minen-Item verwendet die aktuelle Bedrock-Icon-Kurzschreibweise (`"minecraft:icon": "tnt"`) und vermeidet damit veraltete Icon-Felder.
-- Es gibt **keine separate alte Placement-Hilfsdatei mehr**: Platzierung und Minenlogik bleiben in einem einzigen aktiven Minefield-Modul gebündelt.
+- Im Minefield-Ordner gibt es **keine alte doppelte Implementierung mehr**: `index_v2.js` ist die einzige aktive Kernlogik, `ui.js` enthält ausschließlich die grafische Verwaltung.
 
 ### 🎛️ Minen-UI
 
