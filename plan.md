@@ -40,10 +40,16 @@
 - [x] Minen-Auslösemodi 0–2
 - [x] Team-Integration über Spieler-ID und Diplomatie
 - [x] Eigenes und verbündetes Team vor Minenauslösung geschützt
-- [x] **Persistente Minengruppen für mehrere Minen**
-- [x] **Gruppenweise Scharf-/Entschärfen, Entfernen und Auslösemodus**
-- [x] **Synchronisierte Gruppenzündung aller scharfen Gruppenminen**
-- [x] **Automatische Gruppenzündung, wenn eine Gruppenmine durch einen Feind ausgelöst wird**
+- [x] Persistente Minengruppen für mehrere Minen
+- [x] Gruppenweise Scharf-/Entschärfen, Entfernen und Auslösemodus
+- [x] Synchronisierte Gruppenzündung aller scharfen Gruppenminen
+- [x] Automatische Gruppenzündung, wenn eine Gruppenmine durch einen Feind ausgelöst wird
+- [x] **Grafische Minenfeld-Verwaltungs-UI über `/siedler:mines`**
+- [x] **UI für Einzelminen, Gruppenverwaltung, Auslösemodi und Status**
+
+## 💣 Minenfeld-UI
+
+Mit `/siedler:mines` öffnet sich eine grafische Verwaltung. Die UI bietet Einzelmine-Aktionen, Gruppenverwaltung, Auslösemodi sowie Mine-Liste und Status. Die UI verwendet die bestehenden Minefield-Befehle, sodass die vorhandenen Team- und Berechtigungsregeln erhalten bleiben.
 
 ## 💣 Minengruppen
 
