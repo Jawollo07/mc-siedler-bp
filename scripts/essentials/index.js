@@ -5,6 +5,7 @@ import { registerTeleportCommands, registerTeleportEvents } from "./teleport.js"
 import { registerMessagingCommands } from "./messaging.js";
 import { registerAdminCommands } from "./admin.js";
 import { registerVillagerDeathLogger } from "./villager_death_logger.js";
+import { registerEnderChestCommand } from "./enderchest.js";
 
 const logger = createLogger("Essentials");
 
@@ -18,6 +19,7 @@ const logger = createLogger("Essentials");
  * - teleport.js                Spawn, Home, Back und TPA
  * - messaging.js               MSG / Reply
  * - admin.js                   Admin-Werkzeuge
+ * - enderchest.js              persönlicher, persistenter 27-Slot-Enderchest
  * - villager_death_logger.js   detaillierte Villager-Todeslogs
  */
 
@@ -54,7 +56,8 @@ system.beforeEvents.startup.subscribe((event) => {
         registerTeleportCommands(registry);
         registerMessagingCommands(registry);
         registerAdminCommands(registry);
-        logger.info("Essentials-Commands registriert: Teleport, TPA, Messaging und Admin.");
+        registerEnderChestCommand(registry);
+        logger.info("Essentials-Commands registriert: Teleport, TPA, Messaging, Admin und Enderchest.");
     } catch (error) {
         logger.exception("Essentials-Commands konnten nicht vollständig registriert werden", error);
     }
