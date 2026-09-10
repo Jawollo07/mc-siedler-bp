@@ -10,44 +10,31 @@ import { version } from "./version.js";
  * - Keep the import order deterministic.
  * - Never let a non-critical startup task prevent the loader from finishing.
  * - Dynamic properties must be registered before modules that use them.
- * - The logger is imported first so all subsequent module console output is
- *   automatically normalized.
+ * - The logger is imported first so all subsequent module console output is normalized.
  */
 
-// -----------------------------------------------------------------------------
 // Core
-// -----------------------------------------------------------------------------
 import "./dynamic_properties.js";
 
-// -----------------------------------------------------------------------------
 // Teams
-// -----------------------------------------------------------------------------
 import ".././teams/index.js";
 import ".././teams/chat.js";
 import ".././teams/elimination.js";
 
-// -----------------------------------------------------------------------------
 // Economy
-// -----------------------------------------------------------------------------
 import ".././taxes/index.js";
 
-// -----------------------------------------------------------------------------
 // Claims
-// -----------------------------------------------------------------------------
 import ".././claims/index.js";
 import ".././claims/protection.js";
 import ".././claims/display.js";
 
-// -----------------------------------------------------------------------------
 // Market
-// -----------------------------------------------------------------------------
 import ".././market/market_place.js";
 import ".././market/commands.js";
 import ".././market/trader_commands.js";
 
-// -----------------------------------------------------------------------------
 // Monster system
-// -----------------------------------------------------------------------------
 import ".././monster/index.js";
 import ".././monster/pillager_squads.js";
 import ".././monster/outpost_raids.js";
@@ -55,29 +42,22 @@ import ".././monster/commands.js";
 import ".././monster/weakness_commands.js";
 import ".././monster/token.js";
 
-// -----------------------------------------------------------------------------
 // Essentials
-// -----------------------------------------------------------------------------
 import ".././essentials/index.js";
 import ".././essentials/player_stats.js";
 import ".././essentials/start.js";
 
-// -----------------------------------------------------------------------------
 // Anti-AFK
-// -----------------------------------------------------------------------------
 import ".././antiafk/index.js";
 
-// -----------------------------------------------------------------------------
 // Soldier system
-// -----------------------------------------------------------------------------
 import ".././soldier/index.js";
 import ".././soldier/trader.js";
 import ".././soldier/level.js";
 
-// -----------------------------------------------------------------------------
 // Minefield
-// -----------------------------------------------------------------------------
-import ".././minefield/index.js";
+// v2 contains the complete team/diplomacy integration and persistent mine groups.
+import ".././minefield/index_v2.js";
 
 const VERSION = version;
 const MODULE_COUNT = 23;
@@ -88,36 +68,19 @@ let startupCompleted = false;
 let watchdogHandle;
 
 function safeRun(label, callback) {
-    try {
-        callback();
-    } catch (error) {
-        console.error(`[Loader] ${label} failed:`, error);
-    }
+    try { callback(); }
+    catch (error) { console.error(`[Loader] ${label} failed:`, error); }
 }
-
 function startWatchdog() {
-    if (watchdogHandle !== undefined) {
-        return;
-    }
-
+    if (watchdogHandle !== undefined) return;
     watchdogHandle = system.runInterval(() => {
-        if (startupCompleted) {
-            system.clearRun(watchdogHandle);
-            watchdogHandle = undefined;
-            return;
-        }
-
+        if (startupCompleted) { system.clearRun(watchdogHandle); watchdogHandle = undefined; return; }
         console.warn("[Loader] Startup is taking longer than expected. Continuing without blocking the server.");
     }, WATCHDOG_INTERVAL);
 }
-
 function finishStartup() {
-    if (startupCompleted) {
-        return;
-    }
-
+    if (startupCompleted) return;
     startupCompleted = true;
-
     safeRun("Startup status", () => {
         console.info("----------------------------------------");
         console.info("[Loader] ✓ All modules initialized.");
@@ -127,19 +90,9 @@ function finishStartup() {
         console.info("----------------------------------------");
     });
 }
-
 function startLoader() {
-    safeRun("Loader initialization", () => {
-        console.info(`[Loader] Starting ${MODULE_COUNT} modules...`);
-        startWatchdog();
-    });
-
-    system.runTimeout(() => {
-        safeRun("Startup completion", finishStartup);
-    }, STARTUP_DELAY);
+    safeRun("Loader initialization", () => { console.info(`[Loader] Starting ${MODULE_COUNT} modules...`); startWatchdog(); });
+    system.runTimeout(() => safeRun("Startup completion", finishStartup), STARTUP_DELAY);
 }
 
-// All module imports above are evaluated before this code executes.
-// Keeping the final startup sequence guarded prevents logging/watchdog errors
-// from becoming a second failure after the actual modules have loaded.
 startLoader();
