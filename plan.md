@@ -63,6 +63,9 @@
 - [x] Resource Pack mit Custom-Soldaten
 - [x] Essentials mit Homes, Todespunkten, TPA und Startsystem
 - [x] **TPA/TPAHere mit nativer PlayerSelector-Zielauflösung, auch bei `/execute as ... run`**
+- [x] **Essentials-Enderchest mit `/ec` und 27 persistenten persönlichen Slots**
+- [x] **Enderchest-Einlagerung und -Entnahme über die bestehende Server-UI**
+- [x] **Persistente Speicherung von Mengen, Custom-Namen, Lore, Verzauberungen und Haltbarkeit soweit API-seitig verfügbar**
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
 - [x] Externe ChatSend-API-Abhängigkeit entfernt
