@@ -24,6 +24,7 @@
 - **Automatische Zielsuche für nahe feindliche Monster**
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
+- **Persönlicher 27-Slot-Enderchest über `/ec` mit persistenter Speicherung pro Spieler**
 - Detaillierter Villager-Todeslogger mit Todesursache, Verursacher und Claim-Team
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
@@ -107,6 +108,17 @@ Die lokale A*-Wegfindung arbeitet bewusst mit einem begrenzten Suchradius und ei
 ### Kavallerie
 
 Die Kavallerie wird über `cavalry_ai.js` und `cavalry_controller.js` direkt am Pferd gesteuert. Sie nähert sich Gegnern aktiv, chargt aus größerer Distanz, verursacht erhöhten Charge-Schaden und Knockback, passiert Ziele nach Treffern und nutzt eine Stuck-Recovery mit wechselnder Pass-Seite.
+
+## 📦 Essentials / Enderchest
+
+Das Enderchest-System befindet sich unter `scripts/essentials/enderchest.js`.
+
+- `/ec` öffnet den persönlichen Enderchest des Spielers. Minecraft stellt bei einem namespaced Custom Command automatisch auch die Kurzform ohne Namespace bereit.
+- Jeder Spieler besitzt **27 persistente Slots**.
+- Items können aus dem normalen Inventar in einen ausgewählten Enderchest-Slot eingelagert und wieder herausgenommen werden.
+- Die Speicherung erfolgt über eine Dynamic Property direkt am Spieler und ist damit unabhängig von Position, Dimension und Serverneustarts.
+- Mengen, Custom-Namen, Lore, Verzauberungen und Haltbarkeit werden beim Speichern soweit von der Script-API unterstützt mitgespeichert.
+- Der Zugriff ist für normale Spieler ohne OP-Rechte möglich.
 
 ## 📡 Essentials / TPA
 
