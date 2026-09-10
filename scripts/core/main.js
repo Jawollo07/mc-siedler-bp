@@ -56,9 +56,9 @@ import ".././soldier/trader.js";
 import ".././soldier/level.js";
 
 // Minefield
-// index_v2 contains the complete minefield implementation including placement,
+// index contains the complete minefield implementation including placement,
 // persistence, teams, diplomacy, monsters, groups and detonation logic.
-import ".././minefield/index_v2.js";
+import ".././minefield/index.js";
 import ".././minefield/ui.js";
 
 const VERSION = version;
