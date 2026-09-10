@@ -25,12 +25,38 @@
 - Bogenschützen mit ballistischer Pfeilphysik
 - Essentials und Spieler-Dashboard
 - **Persönlicher 27-Slot-Enderchest über `/ec` mit persistenter Speicherung pro Spieler**
+- **Gemeinsame 54-Slot-Team-Doppelchest über `/teamchest` für alle Mitglieder eines Teams**
 - Detaillierter Villager-Todeslogger mit Todesursache, Verursacher und Claim-Team
 - Anti-AFK-System mit Warnung, AFK-Status und Kick
 - Erweitertes zentralisiertes Logging für alle Behavior-Pack-Module
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
 - **Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik**
 - **Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Steuerstatistik**
+
+## 📦 Essentials / Lager
+
+### Persönlicher Enderchest
+
+Das persönliche Enderchest-System befindet sich unter `scripts/essentials/enderchest.js`.
+
+- `/ec` öffnet den persönlichen Enderchest.
+- Jeder Spieler besitzt **27 persistente Slots**.
+- Items können aus dem normalen Inventar eingelagert und wieder herausgenommen werden.
+- Die Speicherung erfolgt pro Spieler über Dynamic Properties und ist damit unabhängig von Position, Dimension und Serverneustarts.
+- Mengen, Custom-Namen, Lore, Verzauberungen und Haltbarkeit werden soweit API-seitig verfügbar mitgespeichert.
+
+### Team-Doppelchest
+
+Die gemeinsame Team-Doppelchest befindet sich unter `scripts/essentials/teamchest.js`.
+
+- `/siedler:teamchest` bzw. die Kurzform **`/teamchest`** öffnet den gemeinsamen Speicher des eigenen Teams.
+- Jedes Team besitzt einen eigenen **54-Slot-Speicher**, entsprechend einer Vanilla-Doppelchest.
+- Nur Spieler, die aktuell Mitglied des Teams sind, können auf dessen Speicher zugreifen.
+- Alle Teammitglieder teilen sich exakt denselben Inhalt.
+- Items können eingelagert, entnommen und ersetzt werden.
+- Die Daten werden persistent über die World Dynamic Property `essentials:teamchests` gespeichert.
+- Beim Zugriff wird die Teamzugehörigkeit über die persistente Spieler-ID aufgelöst.
+- Teamchests sind damit unabhängig von einer tatsächlichen Chest-Blockposition und funktionieren auch nach Serverneustarts.
 
 ## ☠️ Team-Eliminierung
 
@@ -68,57 +94,6 @@ Der Modus kann per Command oder vollständig über den Soldatenstab gesteuert we
 ```text
 /siedler:soldier_mode <0-5>
 ```
-
-Im Soldatenstab stehen die Modi bei einem einzelnen Soldier sowie bei einer Mehrfachauswahl zur Verfügung. Bei Gruppen kann der Modus für **alle Mitglieder der Gruppe gleichzeitig** gesetzt werden.
-
-### 🧭 Soldaten-Teleport
-
-Der Teleport ist ebenfalls direkt im Soldatenstab verfügbar:
-
-- einzelner Soldier → **„Zu mir teleportieren“**
-- Mehrfachauswahl → **„Teleport zu mir“**
-- Gruppe → **„Teleport zu mir“** für alle Gruppenmitglieder
-- Teleports werden kreisförmig um den Spieler verteilt, damit Einheiten nicht exakt auf derselben Position landen
-- Dimensionswechsel des Soldiers wird unterstützt
-- Bei Kavallerie wird die Einheit über das Soldier-Entity-System teleportiert; vorhandene Mount-Steuerung bleibt erhalten
-
-Der bestehende Command bleibt ebenfalls verfügbar:
-
-```text
-/siedler:soldier_tp [Target]
-```
-
-### 👥 Gruppen
-
-Gruppen können über den Soldatenstab erstellt und verwaltet werden. Die Gruppen-UI bietet jetzt zusätzlich:
-
-- Folgen
-- Bleiben
-- Stoppen
-- **Angriffsmodus für die gesamte Gruppe**
-- **Teleport der gesamten Gruppe zum Spieler**
-- Formation ändern
-- Mitglieder verwalten
-- Gruppe löschen
-
-### 🧭 Wegfindung und Performance
-
-Die lokale A*-Wegfindung arbeitet bewusst mit einem begrenzten Suchradius und einem kleinen Node-Budget. Blockabfragen werden damit nicht mehr als ungebremste Großsuche ausgeführt. Direkte Wege werden bevorzugt und zwischengespeichert; A*-Neuberechnungen werden zeitlich begrenzt.
-
-### Kavallerie
-
-Die Kavallerie wird über `cavalry_ai.js` und `cavalry_controller.js` direkt am Pferd gesteuert. Sie nähert sich Gegnern aktiv, chargt aus größerer Distanz, verursacht erhöhten Charge-Schaden und Knockback, passiert Ziele nach Treffern und nutzt eine Stuck-Recovery mit wechselnder Pass-Seite.
-
-## 📦 Essentials / Enderchest
-
-Das Enderchest-System befindet sich unter `scripts/essentials/enderchest.js`.
-
-- `/ec` öffnet den persönlichen Enderchest des Spielers. Minecraft stellt bei einem namespaced Custom Command automatisch auch die Kurzform ohne Namespace bereit.
-- Jeder Spieler besitzt **27 persistente Slots**.
-- Items können aus dem normalen Inventar in einen ausgewählten Enderchest-Slot eingelagert und wieder herausgenommen werden.
-- Die Speicherung erfolgt über eine Dynamic Property direkt am Spieler und ist damit unabhängig von Position, Dimension und Serverneustarts.
-- Mengen, Custom-Namen, Lore, Verzauberungen und Haltbarkeit werden beim Speichern soweit von der Script-API unterstützt mitgespeichert.
-- Der Zugriff ist für normale Spieler ohne OP-Rechte möglich.
 
 ## 📡 Essentials / TPA
 
