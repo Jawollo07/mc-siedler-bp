@@ -32,6 +32,22 @@
 - Native Chat-Verarbeitung ohne externe ChatSend-API-Abhängigkeit
 - **Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik**
 - **Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Steuerstatistik**
+- **Wiederverwendbares Minenfeld mit verzögerter Explosion, Warnsound, Kettenreaktion und automatischem Wiederscharfmachen**
+
+## 💣 Minenfeld
+
+Das Minenfeld-System befindet sich unter `scripts/minefield/index.js`. Das platzierbare Item ist `siedler:mine`.
+
+- `/give @s siedler:mine` gibt eine Minenladung.
+- Mit der Minenladung einen Block anvisieren und benutzen, um dort eine Mine zu platzieren.
+- Nach kurzer Aktivierungszeit wird die Mine scharf.
+- Betritt ein Spieler den Bereich der Mine, wird sie ausgelöst.
+- Sofort erscheint eine kurze Warnung und ein Warnsound; nach **1 Sekunde** folgt die Explosion.
+- Explosionen können weitere scharfe Minen im Umkreis von ca. **3,25 Blöcken** als Kettenreaktion auslösen.
+- Nach der Explosion wird die Mine deaktiviert und nach **15 Sekunden** automatisch wieder scharf.
+- Die Minenpositionen und Zustände werden persistent über die World Dynamic Property `minefield:mines` gespeichert.
+- Es können bis zu **2000** Minen gleichzeitig gespeichert werden.
+- Die Explosion verursacht standardmäßig eine normale Explosion ohne Feuer und kann Blöcke zerstören.
 
 ## 📦 Essentials / Lager
 
