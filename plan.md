@@ -46,6 +46,7 @@
 - [x] Automatische Gruppenzündung, wenn eine Gruppenmine durch einen Feind ausgelöst wird
 - [x] **Grafische Minenfeld-Verwaltungs-UI über `/siedler:mines`**
 - [x] **UI für Einzelminen, Gruppenverwaltung, Auslösemodi und Status**
+- [x] **Early-Execution-sicheres Laden des persistenten Minenspeichers**
 
 ## 💣 Minenfeld-UI
 
