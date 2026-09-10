@@ -17,14 +17,16 @@
 - Anti-AFK und zentralisiertes Logging
 - Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik
 - Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
-- **Minenfeld mit verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen, Monster-Auslösung und Verwaltungs-UI**
+- **Minenfeld mit robuster Platzierung, verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen, Monster-Auslösung und Verwaltungs-UI**
 
 ## 💣 Minenfeld
 
-Das System liegt unter `scripts/minefield/index_v2.js`. Das platzierbare Item ist `siedler:mine`.
+Das komplette Minenfeld-System liegt zentral unter `scripts/minefield/index_v2.js`. Das platzierbare Item ist `siedler:mine`.
 
 - `/give @s siedler:mine` gibt eine Minenladung.
-- Mit der Minenladung einen Block anvisieren und benutzen, um eine Mine zu platzieren.
+- Mit der Minenladung einen geeigneten Block anvisieren und benutzen, um eine Mine zu platzieren.
+- Die Platzierung wird auf einen freien Block geprüft; Flüssigkeiten und bereits belegte Positionen werden abgelehnt.
+- Doppelplatzierungen werden verhindert und das Item wird erst bei erfolgreicher Platzierung verbraucht.
 - Jede Mine speichert persistent **Mine-ID, Besitzer-ID, Besitzer-Team, Auslösemodus und optional eine Gruppe**.
 - Eigene und verbündete Teams lösen Team-Minen nicht aus.
 - Modus `0` = nur Feinde, `1` = Feinde + Neutral, `2` = alle Spieler.
@@ -35,6 +37,7 @@ Das System liegt unter `scripts/minefield/index_v2.js`. Das platzierbare Item is
 - Nach der Explosion wird die Mine nach 15 Sekunden automatisch wieder scharf.
 - Der persistente Minenspeicher wird **erst nach der Bedrock-Early-Execution-Phase** gelesen, damit `world.getDynamicProperty()` beim Modulstart keinen Early-Execution-Fehler verursacht.
 - Das Minen-Item verwendet die aktuelle Bedrock-Icon-Kurzschreibweise (`"minecraft:icon": "tnt"`) und vermeidet damit veraltete Icon-Felder.
+- Es gibt **keine separate alte Placement-Hilfsdatei mehr**: Platzierung und Minenlogik bleiben in einem einzigen aktiven Minefield-Modul gebündelt.
 
 ### 🎛️ Minen-UI
 
