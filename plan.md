@@ -40,6 +40,7 @@
 - [x] Minen-Auslösemodi 0–2
 - [x] Team-Integration über Spieler-ID und Diplomatie
 - [x] Eigenes und verbündetes Team vor Minenauslösung geschützt
+- [x] **Monster-Auslösung für normale Bedrock-Monster und `siedler:monster`**
 - [x] Persistente Minengruppen für mehrere Minen
 - [x] Gruppenweise Scharf-/Entschärfen, Entfernen und Auslösemodus
 - [x] Synchronisierte Gruppenzündung aller scharfen Gruppenminen
@@ -55,6 +56,10 @@ Mit `/siedler:mines` öffnet sich eine grafische Verwaltung. Die UI bietet Einze
 ## 💣 Minengruppen
 
 Mehrere Minen können mit einem Namen zu einer Gruppe zusammengefasst werden. Die Gruppenzuordnung wird gemeinsam mit der Mine gespeichert und überlebt Serverneustarts. Eine Gruppe kann als Einheit geschaltet werden; bei einer Gruppenzündung erhalten alle Mitglieder dieselbe 1-Sekunden-Warnphase und werden anschließend gleichzeitig zur Explosion eingeplant.
+
+## 👹 Minen und Monster
+
+Scharfe Minen prüfen zusätzlich zur Spielerauslösung nahe Entities. Normale Bedrock-Monster werden über die `monster`-Entity-Familie erkannt. Das Custom-Monster `siedler:monster` wird zusätzlich explizit erkannt, falls es die Vanilla-Familie nicht gesetzt hat. Monster ignorieren die Spieler-Auslösemodi 0–2 und können jede scharfe Mine auslösen.
 
 ### Befehle
 
