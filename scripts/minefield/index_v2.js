@@ -85,6 +85,11 @@ function registerCommands(r){
     reg("siedler:mine_group_mode","Setzt den Modus einer Gruppe.",[{type:CustomCommandParamType.String,name:"gruppe"},{type:CustomCommandParamType.Integer,name:"modus"}],(p,g,m)=>{m=Number(m);if(![0,1,2].includes(m))return p.sendMessage("§c[Mine] 0=Feinde, 1=Feinde+Neutral, 2=Alle.");groupMode(p,g,m);});
     reg("siedler:mine_group_detonate","Zündet alle scharfen Gruppenminen gleichzeitig.",[{type:CustomCommandParamType.String,name:"gruppe"}],groupDetonate);
 }
-function scan(){load();const now=system.currentTick;let changed=false;for(const m of mines){if(!m.armed&&!m.detonating&&m.armAt>0&&now>=m.armAt&&m.rearmAt===0){m.armed=true;m.armAt=0;changed=true;}if(!m.armed&&!m.detonating&&m.rearmAt>0&&now>=m.rearmAt){m.armed=true;m.rearmAt=0;changed=true;}}for(const p of world.getAllPlayers()){if(!p?.isValid)continue;for(let i=0;i<mines.length;i++){const m=mines[i];if(!m?.armed||m.detonating||m.dimension!==p.dimension.id)continue;if(distanceSquared(m,p.location)<=.75*.75&&canTrigger(p,m))schedule(i);}}if(changed)save();}
+function scan(){const now=system.currentTick;let changed=false;for(const m of mines){if(!m.armed&&!m.detonating&&m.armAt>0&&now>=m.armAt&&m.rearmAt===0){m.armed=true;m.armAt=0;changed=true;}if(!m.armed&&!m.detonating&&m.rearmAt>0&&now>=m.rearmAt){m.armed=true;m.rearmAt=0;changed=true;}}for(const p of world.getAllPlayers()){if(!p?.isValid)continue;for(let i=0;i<mines.length;i++){const m=mines[i];if(!m?.armed||m.detonating||m.dimension!==p.dimension.id)continue;if(distanceSquared(m,p.location)<=.75*.75&&canTrigger(p,m))schedule(i);}}if(changed)save();}
 try{world.afterEvents.itemUse.subscribe(e=>{const p=e.source;if(p?.typeId==="minecraft:player"&&e.itemStack?.typeId===ITEM_ID)placeMine(p);});system.beforeEvents.startup.subscribe(e=>registerCommands(e.customCommandRegistry));}catch(error){logger.error("Could not initialize minefield events",error);}
-load();system.runInterval(scan,SCAN_INTERVAL);logger.success("Minefield v2 loaded: teams, diplomacy, persistent mine groups and synchronized detonation.");
+
+// World dynamic properties are unavailable during Bedrock early-execution.
+// The first persistent read is therefore delayed until the next tick.
+system.runTimeout(load, 1);
+system.runInterval(scan, SCAN_INTERVAL);
+logger.success("Minefield v2 loaded: teams, diplomacy, persistent mine groups and synchronized detonation.");
