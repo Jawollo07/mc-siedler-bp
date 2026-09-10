@@ -72,6 +72,7 @@
 - [x] **Minenfeld-Item `siedler:mine` mit platzierbaren persistenten Minen**
 - [x] **Minen-Auslösung beim Betreten mit Warnung/Sound und 1-Sekunden-Verzögerung**
 - [x] **Kettenreaktion benachbarter scharfer Minen**
+- [x] **Explosion ohne Blockschaden, aber mit Feuer**
 - [x] **Automatisches Wiederscharfmachen der Mine nach 15 Sekunden**
 - [x] Detaillierter Villager-Todeslogger inklusive Claim-Team
 - [x] Vollständiges Anti-AFK-System
