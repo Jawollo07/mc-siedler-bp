@@ -32,6 +32,10 @@
 - [x] Pillager-Squads mit Claim-sicherem Spawn und Online-Verteidiger-Prüfung
 - [x] Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
 - [x] Minenfeld-Item `siedler:mine` mit persistenten Minen
+- [x] Robuste Mine-Platzierung mit Untergrund-/Freiraumprüfung
+- [x] Schutz vor Doppelplatzierung und zu dicht gesetzten Minen
+- [x] Item-Verbrauch erst nach erfolgreicher Platzierungsvalidierung
+- [x] Platzierungs-Cooldown gegen doppelte Item-Use-Events
 - [x] Minen-Auslösung mit Warnung/Sound und 1-Sekunden-Verzögerung
 - [x] Kettenreaktion benachbarter scharfer Minen
 - [x] Explosion ohne Blockschaden, aber mit Feuer
@@ -48,6 +52,7 @@
 - [x] **Grafische Minenfeld-Verwaltungs-UI über `/siedler:mines`**
 - [x] **UI für Einzelminen, Gruppenverwaltung, Auslösemodi und Status**
 - [x] **Early-Execution-sicheres Laden des persistenten Minenspeichers**
+- [x] **Alte doppelte Minefield-Kernimplementierung entfernt; nur noch die aktive Kernlogik und UI bleiben im Modul**
 
 ## 💣 Minenfeld-UI
 
@@ -56,6 +61,10 @@ Mit `/siedler:mines` öffnet sich eine grafische Verwaltung. Die UI bietet Einze
 ## 💣 Minengruppen
 
 Mehrere Minen können mit einem Namen zu einer Gruppe zusammengefasst werden. Die Gruppenzuordnung wird gemeinsam mit der Mine gespeichert und überlebt Serverneustarts. Eine Gruppe kann als Einheit geschaltet werden; bei einer Gruppenzündung erhalten alle Mitglieder dieselbe 1-Sekunden-Warnphase und werden anschließend gleichzeitig zur Explosion eingeplant.
+
+## 💣 Mine-Platzierung
+
+Die Mine wird über `siedler:mine` platziert. Beim Benutzen wird die Blickrichtung auf einen gültigen Untergrund ausgewertet. Die Zielposition muss frei sein und darf nicht von einer anderen Mine zu dicht belegt sein. Flüssigkeiten und ungeeignete Untergründe werden abgelehnt. Erst wenn alle Prüfungen erfolgreich sind, wird die Ladung aus dem Inventar entfernt und die persistente Mine gespeichert.
 
 ## 👹 Minen und Monster
 
