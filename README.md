@@ -33,6 +33,7 @@ Das System liegt unter `scripts/minefield/index_v2.js`. Das platzierbare Item is
 - Scharfe Minen in ca. 3,25 Blöcken Entfernung können eine Kettenreaktion auslösen.
 - Nach der Explosion wird die Mine nach 15 Sekunden automatisch wieder scharf.
 - Der persistente Minenspeicher wird **erst nach der Bedrock-Early-Execution-Phase** gelesen, damit `world.getDynamicProperty()` beim Modulstart keinen Early-Execution-Fehler verursacht.
+- Das Minen-Item verwendet die aktuelle Bedrock-Icon-Kurzschreibweise (`"minecraft:icon": "tnt"`) und vermeidet damit veraltete Icon-Felder.
 
 ### 🎛️ Minen-UI
 
