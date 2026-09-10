@@ -2,14 +2,17 @@
 
 > Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 09.09.2026
+**Stand:** 10.09.2026
 
 ## 📊 Aktueller Stand
 
 - [x] Zentraler Loader und fehlertolerantes Modul-Laden
 - [x] Zentralisiertes erweitertes Logging mit INFO/WARN/ERROR/DEBUG und Console-Bridge
 - [x] Teams, Diplomatie, Claims und Wirtschaft
-- [x] Diplomatie-UI und `/diplomacy`
+- [x] **Team-Eliminierung mit konfigurierbarem Eliminationsblock**
+- [x] **Broadcast bei Ausscheiden eines Teams**
+- [x] **Permanenter Spectator-Modus für ausgeschiedene Teammitglieder nach ihrem Tod**
+- [x] **Persistente Eliminationsdaten für Teams und Spieler über World Dynamic Properties**
 - [x] Claim-Block-Recovery und Item-Rückgabe
 - [x] Permanenter Monster-Token-TaxBonus
 - [x] Tagessteuer nur bei mindestens einem online Teammitglied
