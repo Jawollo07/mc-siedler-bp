@@ -17,7 +17,7 @@
 - Anti-AFK und zentralisiertes Logging
 - Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik
 - Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
-- **Minenfeld mit verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen und Verwaltungs-UI**
+- **Minenfeld mit verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen, Monster-Auslösung und Verwaltungs-UI**
 
 ## 💣 Minenfeld
 
@@ -28,6 +28,7 @@ Das System liegt unter `scripts/minefield/index_v2.js`. Das platzierbare Item is
 - Jede Mine speichert persistent **Mine-ID, Besitzer-ID, Besitzer-Team, Auslösemodus und optional eine Gruppe**.
 - Eigene und verbündete Teams lösen Team-Minen nicht aus.
 - Modus `0` = nur Feinde, `1` = Feinde + Neutral, `2` = alle Spieler.
+- **Monster lösen scharfe Minen unabhängig vom Spieler-Auslösemodus immer aus.** Das umfasst normale Bedrock-Monster über die `monster`-Familie sowie das Custom-Entity `siedler:monster`.
 - Nach dem Betreten gibt es eine Warnung; nach 1 Sekunde explodiert die Mine.
 - Explosionen zerstören **keine Blöcke**, dürfen aber Feuer erzeugen.
 - Scharfe Minen in ca. 3,25 Blöcken Entfernung können eine Kettenreaktion auslösen.
