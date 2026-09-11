@@ -1,5 +1,6 @@
 import { system, world, CustomCommandStatus } from "@minecraft/server";
 import { getPlayerTeam, getTeams, saveTeams } from "../teams/index.js";
+import { addTaxBonus, TAX_BONUS_CONFIG } from "../taxes/config.js";
 
 const PROPERTY = "siedler:outposts";
 const CAPTURE_RADIUS = 12;
@@ -74,23 +75,45 @@ function registerOutpost(player, location) {
     return true;
 }
 
-function setOutpostOwner(outpost, newTeam) {
+function rewardOutpostTaxBonus(teamName, capturingPlayer) {
+    const teams = getTeams();
+    const teamData = teams[teamName];
+    if (!teamData) return 0;
+
+    const before = Number(teamData.taxBonus) || 0;
+    const after = addTaxBonus(teamData, TAX_BONUS_CONFIG.OUTPOST_REWARD);
+    if (!saveTeams(teams)) return before;
+
+    const gained = after - before;
+    if (capturingPlayer) {
+        if (gained > 0) {
+            capturingPlayer.sendMessage(`§6[Outpost] §a+${gained} Emerald TaxBonus für Team ${teamName}! §7Dauerhaft pro Tag: ${after}/${TAX_BONUS_CONFIG.MAX_BONUS}`);
+        } else {
+            capturingPlayer.sendMessage(`§6[Outpost] §eTaxBonus von Team ${teamName} ist bereits voll.`);
+        }
+    }
+    return after;
+}
+
+function setOutpostOwner(outpost, newTeam, capturingPlayer) {
+    const teams = getTeams();
+    if (!teams[newTeam]) return false;
+
     const previous = outpost.ownerTeam;
     outpost.ownerTeam = newTeam;
     outpost.capturingTeam = null;
     outpost.captureProgress = 0;
 
-    const teams = getTeams();
-    if (!teams[newTeam]) return;
+    // Jede erfolgreiche Eroberung ist eine eigene TaxBonus-Quelle.
+    // Das nutzt dieselbe zentrale TaxBonus-Logik wie Monster-Tokens.
+    rewardOutpostTaxBonus(newTeam, capturingPlayer);
 
-    // Optional kleiner Wirtschaftsvorteil: ein eroberter Outpost erhöht den
-    // persistenten TaxBonus des Teams nicht automatisch. Der Outpost ist
-    // primär ein strategischer Besitzpunkt.
     if (previous && previous !== newTeam) {
-        announce(`§6⚔ §e${newTeam} §6hat den Outpost von §c${previous} §6erobert!`);
+        announce(`§6⚔ §e${newTeam} §6hat den Outpost von §c${previous} §6erobert! §a(+${TAX_BONUS_CONFIG.OUTPOST_REWARD} TaxBonus)`);
     } else {
-        announce(`§6⚔ §e${newTeam} §6hat einen Outpost erobert!`);
+        announce(`§6⚔ §e${newTeam} §6hat einen Outpost erobert! §a(+${TAX_BONUS_CONFIG.OUTPOST_REWARD} TaxBonus)`);
     }
+    return true;
 }
 
 function tickOutposts() {
@@ -98,7 +121,13 @@ function tickOutposts() {
     let changed = false;
 
     for (const outpost of Object.values(outposts)) {
-        const dimension = world.getDimension(outpost.dimension);
+        let dimension;
+        try {
+            dimension = world.getDimension(outpost.dimension);
+        } catch {
+            continue;
+        }
+
         const players = onlinePlayersInRadius(dimension, outpost.location);
         const teamsPresent = [...new Set(players.map(teamName).filter(Boolean))];
 
@@ -137,8 +166,7 @@ function tickOutposts() {
         }
 
         if (outpost.captureProgress >= CAPTURE_TICKS) {
-            setOutpostOwner(outpost, team);
-            changed = true;
+            if (setOutpostOwner(outpost, team, players[0])) changed = true;
         }
     }
 
@@ -160,4 +188,4 @@ system.beforeEvents.startup.subscribe(event => {
 });
 
 system.runInterval(tickOutposts, TICK_INTERVAL);
-console.info("§a[Outpost] Eroberungssystem geladen.");
+console.info("§a[Outpost] Eroberungssystem mit TaxBonus-Integration geladen.");
