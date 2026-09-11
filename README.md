@@ -5,6 +5,12 @@
 **Behavior Pack:** https://github.com/Jawollo07/mc-siedler-bp  
 **Resource Pack:** https://github.com/Jawollo07/mc-siedler-rp
 
+## 📖 Enduser-Handbuch
+
+➡️ **[USER_GUIDE.md – Commands, Systeme und Funktionsweise](USER_GUIDE.md)**
+
+Dort findest du eine vollständige, spielerorientierte Übersicht der aktuell implementierten Befehle und Systeme.
+
 ## 📖 Systeme
 
 - Teams, Diplomatie, Claims und Wirtschaft
