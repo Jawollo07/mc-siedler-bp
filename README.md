@@ -23,12 +23,48 @@ Dort findest du eine spielerorientierte Übersicht der aktuell implementierten B
 - Anti-AFK und zentralisiertes Logging
 - Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik
 - Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
-- **Persistenter TaxBonus durch Monster-Tokens und eroberte Outposts**
+- **TaxBonus als Multiplikator pro Dorfbewohner durch Monster-Tokens und eroberte Outposts**
 - **Minenfeld mit robuster Platzierung, verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen, Monster-Auslösung und Verwaltungs-UI**
+
+## 💰 Steuersystem
+
+Die tägliche Steuer wird pro Dorfbewohner berechnet. Der `taxBonus` ist dabei **kein zusätzlicher fixer Emerald-Betrag**, sondern der Multiplikator für jeden Dorfbewohner.
+
+```text
+taxBonus = 1 → 1 Emerald pro Dorfbewohner/Tag
+taxBonus = 2 → 2 Emeralds pro Dorfbewohner/Tag
+taxBonus = 5 → 5 Emeralds pro Dorfbewohner/Tag
+```
+
+Die Formel lautet:
+
+```text
+Tagessteuer = Anzahl Dorfbewohner × taxBonus
+```
+
+Beispiel mit 5 Dorfbewohnern:
+
+```text
+taxBonus=1 → 5 Emeralds/Tag
+taxBonus=2 → 10 Emeralds/Tag
+taxBonus=5 → 25 Emeralds/Tag
+```
+
+Der Standardwert ist `1`. Monster-Tokens und Outpost-Eroberungen erhöhen den permanenten `taxBonus` standardmäßig jeweils um `+1`.
+
+### Gemeinsame TaxBonus-Konfiguration
+
+Die zentrale Konfiguration liegt in `scripts/taxes/config.js`:
+
+- `BASE_TAX_MULTIPLIER` = `1`
+- `TOKEN_REWARD` = Erhöhung pro besiegtem Token
+- `OUTPOST_REWARD` = Erhöhung pro erfolgreicher Outpost-Eroberung
+- `MAX_BONUS` = maximaler TaxBonus-Multiplikator pro Team
+- `MAX_DAILY_PAYOUT` = maximale Tagesauszahlung
 
 ## 👹 Monster-Token-System
 
-Monster-Tokens sind besondere Monster, deren Besiegen einen **permanenten TaxBonus für das Team des Killers** gewährt.
+Monster-Tokens sind besondere Monster, deren Besiegen den **permanenten TaxBonus des Teams des Killers** erhöht.
 
 ```text
 /siedler:token
@@ -39,7 +75,8 @@ Monster-Tokens sind besondere Monster, deren Besiegen einen **permanenten TaxBon
 
 ### Token-Regeln
 
-- Pro besiegtem Token-Mob gibt es standardmäßig **+1 Emerald permanenten TaxBonus pro Tag** für das Team des Spielers, der den Token besiegt.
+- Pro besiegtem Token-Mob wird der TaxBonus standardmäßig um **+1** erhöht.
+- Der TaxBonus wirkt anschließend auf **jeden Dorfbewohner**.
 - Die Teamzuordnung verwendet die **persistente Spieler-ID**, nicht den Spielernamen.
 - Der Bonus wird sofort gespeichert und bleibt über Serverneustarts erhalten.
 - Ein Team kann den konfigurierten maximalen TaxBonus nicht überschreiten.
@@ -64,32 +101,25 @@ Der Befehl registriert den aktuellen Standort als eroberbaren Outpost. Die Erobe
 - Sind mehrere Teams gleichzeitig im Radius, ist der Outpost **umkämpft** und der Fortschritt wird zurückgesetzt.
 - Der Besitzer wird persistent gespeichert und überlebt Serverneustarts.
 - Wird ein fremder Outpost erobert, wechselt der Besitzer zum neuen Team.
-- **Jede erfolgreiche Eroberung gewährt dem erobernden Team standardmäßig +1 Emerald permanenten täglichen TaxBonus.**
+- **Jede erfolgreiche Eroberung erhöht den TaxBonus des Teams standardmäßig um +1.**
 - Die Outpost-Belohnung verwendet dieselbe zentrale TaxBonus-Logik und dieselbe Obergrenze wie der Token-Bonus.
 - Der TaxBonus wird direkt im Team gespeichert und vom normalen täglichen Steuersystem berücksichtigt.
 
 ### Beispiel
 
-Team Blau hat 5 Dorfbewohner und bereits einen Token sowie einen Outpost besiegt/erobert:
+Team Blau hat 5 Dorfbewohner und `taxBonus=3`:
 
 ```text
-5 Dorfbewohner × 2 Emeralds = 10 Emeralds
-+ 1 Emerald Token-TaxBonus
-+ 1 Emerald Outpost-TaxBonus
-= 12 Emeralds Tagessteuer
+5 Dorfbewohner × 3 Emeralds = 15 Emeralds Tagessteuer
 ```
 
-Die Belohnung ist **permanent pro Tag** und wird nicht nur einmalig ausgezahlt.
+Hat das Team anschließend einen weiteren Token oder Outpost verdient und damit `taxBonus=4`, sind es:
 
-### Gemeinsame TaxBonus-Konfiguration
+```text
+5 Dorfbewohner × 4 Emeralds = 20 Emeralds Tagessteuer
+```
 
-Die zentrale Konfiguration liegt in `scripts/taxes/config.js`:
-
-- `TOKEN_REWARD` = Bonus pro besiegtem Token
-- `OUTPOST_REWARD` = Bonus pro erfolgreicher Outpost-Eroberung
-- `MAX_BONUS` = maximale permanente Bonus-Summe pro Team
-- `VILLAGER_REWARD` = Grundsteuer pro Dorfbewohner
-- `MAX_DAILY_PAYOUT` = maximale Tagesauszahlung
+Der TaxBonus ist **permanent** und erhöht den täglichen Ertrag für jeden Dorfbewohner.
 
 ## 💣 Minenfeld
 
