@@ -2,7 +2,7 @@
 
 > Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 10.09.2026
+**Stand:** 11.09.2026
 
 ## 📊 Aktueller Stand
 
@@ -12,6 +12,11 @@
 - [x] Team-Eliminierung mit konfigurierbarem Eliminationsblock, Broadcast und permanentem Spectator
 - [x] Claim-Block-Recovery und Item-Rückgabe
 - [x] Permanenter Monster-Token-TaxBonus
+- [x] **Verbessertes Token-Rundensystem mit persistentem Abschlussstatus**
+- [x] **Token-Runde wird durch neuen Token automatisch zurückgesetzt**
+- [x] **Sicherer Token-Spawn mit freiem Fuß-/Kopfblock, festem Untergrund und mehreren Spawnversuchen**
+- [x] **Token-Erkennung über alle drei Dimensionen statt nur Overworld**
+- [x] **Konfigurierbarer Token-TaxBonus pro besiegtem Token**
 - [x] Tagessteuer nur bei mindestens einem online Teammitglied
 - [x] Atomare Steuerbuchung, Retry-Logik und persistente Steuerstatistik
 - [x] Händler, Soldatenhändler und Verzauberungshändler
@@ -54,6 +59,35 @@
 - [x] **Early-Execution-sicheres Laden des persistenten Minenspeichers**
 - [x] **Alte doppelte Minefield-Kernimplementierung entfernt; nur noch die aktive Kernlogik und UI bleiben im Modul**
 
+## 👹 Monster-Token-System
+
+Das Token-System ist jetzt als persistente Runde umgesetzt:
+
+- `/siedler:token` startet bzw. erweitert eine Token-Runde.
+- Maximal 4 Token-Mobs können gleichzeitig aktiv sein.
+- Token-Spawns werden auf einen sicheren freien Platz mit festem Untergrund geprüft.
+- Spawnradius und Mindestabstand sind konfigurierbar; ungültige Kombinationen werden intern begrenzt.
+- Aktive Tokens werden in Overworld, Nether und End berücksichtigt.
+- Besiegt ein Spieler einen Token, erhält sein Team standardmäßig **+1 Emerald permanenten täglichen TaxBonus**.
+- Die Teamzuordnung basiert auf der persistenten Spieler-ID.
+- Wenn der letzte aktive Token besiegt wurde, wird `allTokenDied` persistent auf `true` gesetzt und normale Monster werden in allen Dimensionen entfernt.
+- Solange die Runde abgeschlossen ist, werden neu gespawnte normale Monster durch das bestehende Monster-System entfernt.
+- `/siedler:token` setzt den Rundenstatus beim nächsten Token automatisch wieder auf aktiv.
+- Der TaxBonus bleibt mit dem bestehenden Tax-System dauerhaft gespeichert und wird durch dessen vorhandene Obergrenze begrenzt.
+
+## 👹 Pillager-Squads / Belagerungen
+
+- [x] Pillager-Squads aus Pillagern, optional Vindicators/Ravager und Captain
+- [x] Pillager-Squad-Spawn wird niemals innerhalb eines Claims ausgeführt
+- [x] Mehrfachsuche nach einem sicheren Spawnpunkt außerhalb aller Claims
+- [x] Jeder einzelne Formationsoffset wird vor dem Entity-Spawn nochmals geprüft
+- [x] Kein unsicherer Fallback: ohne sicheren Spawnpunkt wird der komplette Squad verworfen
+- [x] Belagerungsziele werden nur ausgewählt, wenn ein Mitglied des Zielteams online im Claim steht
+- [x] Leere Claims werden bei der Belagerungszielsuche übersprungen
+- [x] Belagerungs-Squads bleiben im Staging, solange kein Verteidiger im Ziel-Claim steht
+- [x] Wird der Claim während des Angriffs leer, erfolgt sofortiger Wechsel auf Retreat
+- [x] Retreat-Squads werden nach dem konfigurierten Retreat-Zeitraum entfernt
+
 ## 💣 Minenfeld-UI
 
 Mit `/siedler:mines` öffnet sich eine grafische Verwaltung. Die UI bietet Einzelmine-Aktionen, Gruppenverwaltung, Auslösemodi sowie Mine-Liste und Status. Die UI verwendet die bestehenden Minefield-Befehle, sodass die vorhandenen Team- und Berechtigungsregeln erhalten bleiben.
@@ -83,19 +117,6 @@ Scharfe Minen prüfen zusätzlich zur Spielerauslösung nahe Entities. Normale B
 ```
 
 `mine_group_create` nimmt alle kontrollierbaren Minen des Spielers im angegebenen Radius auf und ordnet sie der Gruppe zu. Teammitglieder können nur die Minen ihres Teams verwalten; Game Directors dürfen alle Minen verwalten.
-
-## 👹 Pillager-Squads / Belagerungen
-
-- [x] Pillager-Squads aus Pillagern, optional Vindicators/Ravager und Captain
-- [x] Pillager-Squad-Spawn wird niemals innerhalb eines Claims ausgeführt
-- [x] Mehrfachsuche nach einem sicheren Spawnpunkt außerhalb aller Claims
-- [x] Jeder einzelne Formationsoffset wird vor dem Entity-Spawn nochmals geprüft
-- [x] Kein unsicherer Fallback: ohne sicheren Spawnpunkt wird der komplette Squad verworfen
-- [x] Belagerungsziele werden nur ausgewählt, wenn ein Mitglied des Zielteams online im Claim steht
-- [x] Leere Claims werden bei der Belagerungszielsuche übersprungen
-- [x] Belagerungs-Squads bleiben im Staging, solange kein Verteidiger im Ziel-Claim steht
-- [x] Wird der Claim während des Angriffs leer, erfolgt sofortiger Wechsel auf Retreat
-- [x] Retreat-Squads werden nach dem konfigurierten Retreat-Zeitraum entfernt
 
 ## 🎯 Nächster Schwerpunkt
 
