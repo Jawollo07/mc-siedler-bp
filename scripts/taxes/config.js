@@ -1,11 +1,11 @@
 /**
- * Configuration for the persistent monster-token TaxBonus.
+ * Configuration for the persistent TaxBonus.
  *
  * TaxBonus is a permanent daily addition to the team's normal tax.
- * It is increased exclusively by defeating monster tokens.
+ * It can be increased by defeating monster tokens and capturing outposts.
  */
 export const TAX_BONUS_CONFIG = Object.freeze({
-    /** Base daily tax per villager, including the requested extra Emerald. */
+    /** Base daily tax per villager. */
     VILLAGER_REWARD: 2,
 
     /** Maximum permanent daily bonus per team. */
@@ -15,7 +15,10 @@ export const TAX_BONUS_CONFIG = Object.freeze({
     MAX_DAILY_PAYOUT: 10000,
 
     /** Every defeated monster token increases the daily tax by 1 Emerald. */
-    TOKEN_REWARD: 1
+    TOKEN_REWARD: 1,
+
+    /** Every successfully captured outpost increases the daily tax by 1 Emerald. */
+    OUTPOST_REWARD: 1
 });
 
 export function normalizeTaxBonus(value) {
@@ -25,7 +28,11 @@ export function normalizeTaxBonus(value) {
     return Math.max(0, Math.min(TAX_BONUS_CONFIG.MAX_BONUS, Math.floor(number)));
 }
 
-export function addTokenTaxBonus(teamData, amount = TAX_BONUS_CONFIG.TOKEN_REWARD) {
+/**
+ * Adds a permanent daily TaxBonus to a team.
+ * Kept as the shared implementation for all TaxBonus sources.
+ */
+export function addTaxBonus(teamData, amount = 1) {
     if (!teamData || typeof teamData !== "object") return 0;
 
     const current = normalizeTaxBonus(teamData.taxBonus);
@@ -34,6 +41,11 @@ export function addTokenTaxBonus(teamData, amount = TAX_BONUS_CONFIG.TOKEN_REWAR
 
     teamData.taxBonus = next;
     return next;
+}
+
+/** Backwards-compatible token helper. */
+export function addTokenTaxBonus(teamData, amount = TAX_BONUS_CONFIG.TOKEN_REWARD) {
+    return addTaxBonus(teamData, amount);
 }
 
 export function calculateTax(villagerCount, taxBonus) {
