@@ -9,7 +9,7 @@
 
 ➡️ **[USER_GUIDE.md – Commands, Systeme und Funktionsweise](USER_GUIDE.md)**
 
-Dort findest du eine vollständige, spielerorientierte Übersicht der aktuell implementierten Befehle und Systeme.
+Dort findest du eine spielerorientierte Übersicht der aktuell implementierten Befehle und Systeme.
 
 ## 📖 Systeme
 
@@ -23,7 +23,7 @@ Dort findest du eine vollständige, spielerorientierte Übersicht der aktuell im
 - Anti-AFK und zentralisiertes Logging
 - Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik
 - Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
-- **Verbessertes Monster-Token-System mit Token-Runden, sicherem Spawn, Team-TaxBonus und persistentem Rundenstatus**
+- **Persistenter TaxBonus durch Monster-Tokens und eroberte Outposts**
 - **Minenfeld mit robuster Platzierung, verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen, Monster-Auslösung und Verwaltungs-UI**
 
 ## 👹 Monster-Token-System
@@ -32,41 +32,64 @@ Monster-Tokens sind besondere Monster, deren Besiegen einen **permanenten TaxBon
 
 ```text
 /siedler:token
+/siedler:token_auto
 ```
 
-Der Befehl startet bei Bedarf eine neue Token-Runde und spawnt einen Token-Mob in sicherer Entfernung zum Spieler.
+`/siedler:token` startet bzw. erweitert eine Token-Runde. `/siedler:token_auto` schaltet das automatische Spawning an bzw. aus.
 
 ### Token-Regeln
 
-- Pro Token-Mob gibt es standardmäßig **+1 Emerald permanenten TaxBonus pro Tag** für das Team des Spielers, der den Token besiegt.
+- Pro besiegtem Token-Mob gibt es standardmäßig **+1 Emerald permanenten TaxBonus pro Tag** für das Team des Spielers, der den Token besiegt.
 - Die Teamzuordnung verwendet die **persistente Spieler-ID**, nicht den Spielernamen.
 - Der Bonus wird sofort gespeichert und bleibt über Serverneustarts erhalten.
 - Ein Team kann den konfigurierten maximalen TaxBonus nicht überschreiten.
 - Es können maximal **4 Token-Mobs gleichzeitig** aktiv sein.
 - Token-Mobs werden über den Tag `token_monster` eindeutig erkannt.
-- Token werden nicht einfach in Wasser, Lava oder belegte Blöcke gesetzt; der Spawn sucht einen freien Platz mit geeignetem Untergrund.
 - Sobald alle aktiven Token-Mobs besiegt wurden, wird die Token-Runde als abgeschlossen gespeichert.
-- Nach Abschluss werden vorhandene normale Monster entfernt und neue normale Monster-Spawns blockiert.
-- Mit `/siedler:token` beginnt die nächste Runde wieder; der gespeicherte Abschlussstatus wird dabei zurückgesetzt.
-- Der Token-Rundenstatus wird über eine Dynamic Property gespeichert, sodass er einen Serverneustart übersteht.
+
+## 🏰 Outpost-Eroberung
+
+Registrierte Outposts können von Teams **erobert und dauerhaft kontrolliert** werden.
+
+```text
+/siedler:outpost_register
+```
+
+Der Befehl registriert den aktuellen Standort als eroberbaren Outpost. Die Eroberung funktioniert anschließend über die Anwesenheit von Teammitgliedern im Radius.
+
+### Eroberungsregeln
+
+- Eroberungsradius: **12 Blöcke**.
+- Ein Team muss den Outpost **10 Sekunden** ununterbrochen halten.
+- Sind mehrere Teams gleichzeitig im Radius, ist der Outpost **umkämpft** und der Fortschritt wird zurückgesetzt.
+- Der Besitzer wird persistent gespeichert und überlebt Serverneustarts.
+- Wird ein fremder Outpost erobert, wechselt der Besitzer zum neuen Team.
+- **Jede erfolgreiche Eroberung gewährt dem erobernden Team standardmäßig +1 Emerald permanenten täglichen TaxBonus.**
+- Die Outpost-Belohnung verwendet dieselbe zentrale TaxBonus-Logik und dieselbe Obergrenze wie der Token-Bonus.
+- Der TaxBonus wird direkt im Team gespeichert und vom normalen täglichen Steuersystem berücksichtigt.
 
 ### Beispiel
 
-Hat Team Blau 5 Dorfbewohner und bereits einen Token besiegt:
+Team Blau hat 5 Dorfbewohner und bereits einen Token sowie einen Outpost besiegt/erobert:
 
 ```text
 5 Dorfbewohner × 2 Emeralds = 10 Emeralds
-+ 1 Emerald permanenter Token-Bonus
-= 11 Emeralds Tagessteuer
++ 1 Emerald Token-TaxBonus
++ 1 Emerald Outpost-TaxBonus
+= 12 Emeralds Tagessteuer
 ```
 
-Besiegt später ein Spieler aus Team Blau einen weiteren Token, steigt der permanente Bonus auf `+2 Emeralds/Tag`.
+Die Belohnung ist **permanent pro Tag** und wird nicht nur einmalig ausgezahlt.
 
-### Konfiguration
+### Gemeinsame TaxBonus-Konfiguration
 
-Das Token-System wird zentral in `scripts/monster/config.js` konfiguriert. Dort lassen sich unter anderem Token-Mob, Name, maximale Anzahl, Spawnradius, Mindestabstand, Spawnversuche und TaxBonus pro Token festlegen.
+Die zentrale Konfiguration liegt in `scripts/taxes/config.js`:
 
-Die eigentliche Token-Logik befindet sich in `scripts/monster/token.js` und ist über den zentralen Loader eingebunden.
+- `TOKEN_REWARD` = Bonus pro besiegtem Token
+- `OUTPOST_REWARD` = Bonus pro erfolgreicher Outpost-Eroberung
+- `MAX_BONUS` = maximale permanente Bonus-Summe pro Team
+- `VILLAGER_REWARD` = Grundsteuer pro Dorfbewohner
+- `MAX_DAILY_PAYOUT` = maximale Tagesauszahlung
 
 ## 💣 Minenfeld
 
@@ -77,19 +100,13 @@ Das komplette Minenfeld-System liegt zentral unter `scripts/minefield/index_v2.j
 - Die Platzierung wird auf einen festen Untergrund und einen **freien Block darüber** geprüft; Flüssigkeiten und ungeeignete Positionen werden abgelehnt.
 - Doppelplatzierungen bzw. zu dicht nebeneinander liegende Minen werden verhindert.
 - Das Item wird **erst nach erfolgreicher Validierung** verbraucht.
-- Eine kurze Platzierungs-Sperre verhindert Doppel-Auslösungen durch mehrfach eintreffende Item-Use-Events.
 - Nach erfolgreicher Platzierung werden Position und Team direkt bestätigt; die Mine wird nach 1 Sekunde automatisch scharf.
-- Jede Mine speichert persistent **Mine-ID, Besitzer-ID, Besitzer-Team, Auslösemodus und optional eine Gruppe**.
 - Eigene und verbündete Teams lösen Team-Minen nicht aus.
-- Modus `0` = nur Feinde, `1` = Feinde + Neutral, `2` = alle Spieler.
-- **Monster lösen scharfe Minen unabhängig vom Spieler-Auslösemodus immer aus.** Das umfasst normale Bedrock-Monster über die `monster`-Familie sowie das Custom-Entity `siedler:monster`.
+- **Monster lösen scharfe Minen unabhängig vom Spieler-Auslösemodus immer aus.**
 - Nach dem Betreten gibt es eine Warnung; nach 1 Sekunde explodiert die Mine.
 - Explosionen zerstören **keine Blöcke**, dürfen aber Feuer erzeugen.
-- Scharfe Minen in ca. 3,25 Blöcken Entfernung können eine Kettenreaktion auslösen.
-- Nach der Explosion wird die Mine nach 15 Sekunden automatisch wieder scharf.
-- Der persistente Minenspeicher wird **erst nach der Bedrock-Early-Execution-Phase** gelesen, damit `world.getDynamicProperty()` beim Modulstart keinen Early-Execution-Fehler verursacht.
-- Das Minen-Item verwendet die aktuelle Bedrock-Icon-Kurzschreibweise (`"minecraft:icon": "tnt"`) und vermeidet damit veraltete Icon-Felder.
-- Im Minefield-Ordner gibt es **keine alte doppelte Implementierung mehr**: `index_v2.js` ist die einzige aktive Kernlogik, `ui.js` enthält ausschließlich die grafische Verwaltung.
+- Scharfe Minen können eine Kettenreaktion auslösen.
+- Nach der Explosion wird die Mine automatisch wieder scharf.
 
 ### 🎛️ Minen-UI
 
@@ -99,40 +116,4 @@ Mit
 /siedler:mines
 ```
 
-öffnet sich die grafische **Minenfeld-Verwaltung**. Dort können Einzelminen und Minengruppen ohne manuelle Befehle verwaltet werden.
-
-Die UI bietet:
-
-- Einzelmine scharf/entschärfen/entfernen
-- alle eigenen Team-Minen der Dimension löschen
-- Mine-Liste und Status
-- Minengruppe erstellen und Radius festlegen
-- vorhandene Gruppen anzeigen
-- Gruppe scharf/entschärfen/entfernen
-- Gruppe manuell zünden
-- Gruppen-Auslösemodus einstellen
-- Auslösemodus einer einzelnen Mine einstellen
-
-### 💣 Minengruppen
-
-Mehrere eigene Team-Minen können zu einer **persistenten Gruppe** zusammengefasst werden. Eine Gruppenzündung startet die Warnung und Explosion für alle Gruppenmitglieder praktisch gleichzeitig. Wird eine Gruppenmine von einem Gegner betreten, wird ebenfalls die gesamte Gruppe synchron gezündet.
-
-```text
-/siedler:mine_group_create <gruppe> <radius>
-/siedler:mine_group_list
-/siedler:mine_group_arm <gruppe>
-/siedler:mine_group_disarm <gruppe>
-/siedler:mine_group_remove <gruppe>
-/siedler:mine_group_mode <gruppe> <0-2>
-/siedler:mine_group_detonate <gruppe>
-```
-
-Beispiel:
-
-```text
-/siedler:mine_group_create mauer 12
-/siedler:mine_group_arm mauer
-/siedler:mine_group_mode mauer 0
-```
-
-Damit kann z. B. ein komplettes Minenfeld entlang einer Mauer als Einheit geschaltet werden. Die Gruppen-Zuordnung bleibt über Neustarts erhalten.
+öffnet sich die grafische **Minenfeld-Verwaltung**.
