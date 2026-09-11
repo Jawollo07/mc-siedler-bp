@@ -22,9 +22,9 @@ export function showTaxStatsForm(teamNameOrPlayer) {
         .title(`Steuern: ${teamName}`)
         .body(
             `§7Aktuelle Tagessteuer\n` +
-            `§f${tax.total} Emeralds §7(${villagers} Dorfbewohner + ${bonus} Bonus)\n\n` +
-            `§7Steuer pro Dorfbewohner: §e2 Emeralds/Tag\n` +
-            `§7Permanenter Token-Bonus: §e+${bonus} Emeralds/Tag\n` +
+            `§f${tax.total} Emeralds §7(${villagers} Dorfbewohner × ${bonus} Emeralds)\n\n` +
+            `§7Steuer pro Dorfbewohner: §e${bonus} Emeralds/Tag\n` +
+            `§7TaxBonus: §e${bonus}×\n` +
             `§7Bisher eingezahlt: §e${teamData.totalTaxes ?? 0} Emeralds\n` +
             `§7Letzte Zahlung: §e${teamData.lastTaxAmount ?? 0} Emeralds\n` +
             `§7Letzter Zahlungstag: §e${teamData.lastPaidDay ?? "Nie"}\n` +
@@ -33,7 +33,7 @@ export function showTaxStatsForm(teamNameOrPlayer) {
         )
         .button(`Tagessteuer: ${tax.total} Emeralds`)
         .button(`Dorfbewohner: ${villagers}`)
-        .button(`Token-Bonus: +${bonus} Emeralds/Tag`)
+        .button(`TaxBonus: ${bonus}×`)
         .button(`Gesamt eingezahlt: ${teamData.totalTaxes ?? 0} Emeralds`)
         .button(`Steuerkiste: ${teamData.taxChest ? "Konfiguriert" : "Nicht vorhanden"}`);
 }
