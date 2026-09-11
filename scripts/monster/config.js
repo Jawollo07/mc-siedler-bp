@@ -43,22 +43,32 @@ export const DEFAULT_CONFIG = {
         interval: 100
     },
     token: {
+        // Wird true, sobald alle aktiven Token-Mobs der Runde besiegt wurden.
         allTokenDied: false,
         mobType: "minecraft:zombie",
         mobTag: "token_monster",
         mobName: "§6Token-Mob",
 
+        // Anzahl gleichzeitig aktiver Token-Mobs.
         maxMobs: 4,
 
+        // Spawn-Suche relativ zum Spieler. minDistance darf nicht größer als radius sein.
         spawn: {
-            radius: 1,
-            minDistance: 2,
-            maxAttempts: 20
+            radius: 8,
+            minDistance: 3,
+            maxAttempts: 30,
+            requireSolidFloor: true,
+            requireAirAbove: true
+        },
+
+        // Belohnung pro tatsächlich von einem Spieler besiegtem Token.
+        reward: {
+            taxBonus: 1
         },
 
         command: {
             name: "siedler:token",
-            description: "Spawnt ein Monster-Token."
+            description: "Startet eine Token-Runde und spawnt ein Monster-Token."
         }
     },
     // Gemeinsame Pillager-/Belagerungs-Konfiguration
