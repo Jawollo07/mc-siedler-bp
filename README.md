@@ -23,7 +23,50 @@ Dort findest du eine vollständige, spielerorientierte Übersicht der aktuell im
 - Anti-AFK und zentralisiertes Logging
 - Pillager-Squads mit Claim-sicherem Spawn und spielerabhängiger Belagerungslogik
 - Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
+- **Verbessertes Monster-Token-System mit Token-Runden, sicherem Spawn, Team-TaxBonus und persistentem Rundenstatus**
 - **Minenfeld mit robuster Platzierung, verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen, Monster-Auslösung und Verwaltungs-UI**
+
+## 👹 Monster-Token-System
+
+Monster-Tokens sind besondere Monster, deren Besiegen einen **permanenten TaxBonus für das Team des Killers** gewährt.
+
+```text
+/siedler:token
+```
+
+Der Befehl startet bei Bedarf eine neue Token-Runde und spawnt einen Token-Mob in sicherer Entfernung zum Spieler.
+
+### Token-Regeln
+
+- Pro Token-Mob gibt es standardmäßig **+1 Emerald permanenten TaxBonus pro Tag** für das Team des Spielers, der den Token besiegt.
+- Die Teamzuordnung verwendet die **persistente Spieler-ID**, nicht den Spielernamen.
+- Der Bonus wird sofort gespeichert und bleibt über Serverneustarts erhalten.
+- Ein Team kann den konfigurierten maximalen TaxBonus nicht überschreiten.
+- Es können maximal **4 Token-Mobs gleichzeitig** aktiv sein.
+- Token-Mobs werden über den Tag `token_monster` eindeutig erkannt.
+- Token werden nicht einfach in Wasser, Lava oder belegte Blöcke gesetzt; der Spawn sucht einen freien Platz mit geeignetem Untergrund.
+- Sobald alle aktiven Token-Mobs besiegt wurden, wird die Token-Runde als abgeschlossen gespeichert.
+- Nach Abschluss werden vorhandene normale Monster entfernt und neue normale Monster-Spawns blockiert.
+- Mit `/siedler:token` beginnt die nächste Runde wieder; der gespeicherte Abschlussstatus wird dabei zurückgesetzt.
+- Der Token-Rundenstatus wird über eine Dynamic Property gespeichert, sodass er einen Serverneustart übersteht.
+
+### Beispiel
+
+Hat Team Blau 5 Dorfbewohner und bereits einen Token besiegt:
+
+```text
+5 Dorfbewohner × 2 Emeralds = 10 Emeralds
++ 1 Emerald permanenter Token-Bonus
+= 11 Emeralds Tagessteuer
+```
+
+Besiegt später ein Spieler aus Team Blau einen weiteren Token, steigt der permanente Bonus auf `+2 Emeralds/Tag`.
+
+### Konfiguration
+
+Das Token-System wird zentral in `scripts/monster/config.js` konfiguriert. Dort lassen sich unter anderem Token-Mob, Name, maximale Anzahl, Spawnradius, Mindestabstand, Spawnversuche und TaxBonus pro Token festlegen.
+
+Die eigentliche Token-Logik befindet sich in `scripts/monster/token.js` und ist über den zentralen Loader eingebunden.
 
 ## 💣 Minenfeld
 
