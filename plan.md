@@ -11,6 +11,7 @@
 - [x] Team-Eliminierung mit konfigurierbarem Eliminationsblock, Broadcast und permanentem Spectator
 - [x] Claim-Block-Recovery und Item-Rückgabe
 - [x] Permanenter Monster-Token-TaxBonus
+- [x] **TaxBonus als Multiplikator pro Dorfbewohner statt als fixer Zusatzbetrag**
 - [x] **Outpost-Eroberung mit persistentem Besitzer und Teamprüfung**
 - [x] **Outpost-Eroberungen als zweite permanente TaxBonus-Quelle**
 - [x] **Gemeinsame zentrale TaxBonus-Logik für Token und Outposts**
@@ -50,12 +51,24 @@
 - [x] Monster-Auslösung für normale Bedrock-Monster und `siedler:monster`
 - [x] Persistente Minengruppen und Gruppenzündung
 
+## 💰 Steuersystem
+
+- `taxBonus=1` bedeutet **1 Emerald pro Dorfbewohner und Tag**.
+- `taxBonus=2` bedeutet **2 Emeralds pro Dorfbewohner und Tag**.
+- `taxBonus=5` bedeutet **5 Emeralds pro Dorfbewohner und Tag**.
+- Die Formel ist: **Tagessteuer = Dorfbewohner × taxBonus**.
+- Neue bzw. alte Teams ohne gültigen TaxBonus werden logisch mit dem Basiswert `1` behandelt.
+- Monster-Tokens und Outpost-Eroberungen erhöhen den permanenten Multiplikator standardmäßig jeweils um `+1`.
+- Die gemeinsame Obergrenze `MAX_BONUS` gilt weiterhin für alle TaxBonus-Quellen.
+- Die Tagesabrechnung erfolgt nur bei mindestens einem online Teammitglied.
+- Steuerkisten werden atomar beschrieben; bei fehlgeschlagener Zahlung erfolgt ein späterer Retry.
+
 ## 👹 Monster-Token-System
 
 - `/siedler:token` startet bzw. erweitert eine Token-Runde.
 - `/siedler:token_auto` schaltet das automatische Token-Spawning um.
 - Maximal 4 Token-Mobs können gleichzeitig aktiv sein.
-- Besiegt ein Spieler einen Token, erhält sein Team standardmäßig **+1 Emerald permanenten täglichen TaxBonus**.
+- Besiegt ein Spieler einen Token, erhöht sich der TaxBonus seines Teams standardmäßig um **+1**.
 - Der Bonus verwendet die gemeinsame zentrale TaxBonus-Konfiguration und die Teamzuordnung über Spieler-ID.
 
 ## 🏰 Outpost-Eroberung
@@ -64,7 +77,7 @@
 - Ein Team hält den Outpost 10 Sekunden innerhalb eines Radius von 12 Blöcken.
 - Mehrere Teams im Radius setzen den Eroberungsfortschritt zurück und markieren den Outpost als umkämpft.
 - Der Besitzer wird persistent gespeichert.
-- Eine erfolgreiche Eroberung erhöht den permanenten täglichen TaxBonus des neuen Besitzerteams standardmäßig um **+1 Emerald**.
+- Eine erfolgreiche Eroberung erhöht den permanenten TaxBonus des neuen Besitzerteams standardmäßig um **+1**.
 - Auch bei einer Rückeroberung wird der Bonus vergeben, solange die `MAX_BONUS`-Obergrenze noch nicht erreicht ist.
 - Die Belohnung läuft über `addTaxBonus()` und damit über dieselbe zentrale Logik wie der Token-TaxBonus.
 
