@@ -60,8 +60,22 @@ if (playerInteractWithBlock && typeof playerInteractWithBlock.subscribe === "fun
     playerInteractWithBlock.subscribe((event) => { const claim = getClaimAt(event.block.location); if (!claim || hasAccess(event.player, claim)) return; const id = event.block.typeId; const protectedBlock = event.block.getComponent("inventory") || id.includes("door") || id.includes("gate") || id.includes("button") || id.includes("lever") || id.includes("trapdoor") || id.includes("bed") || id.includes("respawn_anchor") || id.includes("enchanting_table") || id.includes("anvil") || id.includes("crafting_table") || id.includes("furnace") || id.includes("blast_furnace") || id.includes("smoker") || id.includes("barrel") || id.includes("shulker_box") || id.includes("chest"); if (protectedBlock) { event.cancel = true; deny(event.player, "§cDieses Grundstück ist geschützt!"); } });
 } else logger.warn("playerInteractWithBlock-API nicht verfügbar; Interaktionsschutz deaktiviert.");
 
+// TNT is intentionally allowed inside claims. Other explosions remain blocked.
 const explosion = beforeEvents?.explosion;
-if (explosion && typeof explosion.subscribe === "function") explosion.subscribe((event) => { let impactedBlocks; try { impactedBlocks = event.getImpactedBlocks(); } catch { event.cancel = true; return; } for (const block of impactedBlocks) if (getClaimAt(block.location)) { event.cancel = true; return; } });
+if (explosion && typeof explosion.subscribe === "function") explosion.subscribe((event) => {
+    let impactedBlocks;
+    try { impactedBlocks = event.getImpactedBlocks(); } catch { event.cancel = true; return; }
+
+    const sourceTypeId = event.source?.typeId ?? null;
+    const isTntExplosion = sourceTypeId === "minecraft:tnt";
+
+    if (isTntExplosion) return;
+
+    for (const block of impactedBlocks) if (getClaimAt(block.location)) {
+        event.cancel = true;
+        return;
+    }
+});
 else logger.warn("explosion-API nicht verfügbar; Explosionsschutz deaktiviert.");
 
 system.runInterval(() => {
@@ -76,4 +90,4 @@ system.runInterval(() => {
     }
 }, 20);
 
-logger.success("Claim-Protection geladen (inkl. Block-Recovery und Item-Rückgabe)");
+logger.success("Claim-Protection geladen (inkl. Block-Recovery, Item-Rückgabe und erlaubten TNT-Explosionen)");
