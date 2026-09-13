@@ -12,6 +12,11 @@
       "minecraft:icon": "tnt",
       "minecraft:display_name": {
         "value": "§cMinenladung"
+      },
+      "minecraft:use_modifiers": {
+        "use_duration": 0.05,
+        "movement_modifier": 1.0,
+        "start_using": "always"
       }
     }
   }
