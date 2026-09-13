@@ -12,7 +12,7 @@ const allowedBreaks = new Set();
 allowedBreaks.add("minecraft:tnt");
 allowedBreaks.add("minecraft:glass");
 allowedBreaks.add("minecraft:tinted_glass");
-
+allowedBreaks.add("minecraft:beacon");
 function isGlassBlock(typeId) {
     return typeof typeId === "string" && typeId.endsWith("_stained_glass");
 }
