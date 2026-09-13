@@ -49,9 +49,7 @@ function save(){
 
 function isEmptyBlock(block){
     if(!block)return false;
-    try{
-        if(block.isAir)return true;
-    }catch{}
+    try{if(block.isAir)return true;}catch{}
     return block.typeId==="minecraft:air"||block.typeId==="minecraft:cave_air"||block.typeId==="minecraft:void_air";
 }
 function isLiquidBlock(block){
@@ -60,11 +58,9 @@ function isLiquidBlock(block){
     return block.typeId==="minecraft:water"||block.typeId==="minecraft:flowing_water"||block.typeId==="minecraft:lava"||block.typeId==="minecraft:flowing_lava";
 }
 function getPlacementTarget(block,face){
-    if(!block||!face)return null;
-    // Mines are ground charges. Only the top face is accepted so they never float
-    // against walls or become hidden inside another block.
-    const faceName=String(face).toLowerCase();
-    if(faceName!=="up"&&faceName!=="direction.up"&&faceName!=="1")return null;
+    if(!block)return null;
+    const faceName=face===undefined||face===null?"up":String(face).toLowerCase();
+    if(face!==undefined&&face!==null&&faceName!=="up"&&faceName!=="direction.up"&&faceName!=="blockface.up"&&faceName!=="1")return null;
     try{return block.dimension.getBlock({x:block.location.x,y:block.location.y+1,z:block.location.z})??null;}catch{return null;}
 }
 function canPlaceAt(player,base,target){
@@ -85,12 +81,10 @@ function placeMine(p,base,face){
     const last=placementCooldown.get(p.id);
     if(last!==undefined&&now-last<PLACEMENT_COOLDOWN_TICKS)return;
     placementCooldown.set(p.id,now);
-
     const target=getPlacementTarget(base,face);
     const error=canPlaceAt(p,base,target);
-    if(error){p.sendMessage(error);p.playSound("note.bass",{volume:.45,pitch:.7});return;}
+    if(error){p.sendMessage(error);try{p.playSound("note.bass",{volume:.45,pitch:.7});}catch{}return;}
     if(!consumeMine(p)){p.sendMessage("§c[Mine] Die Minenladung befindet sich nicht mehr im ausgewählten Slot.");return;}
-
     const l={x:Math.floor(base.location.x),y:Math.floor(base.location.y)+1,z:Math.floor(base.location.z)};
     const team=getPlayerTeam(p);
     mines.push({id:createMineId(),x:l.x+.5,y:l.y+.05,z:l.z+.5,dimension:p.dimension.id,ownerId:p.id??null,ownerTeam:team,group:null,triggerMode:0,armed:false,armAt:system.currentTick+ARM_DELAY_TICKS,rearmAt:0,detonating:false});
@@ -158,11 +152,16 @@ function scan(){
 }
 
 try{
-    // Current @minecraft/server API: this event gives us the exact block and face
-    // the player used. It is much more reliable for a custom mine item than a
-    // second raycast from the player's camera.
+    // Register both supported interaction paths. Custom items can expose use via
+    // itemStartUseOn or playerInteractWithBlock depending on the Bedrock runtime.
+    // The per-player cooldown prevents duplicate placement if both fire.
     world.afterEvents.itemStartUseOn.subscribe(e=>{
         const p=e.source;
+        if(p?.typeId!=="minecraft:player"||e.itemStack?.typeId!==ITEM_ID)return;
+        placeMine(p,e.block,e.blockFace);
+    });
+    world.afterEvents.playerInteractWithBlock.subscribe(e=>{
+        const p=e.player;
         if(p?.typeId!=="minecraft:player"||e.itemStack?.typeId!==ITEM_ID)return;
         placeMine(p,e.block,e.blockFace);
     });
