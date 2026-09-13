@@ -61,6 +61,7 @@ Teams bilden die Grundlage des Siedler-Systems. Spieler werden anhand ihrer pers
 | `/siedler:team_add <spieler> <team>` | Spieler hinzufügen | Spielleitung |
 | `/siedler:team_remove <spieler> <team>` | Spieler entfernen | Spielleitung |
 | `/siedler:team_delete <team>` | Team löschen | Spielleitung |
+| `/siedler:team_ausscheiden <team>` | Team vollständig ausscheiden und Mitglieder in den Spectator-Modus setzen | Spielleitung |
 | `/siedler:team_ausscheidung_aufheben <team>` | Ausscheidung eines Teams aufheben und betroffene Spieler freigeben | Spielleitung |
 | `/siedler:team_list` | Teams und Mitglieder anzeigen | Spielleitung |
 

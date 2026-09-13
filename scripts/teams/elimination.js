@@ -70,6 +70,37 @@ function markTeamEliminated(teamName) {
     return true;
 }
 
+export function eliminateTeam(teamName) {
+    const teams = getTeams();
+    const team = teams[teamName];
+    if (!team) return { success: false, reason: "unknown_team" };
+
+    const teamPlayerIds = Array.isArray(team.players) ? team.players : [];
+    const eliminatedTeams = getEliminatedTeams();
+    if (!eliminatedTeams.includes(teamName)) eliminatedTeams.push(teamName);
+
+    const eliminatedPlayers = [
+        ...getEliminatedPlayers(),
+        ...teamPlayerIds
+    ];
+
+    if (!writeStringArray(ELIMINATED_TEAMS_PROPERTY, eliminatedTeams)
+        || !writeStringArray(ELIMINATED_PLAYERS_PROPERTY, eliminatedPlayers)) {
+        return { success: false, reason: "storage_error" };
+    }
+
+    const color = team.color || "§f";
+    world.sendMessage(`§c§l☠ TEAM AUS! §r${color}${teamName}§r §cist ausgeschieden!`);
+
+    for (const player of world.getPlayers()) {
+        if (!teamPlayerIds.includes(player.id)) continue;
+        setSpectator(player, `Team ${teamName} ausgeschieden`);
+    }
+
+    logger.warn(`Team vollständig ausgeschieden: ${teamName}`);
+    return { success: true };
+}
+
 export function clearTeamElimination(teamName) {
     const teams = getTeams();
     const team = teams[teamName];
@@ -233,6 +264,37 @@ export function registerEliminationSystem() {
     system.runInterval(enforcePermanentSpectator, 20);
 
     system.beforeEvents.startup.subscribe((event) => {
+        event.customCommandRegistry.registerCommand({
+            name: "siedler:team_ausscheiden",
+            description: "Scheidet ein Team vollständig aus.",
+            permissionLevel: CommandPermissionLevel.GameDirectors,
+            cheatsRequired: false,
+            mandatoryParameters: [
+                { type: CustomCommandParamType.String, name: "team" }
+            ]
+        }, (origin, team) => {
+            const player = origin?.sourceEntity;
+            if (player?.typeId !== "minecraft:player") {
+                return { status: CustomCommandStatus.Failure };
+            }
+
+            const teamName = String(team ?? "").trim();
+            system.run(() => {
+                const result = eliminateTeam(teamName);
+
+                if (!result.success) {
+                    player.sendMessage(result.reason === "unknown_team"
+                        ? `§cDas Team "${teamName}" existiert nicht.`
+                        : "§cDas Team konnte nicht ausgeschieden werden.");
+                    return;
+                }
+
+                player.sendMessage(`§aTeam "${teamName}" wurde vollständig ausgeschieden.`);
+            });
+
+            return { status: CustomCommandStatus.Success };
+        });
+
         event.customCommandRegistry.registerCommand({
             name: "siedler:team_ausscheidung_aufheben",
             description: "Hebt die Ausscheidung eines Teams auf.",
