@@ -7,7 +7,7 @@
 
 ## 📖 Enduser-Handbuch
 
-➡️ **[USER_GUIDE.md – Commands, Systeme und Funktionsweise](USER_GUIDE.md)**
+➡️ **[USER_GUIDE.md – Commands, Systeme und Funktionsweise](USER_GUIDE.md)**  
 
 Dort findest du eine spielerorientierte Übersicht der aktuell implementierten Befehle und Systeme.
 
@@ -126,7 +126,7 @@ Der TaxBonus ist **permanent** und erhöht den täglichen Ertrag für jeden Dorf
 Das komplette Minenfeld-System liegt zentral unter `scripts/minefield/index_v2.js`. Das platzierbare Item ist `siedler:mine`.
 
 - `/give @s siedler:mine` gibt eine Minenladung.
-- Die Platzierung verwendet das aktuelle Bedrock-Block-Use-Event und damit den **tatsächlich angeklickten Block inklusive Blockfläche** statt eines separaten Kameraraycasts.
+- Die Platzierung nutzt **zwei aktuelle Bedrock-Interaktionswege** (`itemStartUseOn` und `playerInteractWithBlock`) mit dem tatsächlich angeklickten Block und seiner Blockfläche; der Cooldown verhindert doppelte Platzierung, wenn beide Events auslösen.
 - Für eine Bodenmine wird die **Oberseite eines festen Blocks** verwendet. Dadurch wird die Zielposition zuverlässig bestimmt.
 - Der Zielblock über dem Untergrund muss frei sein; Flüssigkeiten und belegte Positionen werden abgelehnt.
 - Doppelplatzierungen bzw. zu dicht nebeneinander liegende Minen werden verhindert.
