@@ -126,9 +126,11 @@ Der TaxBonus ist **permanent** und erhöht den täglichen Ertrag für jeden Dorf
 Das komplette Minenfeld-System liegt zentral unter `scripts/minefield/index_v2.js`. Das platzierbare Item ist `siedler:mine`.
 
 - `/give @s siedler:mine` gibt eine Minenladung.
-- Mit der Minenladung einen geeigneten Block anvisieren und benutzen, um eine Mine zu platzieren.
-- Die Platzierung wird auf einen festen Untergrund und einen **freien Block darüber** geprüft; Flüssigkeiten und ungeeignete Positionen werden abgelehnt.
+- Die Platzierung verwendet das aktuelle Bedrock-Block-Use-Event und damit den **tatsächlich angeklickten Block inklusive Blockfläche** statt eines separaten Kameraraycasts.
+- Für eine Bodenmine wird die **Oberseite eines festen Blocks** verwendet. Dadurch wird die Zielposition zuverlässig bestimmt.
+- Der Zielblock über dem Untergrund muss frei sein; Flüssigkeiten und belegte Positionen werden abgelehnt.
 - Doppelplatzierungen bzw. zu dicht nebeneinander liegende Minen werden verhindert.
+- Ein kurzer Placement-Cooldown verhindert doppelte Auslösung bei wiederholten Use-Events.
 - Das Item wird **erst nach erfolgreicher Validierung** verbraucht.
 - Nach erfolgreicher Platzierung werden Position und Team direkt bestätigt; die Mine wird nach 1 Sekunde automatisch scharf.
 - Eigene und verbündete Teams lösen Team-Minen nicht aus.
@@ -147,3 +149,5 @@ Mit
 ```
 
 öffnet sich die grafische **Minenfeld-Verwaltung**.
+
+Die UI bietet Einzelminen- und Gruppenverwaltung inklusive Scharf-/Entschärfen, Entfernen, Auslösemodus, Gruppenradius und manueller Gruppenzündung.
