@@ -8,6 +8,8 @@ function deny(player, message) { try { player.sendMessage(message); } catch {} }
 const beforeEvents = world.beforeEvents;
 const recentPlacements = [];
 const recentBreaks = [];
+const allowedBreaks = new Set();
+allowedBreaks.add("minecraft:tnt");
 function queueChange(queue, block, player, returnItem = false) {
     if (!block?.location) return;
     queue.push({ x: Math.floor(block.location.x), y: Math.floor(block.location.y), z: Math.floor(block.location.z), dim: player?.dimension?.id ?? "minecraft:overworld", playerId: player?.id ?? null, blockType: block.typeId ?? "minecraft:air", returnItem, ts: Date.now() });
@@ -30,7 +32,7 @@ function returnPlacedItem(player, block) {
 const playerBreakBlock = beforeEvents?.playerBreakBlock;
 if (playerBreakBlock && typeof playerBreakBlock.subscribe === "function") {
     playerBreakBlock.subscribe((event) => {
-        try { const claim = getClaimAt(event.block.location); if (!claim || hasAccess(event.player, claim)) return; queueChange(recentBreaks, event.block, event.player); event.cancel = true; deny(event.player, "§cDieses Grundstück gehört einem anderen Team! Der Block wurde geschützt."); }
+        try { const claim = getClaimAt(event.block.location); if (!claim || hasAccess(event.player, claim)) return; if (allowedBreaks.has(event.block.typeId)) return; queueChange(recentBreaks, event.block, event.player); event.cancel = true; deny(event.player, "§cDieses Grundstück gehört einem anderen Team! Der Block wurde geschützt."); }
         catch (err) { logger.warn(`Break protection error: ${err}`); try { event.cancel = true; } catch {} }
     });
 } else logger.warn("playerBreakBlock-API nicht verfügbar; After-Event-Recovery wird verwendet.");
