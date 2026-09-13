@@ -45,12 +45,22 @@ for (const candidate of [world.afterEvents?.playerBreakBlock, world.afterEvents?
 
 const playerPlaceBlock = beforeEvents?.playerPlaceBlock;
 if (playerPlaceBlock && typeof playerPlaceBlock.subscribe === "function") {
-    playerPlaceBlock.subscribe((event) => { const claim = getClaimAt(event.block.location); if (!claim || hasAccess(event.player, claim)) return; event.cancel = true; deny(event.player, "§cDu darfst hier nichts bauen! Dein Block bleibt im Inventar."); });
+    playerPlaceBlock.subscribe((event) => {
+        const claim = getClaimAt(event.block.location);
+        if (!claim || hasAccess(event.player, claim)) return;
+
+        // TNT is a special siege block: every player, including enemies,
+        // may place it inside a claim. Normal building remains protected.
+        if (event.block.typeId === "minecraft:tnt") return;
+
+        event.cancel = true;
+        deny(event.player, "§cDu darfst hier nichts bauen! Dein Block bleibt im Inventar.");
+    });
 } else {
     logger.warn("playerPlaceBlock-API nicht verfügbar; After-Event-Fallback für Platzierungen.");
     for (const candidate of [world.afterEvents?.playerPlaceBlock, world.afterEvents?.blockPlace]) {
         if (!candidate || typeof candidate.subscribe !== "function") continue;
-        try { candidate.subscribe((event) => { try { const block = event?.block, player = event?.player ?? event?.playerEntity ?? event?.source ?? null; if (!block?.location) return; const claim = getClaimAt(block.location); if (!claim || (player && hasAccess(player, claim))) return; const returned = player ? returnPlacedItem(player, block) : false; queueChange(recentPlacements, block, player, returned); try { block.setType("minecraft:air"); } catch {} if (player) deny(player, returned ? "§cDieses Grundstück ist geschützt! Der Block wurde entfernt und zurückgegeben." : "§cDieses Grundstück ist geschützt! Platzierung rückgängig gemacht."); } catch (err) { logger.warn(`After-place fallback error: ${err}`); } }); }
+        try { candidate.subscribe((event) => { try { const block = event?.block, player = event?.player ?? event?.playerEntity ?? event?.source ?? null; if (!block?.location) return; const claim = getClaimAt(block.location); if (!claim || (player && hasAccess(player, claim)) || block.typeId === "minecraft:tnt") return; const returned = player ? returnPlacedItem(player, block) : false; queueChange(recentPlacements, block, player, returned); try { block.setType("minecraft:air"); } catch {} if (player) deny(player, returned ? "§cDieses Grundstück ist geschützt! Der Block wurde entfernt und zurückgegeben." : "§cDieses Grundstück ist geschützt! Platzierung rückgängig gemacht."); } catch (err) { logger.warn(`After-place fallback error: ${err}`); } }); }
         catch (err) { logger.warn(`After-place event konnte nicht registriert werden: ${err}`); }
     }
 }
