@@ -39,11 +39,11 @@
 - [x] Pillager-Squads mit Claim-sicherem Spawn und Online-Verteidiger-Prüfung
 - [x] Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
 - [x] Minenfeld-Item `siedler:mine` mit persistenten Minen
-- [x] **Zuverlässige Mine-Platzierung über das aktuelle Bedrock-Block-Use-Event mit exakter Blockfläche**
+- [x] **Zuverlässige Mine-Platzierung über mehrere aktuelle Bedrock-Interaktions-Events mit exakter Blockfläche**
 - [x] **Bodenplatzierung auf der Oberseite eines festen Blocks mit Freiraumprüfung**
 - [x] Flüssigkeits-, Doppelplatzierungs-, Mindestabstands- und Maximalmengen-Prüfung
 - [x] Item-Verbrauch erst nach erfolgreicher Platzierungsvalidierung
-- [x] Placement-Cooldown gegen doppelte Item-Use-Events
+- [x] Placement-Cooldown gegen doppelte Item-Use-/Interaktions-Events
 - [x] Minen-Auslösung mit Warnung/Sound und 1-Sekunden-Verzögerung
 - [x] Kettenreaktion benachbarter scharfer Minen
 - [x] Explosion ohne Blockschaden, aber mit Feuer
@@ -109,6 +109,7 @@
 19. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
 20. API-Kompatibilitätsguards für weitere optionale/versionsabhängige Bedrock-Events prüfen
 21. Minefield-Platzierung mit realen Bedrock-Serverlogs und verschiedenen Untergründen testen
+22. Minefield-Interaktions-Fallback mit `itemStartUseOn` und `playerInteractWithBlock` auf BDS 1.26.x verifizieren
 
 ### Leitprinzip
 
