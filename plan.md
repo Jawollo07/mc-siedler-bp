@@ -2,7 +2,7 @@
 
 > Aktueller Entwicklungsstand des Behavior Packs.
 
-**Stand:** 11.09.2026
+**Stand:** 13.09.2026
 
 ## 📊 Aktueller Stand
 
@@ -39,8 +39,11 @@
 - [x] Pillager-Squads mit Claim-sicherem Spawn und Online-Verteidiger-Prüfung
 - [x] Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
 - [x] Minenfeld-Item `siedler:mine` mit persistenten Minen
-- [x] Robuste Mine-Platzierung mit Untergrund-/Freiraumprüfung
-- [x] Platzierungs-Cooldown gegen doppelte Item-Use-Events
+- [x] **Zuverlässige Mine-Platzierung über das aktuelle Bedrock-Block-Use-Event mit exakter Blockfläche**
+- [x] **Bodenplatzierung auf der Oberseite eines festen Blocks mit Freiraumprüfung**
+- [x] Flüssigkeits-, Doppelplatzierungs-, Mindestabstands- und Maximalmengen-Prüfung
+- [x] Item-Verbrauch erst nach erfolgreicher Platzierungsvalidierung
+- [x] Placement-Cooldown gegen doppelte Item-Use-Events
 - [x] Minen-Auslösung mit Warnung/Sound und 1-Sekunden-Verzögerung
 - [x] Kettenreaktion benachbarter scharfer Minen
 - [x] Explosion ohne Blockschaden, aber mit Feuer
@@ -105,6 +108,7 @@
 18. Optionales Debug-Level für gezielte KI-/UI-Diagnose einsetzen
 19. Logging um strukturierte Fehler-/Kontextdaten für schwer reproduzierbare Probleme erweitern
 20. API-Kompatibilitätsguards für weitere optionale/versionsabhängige Bedrock-Events prüfen
+21. Minefield-Platzierung mit realen Bedrock-Serverlogs und verschiedenen Untergründen testen
 
 ### Leitprinzip
 
