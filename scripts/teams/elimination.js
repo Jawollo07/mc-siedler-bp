@@ -1,4 +1,10 @@
-import { world, system } from "@minecraft/server";
+import {
+    world,
+    system,
+    CommandPermissionLevel,
+    CustomCommandParamType,
+    CustomCommandStatus
+} from "@minecraft/server";
 import { getClaimAt } from "../claims/utils.js";
 import { getTeams } from "./index.js";
 import { createLogger } from "../core/logger.js";
@@ -62,6 +68,35 @@ function markTeamEliminated(teamName) {
     world.sendMessage(`§c§l☠ TEAM AUS! §r${color}${teamName}§r §cist ausgeschieden!`);
     logger.warn(`Team ausgeschieden: ${teamName}`);
     return true;
+}
+
+export function clearTeamElimination(teamName) {
+    const teams = getTeams();
+    const team = teams[teamName];
+    if (!team) return { success: false, reason: "unknown_team" };
+
+    const eliminatedTeams = getEliminatedTeams().filter(name => name !== teamName);
+    const teamPlayerIds = Array.isArray(team.players) ? team.players : [];
+    const eliminatedPlayers = getEliminatedPlayers().filter(id => !teamPlayerIds.includes(id));
+
+    if (!writeStringArray(ELIMINATED_TEAMS_PROPERTY, eliminatedTeams)
+        || !writeStringArray(ELIMINATED_PLAYERS_PROPERTY, eliminatedPlayers)) {
+        return { success: false, reason: "storage_error" };
+    }
+
+    for (const player of world.getPlayers()) {
+        if (!teamPlayerIds.includes(player.id)) continue;
+
+        try {
+            player.runCommand("gamemode survival");
+            player.sendMessage(`§aDie Ausscheidung deines Teams ${team.color || "§f"}${teamName}§a wurde aufgehoben.`);
+        } catch (error) {
+            logger.exception(`Spielermodus konnte nicht zurückgesetzt werden: ${player.name}`, error);
+        }
+    }
+
+    logger.info(`Ausscheidung aufgehoben: ${teamName}`);
+    return { success: true };
 }
 
 function markPlayerEliminated(player) {
@@ -196,6 +231,39 @@ export function registerEliminationSystem() {
     // Guarantees that an eliminated player cannot leave spectator mode again,
     // including after commands or other systems change the game mode.
     system.runInterval(enforcePermanentSpectator, 20);
+
+    system.beforeEvents.startup.subscribe((event) => {
+        event.customCommandRegistry.registerCommand({
+            name: "siedler:team_ausscheidung_aufheben",
+            description: "Hebt die Ausscheidung eines Teams auf.",
+            permissionLevel: CommandPermissionLevel.GameDirectors,
+            cheatsRequired: false,
+            mandatoryParameters: [
+                { type: CustomCommandParamType.String, name: "team" }
+            ]
+        }, (origin, team) => {
+            const player = origin?.sourceEntity;
+            if (player?.typeId !== "minecraft:player") {
+                return { status: CustomCommandStatus.Failure };
+            }
+
+            const teamName = String(team ?? "").trim();
+            system.run(() => {
+                const result = clearTeamElimination(teamName);
+
+                if (!result.success) {
+                    player.sendMessage(result.reason === "unknown_team"
+                        ? `§cDas Team "${teamName}" existiert nicht.`
+                        : "§cDie Ausscheidung konnte nicht aufgehoben werden.");
+                    return;
+                }
+
+                player.sendMessage(`§aDie Ausscheidung von Team "${teamName}" wurde aufgehoben.`);
+            });
+
+            return { status: CustomCommandStatus.Success };
+        });
+    });
 
     logger.success(`Team-Eliminierung geladen – Eliminationsblock: ${ELIMINATION_BLOCK_TYPE}`);
 }
