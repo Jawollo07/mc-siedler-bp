@@ -16,6 +16,7 @@ Dort findest du eine spielerorientierte Übersicht der aktuell implementierten B
 - Teams, Diplomatie, Claims und Wirtschaft
 - Team-Eliminierung mit Broadcast und permanentem Spectator nach dem Tod
 - Claim-Protection mit Block-Recovery und Item-Rückgabe
+- **TNT darf innerhalb von Claims gezündet werden; andere Explosionen bleiben durch die Claim-Protection blockiert.**
 - Zentraler Marktplatz und spezialisierte Händler
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - Konfigurierbare Soldier-Angriffsmodi 0–5
@@ -25,6 +26,16 @@ Dort findest du eine spielerorientierte Übersicht der aktuell implementierten B
 - Robustes tägliches Steuersystem mit Online-Prüfung, Wiederholungsversuchen und Statistik
 - **TaxBonus als Multiplikator pro Dorfbewohner durch Monster-Tokens und eroberte Outposts**
 - **Minenfeld mit robuster Platzierung, verzögerter Explosion, Warnsound, Kettenreaktion, Feuer, Team-Schutz, Minengruppen, Monster-Auslösung und Verwaltungs-UI**
+
+## 🛡️ Claim-Protection
+
+Claims schützen fremde Grundstücke weiterhin vor normalem Abbauen, Platzieren und geschützten Interaktionen.
+
+### TNT-Regel
+
+TNT ist innerhalb von Claims ausdrücklich erlaubt. Eine gezündete TNT-Ladung darf daher auch Blöcke innerhalb eines Claims zerstören. Die Explosions-Protection blockiert weiterhin andere Explosionen, die einen Claim treffen (z. B. nicht-TNT-basierte Explosionen).
+
+Die Änderung ist bewusst auf TNT begrenzt und lockert nicht den normalen Blockschutz für Spieler.
 
 ## 💰 Steuersystem
 
