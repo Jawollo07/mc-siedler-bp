@@ -16,7 +16,8 @@ Dort findest du eine spielerorientierte Übersicht der aktuell implementierten B
 - Teams, Diplomatie, Claims und Wirtschaft
 - Team-Eliminierung mit Broadcast und permanentem Spectator nach dem Tod
 - Claim-Protection mit Block-Recovery und Item-Rückgabe
-- **TNT darf innerhalb von Claims gezündet werden; andere Explosionen bleiben durch die Claim-Protection blockiert.**
+- **TNT darf innerhalb von Claims platziert und gezündet werden – auch von gegnerischen Teams; andere Explosionen bleiben durch die Claim-Protection blockiert.**
+- **Glasblöcke dürfen in fremden Claims abgebaut werden.**
 - Zentraler Marktplatz und spezialisierte Händler
 - Soldaten mit KI, Leveln, XP, Ausrüstung und Kavallerie
 - Konfigurierbare Soldier-Angriffsmodi 0–5
@@ -33,9 +34,13 @@ Claims schützen fremde Grundstücke weiterhin vor normalem Abbauen, Platzieren 
 
 ### TNT-Regel
 
-TNT ist innerhalb von Claims ausdrücklich erlaubt. Eine gezündete TNT-Ladung darf daher auch Blöcke innerhalb eines Claims zerstören. Die Explosions-Protection blockiert weiterhin andere Explosionen, die einen Claim treffen (z. B. nicht-TNT-basierte Explosionen).
+TNT ist innerhalb von Claims ausdrücklich erlaubt. **Jeder Spieler – auch ein gegnerisches Team – darf TNT innerhalb eines Claims platzieren und zünden.** Eine gezündete TNT-Ladung darf daher auch Blöcke innerhalb eines Claims zerstören. Die Explosions-Protection blockiert weiterhin andere Explosionen, die einen Claim treffen (z. B. nicht-TNT-basierte Explosionen).
 
-Die Änderung ist bewusst auf TNT begrenzt und lockert nicht den normalen Blockschutz für Spieler.
+Die TNT-Ausnahme lockert nicht den normalen Blockschutz für andere Blöcke.
+
+### Glas-Regel
+
+**Glasblöcke dürfen auch in fremden Claims abgebaut werden.** Dazu zählen normales Glas, getöntes Glas und farbige Glasblöcke (`*_stained_glass`). Der normale Schutz für andere Blöcke bleibt unverändert.
 
 ## 💰 Steuersystem
 
